@@ -12,6 +12,12 @@ service firebase.storage {
         firestore.get(/databases/(default)/documents/procurement_documents/$(docId)).data.departmentId) &&
         firestore.get(/databases/(default)/documents/procurement_documents/$(docId)).data.projectId == projectId;
     }
+    // Official template: read-only to authenticated procurement members.
+    // Upload/replacement must be done by a trusted administrator via Firebase Console or Admin SDK.
+    match /procurement/templates/first-set/source.pdf {
+      allow read: if member();
+      allow write: if false;
+    }
     match /procurement/projects/{projectId}/files/{docId} {
       allow read: if member() && firestore.exists(/databases/(default)/documents/procurement_documents/$(docId)) &&
         firestore.get(/databases/(default)/documents/procurement_documents/$(docId)).data.projectId == projectId;
