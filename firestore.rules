@@ -43,6 +43,30 @@ service cloud.firestore {
         request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
+    // Immutable user-owned copies, separate from uploaded PDF documents.
+    match /procurement_document_copies/{copyId} {
+      allow read: if member();
+      allow create: if member() &&
+        owns(request.resource.data.departmentId) &&
+        request.resource.data.keys().hasOnly(['schemaVersion','templateId','title','departmentId','createdBy','createdAt','values','items','selectedPages','documentCount']) &&
+        request.resource.data.schemaVersion == 1 &&
+        request.resource.data.templateId == 'first-set-v1' &&
+        request.resource.data.documentCount == 10 &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.createdAt == request.time &&
+        validDept(request.resource.data.departmentId) &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() > 0 &&
+        request.resource.data.title.size() <= 250 &&
+        request.resource.data.values is map &&
+        request.resource.data.values.size() <= 75 &&
+        request.resource.data.values.department == request.resource.data.departmentId &&
+        request.resource.data.items is list &&
+        request.resource.data.items.size() <= 80 &&
+        request.resource.data.selectedPages is list &&
+        request.resource.data.selectedPages.size() <= 10;
+      allow update, delete: if false;
+    }
     match /procurement_documents/{documentId} {
       allow read: if member();
       allow create: if member() && owns(request.resource.data.departmentId) &&
