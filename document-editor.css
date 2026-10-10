@@ -61,3 +61,21 @@
 .activeDepartment span{color:#7a8ca4;font-size:11px}
 .activeDepartment strong{color:#335ca3}
 @media(max-width:650px){.departmentCards{grid-template-columns:1fr}.departmentGate{padding:16px}.savedCopyRow{align-items:start;flex-direction:column}}
+
+/* Render actual Word pages rather than a re-authored HTML replica. */
+.templateSetup{margin:18px 0;padding:16px;background:#f7faff;border:1px solid #d9e7f8;border-radius:13px}
+.templateSetup p{margin:8px 0}
+.templateSetup input{display:block;max-width:100%;margin:10px 0}
+.actualWord{overflow:auto;background:#e0e6ee;border-radius:10px;padding:10px;max-height:76vh;min-height:220px}
+.actualWord .docx-wrapper{background:transparent!important;padding:0!important}
+.actualWord section.docx{margin:12px auto!important;box-shadow:0 3px 13px #233b5b29}
+.actualWord section.docx p{font-family:inherit}
+@media print{
+ body{background:#fff}
+ main,.appbar,.banner{display:none!important}
+ #printArea{display:block!important;position:static;width:100%;height:auto}
+ #printArea .docx-wrapper{background:#fff!important;padding:0!important}
+ #printArea section.docx{break-after:page!important;page-break-after:always!important;margin:0 auto!important;box-shadow:none!important}
+ #printArea section.docx:last-child{break-after:auto!important;page-break-after:auto!important}
+ #printArea .sheet{display:none!important}
+}
