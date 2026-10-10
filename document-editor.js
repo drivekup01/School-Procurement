@@ -117,35 +117,56 @@ async function ensureTemplate(){
   $("templateInstallStatus").textContent=missing?"ยังไม่มีแม่แบบ":"โหลดแม่แบบไม่สำเร็จ: "+(e.code||e.message);
  }
 }
+
+let activeTemplateUpload=null;
+$("cancelTemplateUpload").onclick=()=>{
+ if(activeTemplateUpload){activeTemplateUpload.cancel();$("templateInstallStatus").textContent="ยกเลิกอัปโหลดแล้ว ตรวจว่าไฟล์ไม่มีสถานะเสร็จใน Firebase Storage ก่อนลองใหม่"}
+};
 $("installTemplate").onclick=async()=>{
  if(profile?.role!=="admin"||!activeDepartment)return;
  const file=$("templateInput").files?.[0];
  if(!file||!file.name.toLowerCase().endsWith(".docx"))return alert("กรุณาเลือกไฟล์ Word .docx");
  if(file.size>20*1024*1024)return alert("ไฟล์ Word ต้องไม่เกิน 20 MB");
  if(templateBlob&&!confirm("มีแม่แบบอยู่แล้ว การติดตั้งใหม่จะแทนไฟล์ปัจจุบันของฝ่ายนี้ ต้องการดำเนินการหรือไม่?"))return;
- const button=$("installTemplate");button.disabled=true;
- // Fail clearly instead of spending several minutes retrying a Storage endpoint
- // that may be unavailable on the project's current billing plan.
- if(firebaseFns.setMaxUploadRetryTime)firebaseFns.setMaxUploadRetryTime(templateStorage,20000);
- $("templateInstallStatus").textContent="กำลังบันทึกแม่แบบจริงลง Firebase…";
+ const button=$("installTemplate"),cancel=$("cancelTemplateUpload"),progress=$("templateUploadProgress"),output=$("templateInstallStatus");
+ button.disabled=true;cancel.hidden=false;progress.hidden=false;progress.value=0;
+ if(firebaseFns.setMaxUploadRetryTime)firebaseFns.setMaxUploadRetryTime(templateStorage,15000);
+ const uploadRef=firebaseFns.ref(templateStorage,templatePath());
+ const task=firebaseFns.uploadBytesResumable(uploadRef,file,{contentType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+ activeTemplateUpload=task;
+ let lastChange=Date.now(),timeoutId=null;
+ output.textContent="กำลังส่งไฟล์ "+file.name+" ("+(file.size/1024).toFixed(0)+" KB) ไปยัง "+templateStorage.app.options.storageBucket+"…";
  try{
-  await firebaseFns.uploadBytes(firebaseFns.ref(templateStorage,templatePath()),file,{contentType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
-  $("templateInstallStatus").textContent="ติดตั้ง Word แม่แบบจริงสำเร็จ สามารถเปิดดูได้ทุกครั้ง";
+  await new Promise((resolve,reject)=>{
+   let completed=false;
+   const finish=(err)=>{if(completed)return;completed=true;clearInterval(timeoutId);err?reject(err):resolve()};
+   timeoutId=setInterval(()=>{
+     if(Date.now()-lastChange>25000){
+       task.cancel();
+       finish(new Error("ส่งไฟล์ไม่คืบหน้าเกิน 25 วินาที: อาจเกิดจาก Storage Rules, bucket, billing หรือเครือข่าย"));
+     }
+   },1000);
+   task.on("state_changed",snapshot=>{
+     lastChange=Date.now();
+     const percent=snapshot.totalBytes?Math.round(snapshot.bytesTransferred/snapshot.totalBytes*100):0;
+     progress.value=percent;
+     output.textContent="กำลังอัปโหลด "+percent+"% ("+(snapshot.bytesTransferred/1024).toFixed(0)+" / "+(snapshot.totalBytes/1024).toFixed(0)+" KB)";
+   },e=>finish(e),()=>finish());
+  });
+  output.textContent="บันทึกแม่แบบลง Firebase Storage สำเร็จแล้ว กำลังเปิด Preview…";
   await ensureTemplate();
+  if(templateBlob)output.textContent="บันทึกแม่แบบและเปิด Preview สำเร็จ";
+  else output.textContent="บันทึกไฟล์สำเร็จ แต่เปิด Preview ยังไม่ได้ โปรดอ่านข้อความแจ้งในส่วนตัวอย่างเอกสาร";
  }catch(e){
- const reason=e.code||"unknown";
- const help=reason==="storage/retry-limit-exceeded"
- ? "อัปโหลดไม่สำเร็จภายในเวลาที่กำหนด โปรดตรวจ Firebase Storage > Files ว่าสร้าง Bucket แล้ว และตรวจแพ็กเกจ Blaze / Billing รวมถึง Network จากนั้นค่อยลองอีกครั้ง"
- : reason==="storage/unauthorized"
- ? "Storage Rules ไม่อนุญาตบัญชีนี้อัปโหลด ตรวจว่าใช้ Admin และ Publish Storage Rules ล่าสุดแล้ว"
- : reason==="storage/unauthenticated"
- ? "กรุณาเข้าสู่ระบบใหม่ก่อนอัปโหลด"
- : reason==="storage/bucket-not-found"||reason==="storage/no-default-bucket"
- ? "ไม่พบ Storage Bucket โปรดเปิด Storage ให้เรียบร้อยและตรวจชื่อ Bucket ใน firebase-config.js"
- : "ไม่สามารถอัปโหลด: "+(e.message||reason);
- $("templateInstallStatus").textContent=help+" ["+reason+"]";
-}
- finally{button.disabled=false}
+  const code=e.code||"upload/timeout";
+  const message=code==="storage/unauthorized"?"Storage Rules ยังไม่อนุญาตให้ Admin อัปโหลดไฟล์ Word":
+    code==="storage/bucket-not-found"?"ไม่พบ Storage Bucket กรุณาตรวจการตั้งค่า bucket":
+    code==="storage/retry-limit-exceeded"?"การเชื่อมต่อ Storage ไม่สำเร็จหลังลองส่งซ้ำ กรุณาตรวจ Bucket, Billing, Rules และเครือข่าย":
+    code==="storage/canceled"?"ยกเลิกการอัปโหลดแล้ว":(e.message||String(e));
+  output.textContent="อัปโหลดไม่สำเร็จ: "+message+" ["+code+"]";
+ }finally{
+  clearInterval(timeoutId);activeTemplateUpload=null;cancel.hidden=true;button.disabled=false;progress.hidden=true;
+ }
 };
 const blank=()=>({values:{...Object.fromEntries([...commonFields,...specificFields.filter(f=>!sections.has(f[0]))].map(f=>[f[0],f[2]||""])),department:activeDepartment||""},items:[{description:"",quantity:"",unit:"",unitPrice:""}],selected:Array.from({length:16},(_,i)=>i+1)});
 let state=blank();
