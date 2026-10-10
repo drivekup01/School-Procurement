@@ -1,0 +1,17 @@
+[
+  {
+    "origin": [
+      "https://drivekup01.github.io"
+    ],
+    "method": [
+      "GET",
+      "HEAD"
+    ],
+    "responseHeader": [
+      "Content-Type",
+      "Content-Length",
+      "Content-Disposition"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]
