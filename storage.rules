@@ -17,7 +17,8 @@ service firebase.storage {
     // One-time official DOCX master installation, accessible to authenticated school staff.
     // Admin may replace a department's current template after confirming in the UI.
     match /procurement/templates/departments/{department}/source.docx {
-      allow read: if member();
+      // Template viewing requires login but not a secondary Firestore lookup.
+      allow read: if signedIn();
       allow create, update: if isAdmin() &&
         request.resource.size <= 20 * 1024 * 1024 &&
         request.resource.contentType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
