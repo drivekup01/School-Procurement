@@ -1,3 +1,4 @@
+import {renderGovernmentPage} from "./official-forms.js";
 import {firebaseConfig} from "./firebase-config.js";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
@@ -57,15 +58,10 @@ let user=null,profile=null,db=null,step="common",page=1;
 let sourceStorage=null,sourceUrl=null,savedCopies=[];
 const ORIGINAL_TEMPLATE_STORAGE_PATH="procurement/templates/first-set/source.pdf";
 function referenceMessage(msg){$("sourceMessage").textContent=msg}
-async function showOfficialPage(){
- if(!sourceStorage||!user)return;
- if(sourceUrl){$("sourceViewerBox").hidden=false;$("sourceViewer").src=sourceUrl+"#page="+page+"&view=FitH";referenceMessage("ต้นฉบับจริง · หน้า "+page+" / 10 · ยังมีข้อมูลตัวอย่างเดิม จึงยังไม่ใช่สำเนาที่เติมข้อมูลใหม่");return}
- referenceMessage("กำลังโหลดเอกสารต้นฉบับจาก Firebase Storage…");
- try{
- const blob=await getBlob(ref(sourceStorage,ORIGINAL_TEMPLATE_STORAGE_PATH));
- if(blob.type!=="application/pdf")throw Error("ต้นฉบับไม่ใช่ PDF");
- sourceUrl=URL.createObjectURL(blob);$("sourceViewerBox").hidden=false;$("sourceViewer").src=sourceUrl+"#page="+page+"&view=FitH";referenceMessage("ต้นฉบับจริง · หน้า "+page+" / 10 · ยังไม่ได้เชื่อมช่องกรอกกับตัวต้นฉบับ");
- }catch(e){$("sourceViewerBox").hidden=true;referenceMessage("ยังไม่สามารถเปิดต้นฉบับราชการได้ ("+(e.code||e.message)+") — ต้องติดตั้ง PDF แม่แบบใน Firebase Storage หนึ่งครั้ง ไม่ใช่ให้ผู้ใช้ import ทุกงาน");}
+function showOfficialPage(){
+ $("sourceViewerBox").hidden=true;
+ $("generatedPreview").hidden=false;
+ referenceMessage("แสดงแบบเอกสารชุดแรกจากต้นฉบับที่ถอดเป็นโครงหน้าและข้อความ พร้อมเติมข้อมูลที่กรอก • ต้องตรวจเทียบกับ Word ภาพสแกนก่อนใช้ลงนาม");
 }
 const blank=()=>({values:Object.fromEntries([...commonFields,...specificFields.filter(f=>!sections.has(f[0]))].map(f=>[f[0],f[2]||""])),items:[{description:"",quantity:"",unit:"",unitPrice:""}],selected:Array.from({length:10},(_,i)=>i+1)});
 let state=blank();
@@ -84,6 +80,7 @@ const total=()=>state.items.reduce((sum,r)=>sum+Number(r.quantity||0)*Number(r.u
 const itemTable=()=>'<table><thead><tr><th>ที่</th><th>รายการพัสดุ</th><th>จำนวน</th><th>หน่วย</th><th>ราคาต่อหน่วย</th><th>รวมเงิน</th></tr></thead><tbody>'+itemRows()+'<tr><th colspan="5" style="text-align:right">รวมเป็นเงินทั้งสิ้น</th><th style="text-align:right">'+fmt(total())+'</th></tr></tbody></table>';
 const dept=()=>departments.find(x=>x[0]===v("department"))?.[1]||v("department");
 const n=(content)=>'<p>'+content+'</p>';
+function officialPage(i){return renderGovernmentPage(i,{value:v,escape:esc,items:state.items,department:dept()})}
 function htmlForPage(i){
  let body="";
  const title=fullTitle(),budget=fmt(v("budget")),price=fmt(v("referencePrice")),agreement=fmt(v("agreedPrice")),date=mark("requestDate");
@@ -104,9 +101,9 @@ function renderInputs(){ $("commonFields").innerHTML=commonFields.map(fieldMarku
 document.querySelectorAll("[data-key]").forEach(el=>el.oninput=()=>{state.values[el.dataset.key]=el.value;renderPaper();renderTotals();});}
 function renderItems(){ $("itemsRows").innerHTML=state.items.map((r,i)=>'<div class="itemRow"><strong>รายการที่ '+(i+1)+'</strong><div class="rowgrid">'+[["description","ชื่อรายการพัสดุ"],["quantity","จำนวน"],["unit","หน่วยนับ"],["unitPrice","ราคาต่อหน่วย"]].map(([k,name])=>'<label>'+name+'<input data-item="'+i+'" data-col="'+k+'" value="'+esc(r[k])+'" '+(["quantity","unitPrice"].includes(k)?'type="number" min="0" step="any"':'')+'></label>').join("")+'</div><button data-remove="'+i+'" class="secondary">ลบรายการ</button></div>').join("");document.querySelectorAll("[data-item]").forEach(el=>el.oninput=()=>{state.items[Number(el.dataset.item)][el.dataset.col]=el.value;renderPaper();renderTotals()});document.querySelectorAll("[data-remove]").forEach(el=>el.onclick=()=>{if(state.items.length===1)return;state.items.splice(Number(el.dataset.remove),1);renderItems();renderPaper()});renderTotals()}
 function renderTotals(){$("itemTotals").innerHTML='รวมมูลค่ารายการพัสดุที่กรอก: <b>'+fmt(total())+' บาท</b>　(โปรดตรวจเทียบวงเงินงาน '+fmt(v("budget"))+' บาท)'}
-function renderPaper(){$("paperLabel").textContent="ตัวอย่างเอกสาร · หน้า "+page+" / 10";$("paperHolder").innerHTML=htmlForPage(page);document.querySelectorAll("[data-page-button]").forEach(b=>b.classList.toggle("selected",Number(b.dataset.pageButton)===page))}
+function renderPaper(){$("paperLabel").textContent="ตัวอย่างเอกสาร · หน้า "+page+" / 10";$("paperHolder").innerHTML=officialPage(page);document.querySelectorAll("[data-page-button]").forEach(b=>b.classList.toggle("selected",Number(b.dataset.pageButton)===page))}
 function goStage(target){step=target;document.querySelectorAll(".stage").forEach(el=>el.hidden=el.id!==target);document.querySelectorAll("[data-stage]").forEach(el=>el.classList.toggle("selected",el.dataset.stage===target));if(target==="review")renderReview()}
-function goPage(n){page=Math.min(10,Math.max(1,n));renderPaper();if(sourceUrl)showOfficialPage()}
+function goPage(n){page=Math.min(10,Math.max(1,n));renderPaper();showOfficialPage()}
 function renderReview(){$("reviewPages").innerHTML=pages.map((title,i)=>'<label class="reviewRow"><input type="checkbox" data-print-page="'+(i+1)+'" '+(state.selected.includes(i+1)?"checked":"")+'><span>หน้า '+(i+1)+' — '+esc(title)+'</span><button type="button" class="secondary" data-jump="'+(i+1)+'">ดูหน้า</button></label>').join("");document.querySelectorAll("[data-print-page]").forEach(el=>el.onchange=()=>{const n=Number(el.dataset.printPage);state.selected=el.checked?[...new Set([...state.selected,n])]:state.selected.filter(x=>x!==n)});document.querySelectorAll("[data-jump]").forEach(el=>el.onclick=e=>{e.preventDefault();goPage(Number(el.dataset.jump))});const mandatory=[["project","ชื่อโครงการ"],["subject","ชื่องานจัดซื้อ"],["budget","วงเงิน"],["requestDate","วันที่เริ่มเรื่อง"],["procOfficer","เจ้าหน้าที่"],["headOfficer","หัวหน้าเจ้าหน้าที่"],["director","ผู้อำนวยการ"],["specPreparer","ผู้จัดทำ TOR"],["vendor","ชื่อผู้ขาย"],["inspector","ผู้ตรวจรับ"]].filter(([k])=>!v(k));$("missing").textContent=mandatory.length?"ข้อมูลที่ควรตรวจให้ครบก่อนพิมพ์: "+mandatory.map(x=>x[1]).join(" • "):"ข้อมูลหลักครบตามรายการตรวจเบื้องต้นแล้ว (ต้องอ่านตรวจถ้อยคำทุกหน้าก่อนนำไปใช้จริง)";}
 function safeSnapshot(d){
  const vals=d&&typeof d.values==="object"&&!Array.isArray(d.values)?d.values:{};
@@ -147,7 +144,7 @@ $("addItem").onclick=()=>{state.items.push({description:"",quantity:"",unit:"",u
 $("selectAll").onclick=()=>{state.selected=Array.from({length:10},(_,i)=>i+1);renderReview()};
 $("selectNone").onclick=()=>{state.selected=[];renderReview()};
 $("quickPrint").onclick=()=>{$("printSelected").click()};
-$("printSelected").onclick=()=>{if(!state.selected.length){alert("กรุณาเลือกอย่างน้อย 1 หน้า");return}renderReview();$("printArea").innerHTML=state.selected.slice().sort((a,b)=>a-b).map(htmlForPage).join("");window.print()};
+$("printSelected").onclick=()=>{if(!state.selected.length){alert("กรุณาเลือกอย่างน้อย 1 หน้า");return}renderReview();$("printArea").innerHTML=state.selected.slice().sort((a,b)=>a-b).map(officialPage).join("");window.print()};
 $("prev").onclick=()=>goPage(page-1);$("next").onclick=()=>goPage(page+1);
 document.querySelectorAll("[data-stage]").forEach(btn=>btn.onclick=()=>goStage(btn.dataset.stage));
 $("pageNav").innerHTML=pages.map((title,i)=>'<button class="pageButton" data-page-button="'+(i+1)+'" type="button"><b>หน้า '+(i+1)+'</b>'+esc(title)+'</button>').join("");
