@@ -223,7 +223,19 @@ $("addItem").onclick=()=>{state.items.push({description:"",quantity:"",unit:"",u
 $("selectAll").onclick=()=>{state.selected=Array.from({length:16},(_,i)=>i+1);renderReview()};
 $("selectNone").onclick=()=>{state.selected=[];renderReview()};
 $("quickPrint").onclick=()=>{$("printSelected").click()};
-$("printSelected").onclick=()=>{if(!state.selected.length){alert("กรุณาเลือกอย่างน้อย 1 หน้า");return}renderReview();$("printArea").innerHTML=state.selected.slice().sort((a,b)=>a-b).map(officialPage).join("");window.print()};
+$("printSelected").onclick=()=>{
+ if(!state.selected.length){alert("กรุณาเลือกอย่างน้อย 1 หน้า");return}
+ if(!renderedDocx?.pages?.length){alert("ยังไม่ได้แสดงแม่แบบ Word จริง กรุณาติดตั้งแม่แบบให้เรียบร้อยก่อน");return}
+ const chosen=state.selected.slice().sort((a,b)=>a-b).filter(n=>n<=renderedDocx.pages.length);
+ if(!chosen.length)return alert("หน้าที่เลือกไม่อยู่ในแม่แบบ");
+ const printArea=$("printArea");printArea.innerHTML="";
+ const styleNodes=[...$("actualWord").querySelectorAll("style")].map(e=>e.cloneNode(true));
+ for(const st of styleNodes)printArea.appendChild(st);
+ const wrapper=document.createElement("div");wrapper.className="docx-wrapper printableWord";
+ for(const n of chosen){const el=renderedDocx.pages[n-1].cloneNode(true);wrapper.appendChild(el)}
+ printArea.appendChild(wrapper);
+ window.print();
+};
 $("prev").onclick=()=>goPage(page-1);$("next").onclick=()=>goPage(page+1);
 document.querySelectorAll("[data-stage]").forEach(btn=>btn.onclick=()=>goStage(btn.dataset.stage));
 $("pageNav").innerHTML=pages.map((title,i)=>'<button class="pageButton" data-page-button="'+(i+1)+'" type="button"><b>หน้า '+(i+1)+'</b>'+esc(title)+'</button>').join("");
