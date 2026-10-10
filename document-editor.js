@@ -89,32 +89,66 @@ function queueTemplateRefresh(){
  if(!templateBlob)return;
  clearTimeout(renderDelay);renderDelay=setTimeout(renderTemplateWord,650);
 }
+// Avoid indefinite loading when Firebase Storage getBlob() is blocked by CORS/network.
+async function loadWordBlob(path){
+ const fileRef=firebaseFns.ref(templateStorage,path);
+ if(firebaseFns.setMaxDownloadRetryTime)firebaseFns.setMaxDownloadRetryTime(templateStorage,10000);
+ const bounded=(promise,ms)=>new Promise((resolve,reject)=>{
+  let done=false;
+  const timer=setTimeout(()=>{if(!done){done=true;reject(Object.assign(new Error("ไม่มีการตอบกลับจาก Firebase Storage ภายในเวลาที่กำหนด"),{code:"storage/download-timeout"}))}},ms);
+  Promise.resolve(promise).then(result=>{if(!done){done=true;clearTimeout(timer);resolve(result)}},error=>{if(!done){done=true;clearTimeout(timer);reject(error)}});
+ });
+ try{return await bounded(firebaseFns.getBlob(fileRef),12000)}
+ catch(firstError){
+  if(firstError.code==="storage/object-not-found"||firstError.code==="storage/unauthorized"||firstError.code==="storage/unauthenticated")throw firstError;
+  referenceMessage("ดาวน์โหลดแบบแรกไม่สำเร็จ กำลังลองวิธีสำรอง…");
+  // This URL stays inside the signed-in page and is never saved to Firestore.
+  try{
+   const url=await bounded(firebaseFns.getDownloadURL(fileRef),7000);
+   const controller=new AbortController();
+   const timeout=setTimeout(()=>controller.abort(),10000);
+   try{
+    const response=await fetch(url,{signal:controller.signal,cache:"no-store"});
+    if(!response.ok)throw Error("HTTP "+response.status);
+    const blob=await response.blob();
+    if(!blob.size)throw Error("ได้รับไฟล์ว่างจาก Storage");
+    return blob;
+   }finally{clearTimeout(timeout)}
+  }catch(fallbackError){
+   const msg=fallbackError.name==="AbortError"?"การเชื่อมต่อหมดเวลา":fallbackError.message||String(fallbackError);
+   throw Object.assign(new Error("โหลดแม่แบบไม่สำเร็จ ("+(firstError.code||firstError.message)+"). วิธีสำรอง: "+msg+". ตรวจ Storage Rules และ CORS ของ Bucket"),{code:fallbackError.code||firstError.code||"storage/network-error"});
+  }
+ }
+}
 async function ensureTemplate(){
  templateBlob=null;renderedDocx=null;$("actualWord").innerHTML="";
  const requestedDept=activeDepartment;
  if(!requestedDept||!templateStorage)return;
- referenceMessage("กำลังเรียกแม่แบบ Word ของ"+departmentName(requestedDept)+" จาก Storage…");
+ referenceMessage("กำลังดาวน์โหลดแม่แบบ Word ของ"+departmentName(requestedDept)+"…");
  try{
-  templateBlob=await firebaseFns.getBlob(firebaseFns.ref(templateStorage,templatePath()));
+  const blob=await loadWordBlob("procurement/templates/departments/"+requestedDept+"/source.docx");
   if(activeDepartment!==requestedDept)return;
-  $("templateInstallStatus").textContent="มีแม่แบบ Word ของฝ่ายนี้แล้ว";
-  renderTemplateWord();
+  templateBlob=blob;
+  $("templateInstallStatus").textContent="ดาวน์โหลดแม่แบบ Word จาก Storage สำเร็จ";
+  referenceMessage("ดาวน์โหลดสำเร็จ ("+(blob.size/1024).toFixed(1)+" KB) กำลังจัดหน้า Word…");
+  await renderTemplateWord();
  }catch(e){
   if(activeDepartment!==requestedDept)return;
   if(e.code==="storage/object-not-found"&&requestedDept!=="general"){
-    try{
-      templateBlob=await firebaseFns.getBlob(firebaseFns.ref(templateStorage,"procurement/templates/departments/general/source.docx"));
-      if(activeDepartment!==requestedDept)return;
-      referenceMessage("กำลังใช้แม่แบบกลางของฝ่ายบริหารทั่วไปสำหรับ"+departmentName(requestedDept)+" • สามารถติดตั้งแม่แบบเฉพาะฝ่ายทับภายหลัง");
-      $("templateInstallStatus").textContent="ใช้แม่แบบกลางชั่วคราว";
-      renderTemplateWord();return;
-    }catch(fallbackError){
-      if(fallbackError.code!=="storage/object-not-found")e=fallbackError;
-    }
+   try{
+    const blob=await loadWordBlob("procurement/templates/departments/general/source.docx");
+    if(activeDepartment!==requestedDept)return;
+    templateBlob=blob;
+    $("templateInstallStatus").textContent="ใช้แม่แบบส่วนกลาง";
+    referenceMessage("ใช้แม่แบบกลางจากฝ่ายบริหารทั่วไป กำลังแสดง Word…");
+    await renderTemplateWord();
+    return;
+   }catch(secondError){e=secondError}
   }
   const missing=e.code==="storage/object-not-found";
-  referenceMessage(missing?"ยังไม่มีแม่แบบ Word ใน Firebase: Admin ติดตั้งไฟล์ต้นฉบับของฝ่ายบริหารทั่วไปเพียงครั้งเดียวเพื่อเริ่มทดลอง":"โหลดแม่แบบ Word ไม่สำเร็จ: "+(e.code||e.message));
-  $("templateInstallStatus").textContent=missing?"ยังไม่มีแม่แบบ":"โหลดแม่แบบไม่สำเร็จ: "+(e.code||e.message);
+  const message=missing?"ไม่พบไฟล์แม่แบบใน Storage":e.code==="storage/unauthorized"?"Storage Rules ปฏิเสธการอ่าน Word":(e.message||e.code||"ข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+  referenceMessage("โหลดแม่แบบ Word ไม่สำเร็จ: "+message);
+  $("templateInstallStatus").textContent="โหลดแม่แบบไม่สำเร็จ: "+message;
  }
 }
 
