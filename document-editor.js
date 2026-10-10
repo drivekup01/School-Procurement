@@ -73,6 +73,16 @@ function referenceMessage(msg){$("sourceMessage").textContent=msg}
 function scrollWordPage(){
  const el=renderedDocx?.pages?.[page-1];if(el)el.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
+function fitWordPage(){
+ const container=$("actualWord"),first=container.querySelector("section.docx");
+ if(!first)return;
+ container.style.setProperty("--word-zoom","1");
+ const naturalWidth=first.getBoundingClientRect().width;
+ const usableWidth=Math.max(200,container.clientWidth-26);
+ const ratio=naturalWidth>0?Math.min(1,usableWidth/naturalWidth):1;
+ container.style.setProperty("--word-zoom",String(Math.max(.3,Math.round(ratio*1000)/1000)));
+}
+window.addEventListener("resize",()=>{if(renderedDocx)fitWordPage()});
 async function renderTemplateWord(){
  if(!templateBlob||!activeDepartment)return;
  const serial=++renderSerial;
@@ -81,6 +91,7 @@ async function renderTemplateWord(){
   const view=await showWordDocument(templateBlob,$("actualWord"),state.values);
   if(serial!==renderSerial)return;
   renderedDocx=view;
+  fitWordPage();
   $("paperLabel").textContent="Word แม่แบบจริง · หน้า "+page+" / "+view.pages.length;
   referenceMessage("แม่แบบ Word จริง • "+view.pages.length+" หน้า • ทดลองเติมข้อมูลลงในตำแหน่งที่ระบบตรวจพบ "+view.replacements+" จุด (ตรวจข้อความก่อนพิมพ์)");
  }catch(e){referenceMessage("ไม่สามารถเปิดแม่แบบ Word: "+(e.message||e))}
