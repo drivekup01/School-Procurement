@@ -178,7 +178,7 @@ function departmentName(key){return departments.find(d=>d[0]===key)?.[1]||key}
 function usableDepartments(){return profile?.role==="admin"?departments:departments.filter(d=>d[0]===profile?.departmentId)}
 function renderDepartmentSelection(){
  const allowed=usableDepartments();
- $("departmentCards").innerHTML=allowed.map(([key,name])=>'<button type="button" class="departmentCard '+(activeDepartment===key?"active":"")+'" data-dept="'+esc(key)+'"><span class="departmentMark">▣</span><strong>'+esc(name)+'</strong><small>'+ (key==="general"?"ใช้แม่แบบ Word ชุดแรก 16 หน้า":"ใช้แม่แบบกลาง 16 หน้า จนกว่าจะติดตั้งฉบับเฉพาะฝ่าย")+'</small></button>').join("");
+ $("departmentCards").innerHTML=allowed.map(([key,name])=>'<button type="button" class="departmentCard '+(activeDepartment===key?"active":"")+'" data-dept="'+esc(key)+'"><span class="departmentMark">▣</span><strong>'+esc(name)+'</strong><small>'+ (key==="general"?"ใช้ PDF ต้นฉบับ 11 หน้า":"ใช้ PDF ส่วนกลาง 11 หน้า จนกว่าจะมีฉบับเฉพาะฝ่าย")+'</small></button>').join("");
  $("departmentCards").querySelectorAll("[data-dept]").forEach(b=>b.onclick=()=>selectDepartment(b.dataset.dept));
 }
 async function selectDepartment(key){
@@ -235,7 +235,7 @@ async function saveDraft(){
  state.values.department=activeDepartment;const safe=safeSnapshot(state),copyName=safe.values.subject?.trim()||"เอกสารจัดซื้อจัดจ้างไม่มีชื่อ";
  const entry={schemaVersion:1,templateId:"first-set-pdf11-v1",title:copyName,departmentId:safe.values.department||profile.departmentId,createdBy:user.uid,createdAt:firebaseFns.serverTimestamp(),values:safe.values,items:safe.items,selectedPages:safe.selected,documentCount:11};
  const result=await firebaseFns.addDoc(firebaseFns.collection(db,"procurement_document_copies"),entry);
- $("banner").textContent="บันทึกสำเนาลง Firestore สำเร็จ · เลขอ้างอิง "+result.id+" · สามารถพิมพ์หรือบันทึก PDF ต่อได้";
+ $("banner").textContent="บันทึกข้อมูลสำเนาลง Firestore สำเร็จ · เลขอ้างอิง "+result.id+" · สามารถพิมพ์หรือบันทึก PDF ต่อได้";
  await refreshSavedCopies();
  }catch(e){$("banner").textContent="บันทึกลงฐานข้อมูลไม่สำเร็จ: "+(e.code||e.message)+" · ยังไม่ได้สร้างสำเนา อย่าเพิ่งถือว่าบันทึกแล้ว"}
  finally{btn.disabled=false}
