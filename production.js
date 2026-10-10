@@ -73,6 +73,7 @@ $("pdfClose").onclick=closeViewer;
 $("search").oninput=refresh;$("yearFilter").onchange=refresh;
 
 $("departmentFilter").onchange=refresh;
+$("toggleDiagnostics").onclick=()=>{$("healthcheck").hidden=!$("healthcheck").hidden;if(!$("healthcheck").hidden)$("healthcheck").scrollIntoView({behavior:"smooth",block:"start"})};
 function showAdminPanel(html){
  $("adminExpanded").hidden=false;$("adminExpanded").innerHTML=html;
  $("adminExpanded").scrollIntoView({behavior:"smooth",block:"nearest"});
@@ -178,13 +179,13 @@ if(ready){
 try{
 const app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app);storage=getStorage(app);
 onAuthStateChanged(auth,async user=>{
-resetListeners();me=user;profile=null;$("signout").hidden=!user;$("identity").textContent=user?.email||"ยังไม่ได้เข้าสู่ระบบ";$("login").hidden=!!user;$("workspace").hidden=true;$("healthcheck").hidden=!user;
+resetListeners();me=user;profile=null;$("signout").hidden=!user;$("identity").textContent=user?.email||"ยังไม่ได้เข้าสู่ระบบ";$("login").hidden=!!user;$("workspace").hidden=true;$("healthcheck").hidden=true;
 if(!user){notify("");return}
 notify("กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...");
 try{const userDoc=await getDoc(doc(db,"procurement_users",user.uid));if(!userDoc.exists())throw Error("ยังไม่ได้กำหนดสิทธิ์ผู้ใช้ โปรดให้ Admin เพิ่มข้อมูล procurement_users/"+user.uid);
-profile=userDoc.data();if(!["admin","staff"].includes(profile.role)||!profile.departmentId)throw Error("สิทธิ์ผู้ใช้ไม่สมบูรณ์");$("workspace").hidden=false;$("adminHub").hidden=profile.role!=="admin";$("departmentFilterBox").hidden=profile.role!=="admin";$("identity").textContent=(profile.role==="admin"?"Admin • ":"")+(profile.displayName||user.email);notify("");
+profile=userDoc.data();if(!["admin","staff"].includes(profile.role)||!profile.departmentId)throw Error("สิทธิ์ผู้ใช้ไม่สมบูรณ์");$("workspace").hidden=false;$("healthcheck").hidden=true;$("adminHub").hidden=profile.role!=="admin";$("departmentFilterBox").hidden=profile.role!=="admin";$("identity").textContent=(profile.role==="admin"?"Admin • ":"")+(profile.displayName||user.email);notify("");
 for(const key of ["procurement_projects","procurement_jobs","procurement_documents"]){
 const off=onSnapshot(collection(db,key),snapshot=>{const items=snapshot.docs.map(d=>({id:d.id,...d.data()}));if(key==="procurement_projects")projects=items;if(key==="procurement_jobs")jobs=items;if(key==="procurement_documents")documents=items;refresh()},err=>notify("อ่านข้อมูล "+key+" ไม่สำเร็จ: "+(err.message||err)));unsubs.push(off)}
-}catch(err){notify(err.message||String(err))}
+}catch(err){$("healthcheck").hidden=false;notify(err.message||String(err))}
 })}catch(e){$("setup").hidden=false;$("login").hidden=true;notify("เชื่อม Firebase ไม่สำเร็จ: "+(e.message||e))}
 }
