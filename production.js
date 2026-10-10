@@ -74,11 +74,11 @@ $("addProject").onclick=()=>{
 if(!profile)return;
 const allowed=profile.role==="admin"?Object.keys(deptLabels):[profile.departmentId];
 const opts=allowed.map(d=>'<option value="'+esc(d)+'">'+esc(department(d))+'</option>').join("");
-editor("สร้างโครงการ",field("ชื่อโครงการ","name")+field("ปีงบประมาณ พ.ศ.","fiscalYear","number","2569",'min="2500" max="2700"')+'<label>ฝ่ายเจ้าของโครงการ<select name="departmentId">'+opts+'</select></label>'+field("งบจัดสรรโครงการ (บาท)","budget","number","0",'min="0" step="0.01"'),async d=>{if(!d.name.trim()||!validMoney(d.budget)||Number(d.fiscalYear)<2500||Number(d.fiscalYear)>2700||!allowed.includes(d.departmentId))throw Error("ข้อมูลโครงการไม่ถูกต้อง");await addDoc(collection(db,"projects"),{name:d.name.trim(),fiscalYear:Number(d.fiscalYear),departmentId:d.departmentId,budget:Number(d.budget),createdBy:me.uid,createdAt:serverTimestamp()})});
+editor("สร้างโครงการ",field("ชื่อโครงการ","name")+field("ปีงบประมาณ พ.ศ.","fiscalYear","number","2569",'min="2500" max="2700"')+'<label>ฝ่ายเจ้าของโครงการ<select name="departmentId">'+opts+'</select></label>'+field("งบจัดสรรโครงการ (บาท)","budget","number","0",'min="0" step="0.01"'),async d=>{if(!d.name.trim()||!validMoney(d.budget)||Number(d.fiscalYear)<2500||Number(d.fiscalYear)>2700||!allowed.includes(d.departmentId))throw Error("ข้อมูลโครงการไม่ถูกต้อง");await addDoc(collection(db,"procurement_projects"),{name:d.name.trim(),fiscalYear:Number(d.fiscalYear),departmentId:d.departmentId,budget:Number(d.budget),createdBy:me.uid,createdAt:serverTimestamp()})});
 };
 $("addJob").onclick=()=>{
 const p=projects.find(x=>x.id===currentProject);if(!p||!canEdit(p.departmentId))return;
-editor("เพิ่มงานจัดซื้อ/จัดจ้าง",field("ชื่อเรื่องจัดซื้อ","title")+field("วงเงินงาน (บาท)","budget","number","0",'min="0" step="0.01"')+field("ราคากลาง (บาท)","referencePrice","number","0",'min="0" step="0.01"')+field("ยอดอนุมัติ (บาท)","approved","number","0",'min="0" step="0.01"'),async d=>{if(!d.title.trim()||![d.budget,d.referencePrice,d.approved].every(validMoney))throw Error("ข้อมูลไม่ครบหรือวงเงินไม่ถูกต้อง");await addDoc(collection(db,"jobs"),{projectId:p.id,departmentId:p.departmentId,title:d.title.trim(),budget:Number(d.budget),referencePrice:Number(d.referencePrice),approved:Number(d.approved),status:"draft",createdBy:me.uid,createdAt:serverTimestamp()})});
+editor("เพิ่มงานจัดซื้อ/จัดจ้าง",field("ชื่อเรื่องจัดซื้อ","title")+field("วงเงินงาน (บาท)","budget","number","0",'min="0" step="0.01"')+field("ราคากลาง (บาท)","referencePrice","number","0",'min="0" step="0.01"')+field("ยอดอนุมัติ (บาท)","approved","number","0",'min="0" step="0.01"'),async d=>{if(!d.title.trim()||![d.budget,d.referencePrice,d.approved].every(validMoney))throw Error("ข้อมูลไม่ครบหรือวงเงินไม่ถูกต้อง");await addDoc(collection(db,"procurement_jobs"),{projectId:p.id,departmentId:p.departmentId,title:d.title.trim(),budget:Number(d.budget),referencePrice:Number(d.referencePrice),approved:Number(d.approved),status:"draft",createdBy:me.uid,createdAt:serverTimestamp()})});
 };
 $("uploadFile").onclick=()=>{$("filePicker").click()};
 $("filePicker").onchange=async ()=>{
@@ -89,7 +89,7 @@ if(file.size>25*1024*1024)return notify("ขนาดไฟล์ต้องไ
 const title=window.prompt("ชื่อเอกสารที่จะปรากฏในแฟ้ม",file.name.replace(/\.pdf$/i,""));if(title===null)return;
 notify("กำลังอัปโหลดไฟล์เอกสารจริง...");
 try{
-const docRef=doc(collection(db,"documents"));const path="projects/"+j.projectId+"/files/"+docRef.id;
+const docRef=doc(collection(db,"procurement_documents"));const path="procurement/projects/"+j.projectId+"/files/"+docRef.id;
 await setDoc(docRef,{jobId:j.id,projectId:j.projectId,departmentId:j.departmentId,title:title.trim()||file.name,filename:file.name,storagePath:path,status:"uploading",createdBy:me.uid,createdAt:serverTimestamp()});
 await uploadBytes(ref(storage,path),file,{contentType:"application/pdf"});
 await setDoc(docRef,{status:"ready"},{merge:true});notify("อัปโหลด PDF สำเร็จแล้ว");
@@ -103,10 +103,10 @@ onAuthStateChanged(auth,async user=>{
 resetListeners();me=user;profile=null;$("signout").hidden=!user;$("identity").textContent=user?.email||"ยังไม่ได้เข้าสู่ระบบ";$("login").hidden=!!user;$("workspace").hidden=true;
 if(!user){notify("");return}
 notify("กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...");
-try{const userDoc=await getDoc(doc(db,"users",user.uid));if(!userDoc.exists())throw Error("ยังไม่ได้กำหนดสิทธิ์ผู้ใช้ โปรดให้ Admin เพิ่มข้อมูล users/"+user.uid);
+try{const userDoc=await getDoc(doc(db,"procurement_users",user.uid));if(!userDoc.exists())throw Error("ยังไม่ได้กำหนดสิทธิ์ผู้ใช้ โปรดให้ Admin เพิ่มข้อมูล procurement_users/"+user.uid);
 profile=userDoc.data();if(!["admin","staff"].includes(profile.role)||!profile.departmentId)throw Error("สิทธิ์ผู้ใช้ไม่สมบูรณ์");$("workspace").hidden=false;notify("");
-for(const key of ["projects","jobs","documents"]){
-const off=onSnapshot(collection(db,key),snapshot=>{const items=snapshot.docs.map(d=>({id:d.id,...d.data()}));if(key==="projects")projects=items;if(key==="jobs")jobs=items;if(key==="documents")documents=items;refresh()},err=>notify("อ่านข้อมูล "+key+" ไม่สำเร็จ: "+(err.message||err)));unsubs.push(off)}
+for(const key of ["procurement_projects","procurement_jobs","procurement_documents"]){
+const off=onSnapshot(collection(db,key),snapshot=>{const items=snapshot.docs.map(d=>({id:d.id,...d.data()}));if(key==="procurement_projects")projects=items;if(key==="procurement_jobs")jobs=items;if(key==="procurement_documents")documents=items;refresh()},err=>notify("อ่านข้อมูล "+key+" ไม่สำเร็จ: "+(err.message||err)));unsubs.push(off)}
 }catch(err){notify(err.message||String(err))}
 })}catch(e){$("setup").hidden=false;$("login").hidden=true;notify("เชื่อม Firebase ไม่สำเร็จ: "+(e.message||e))}
 }
