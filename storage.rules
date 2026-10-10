@@ -13,7 +13,8 @@ service firebase.storage {
         firestore.get(/databases/(default)/documents/procurement_documents/$(docId)).data.projectId == projectId;
     }
     match /procurement/projects/{projectId}/files/{docId} {
-      allow read: if member() && firestore.exists(/databases/(default)/documents/procurement_documents/$(docId)) &&\n        firestore.get(/databases/(default)/documents/procurement_documents/$(docId)).data.projectId == projectId;
+      allow read: if member() && firestore.exists(/databases/(default)/documents/procurement_documents/$(docId)) &&
+        firestore.get(/databases/(default)/documents/procurement_documents/$(docId)).data.projectId == projectId;
       allow create: if permitted(projectId,docId) &&
         firestore.get(/databases/(default)/documents/procurement_documents/$(docId)).data.status == 'uploading' &&
         request.resource.size <= 25 * 1024 * 1024 &&
