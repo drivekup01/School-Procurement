@@ -11,8 +11,18 @@
 <section id="workspace" hidden>
 <div class="intro"><div><div class="eyebrow">DOCUMENT MANAGEMENT</div><h1>แฟ้มโครงการจัดซื้อจัดจ้าง</h1><p>ค้นหาประวัติ เปิดดู PDF ต้นฉบับ และตรวจหลักฐานทุกฝ่ายในระบบเดียว</p></div><div style="display:flex;gap:9px;flex-wrap:wrap"><a class="button primary" style="text-decoration:none" href="./prepare.html">จัดทำชุดเอกสารราชการ 10 หน้า</a><button id="addProject" class="button subtle">+ สร้างโครงการ</button></div></div>
 
+<section id="adminHub" class="admin-hub panel" hidden>
+<div class="sectionbar"><div><div class="eyebrow">ADMIN WORKSPACE</div><h2>ศูนย์จัดการระบบจัดซื้อจัดจ้าง</h2><p>เข้าถึงทุกฝ่าย จัดทำเอกสาร และติดตามข้อมูลในฐานข้อมูลกลาง</p></div><span class="pill">ผู้ดูแลระบบ • ทุกฝ่าย</span></div>
+<div class="admin-actions">
+<button type="button" id="adminProjects" class="admin-action"><span>▣</span><b>โครงการและงานจัดซื้อ</b><small>เลือกดูหรือสร้างโครงการจริง</small></button>
+<a href="./prepare.html" class="admin-action"><span>▤</span><b>จัดทำเอกสารราชการ</b><small>เลือกฝ่ายและกรอกข้อมูล 10 หน้า</small></a>
+<button type="button" id="adminDocuments" class="admin-action"><span>▥</span><b>แฟ้ม PDF ทั้งระบบ</b><small>เปิดเอกสารที่บันทึกจริงตามโครงการ</small></button>
+<button type="button" id="adminUsers" class="admin-action"><span>♙</span><b>บัญชีและสิทธิ์ผู้ใช้งาน</b><small>ตรวจรายชื่อ Admin และ Staff</small></button>
+</div>
+<div id="adminExpanded" class="admin-expanded" hidden></div>
+</section>
 <div class="metrics"><div class="panel metric"><small>โครงการ</small><strong id="countProjects">0</strong></div><div class="panel metric"><small>งานจัดซื้อจัดจ้าง</small><strong id="countJobs">0</strong></div><div class="panel metric"><small>ยอดอนุมัติตามงาน</small><strong id="amountApproved">฿0</strong></div><div class="panel metric"><small>จำนวนไฟล์เอกสาร</small><strong id="countDocuments">0</strong></div></div>
-<div class="layout"><aside class="panel nav"><h3>โครงการทั้งหมด</h3><input id="search" type="search" placeholder="ค้นหาชื่อโครงการหรือฝ่าย"><select id="yearFilter"><option value="">ทุกปีงบประมาณ</option></select><div id="projectList" class="project-list"></div></aside>
+<div class="layout"><aside class="panel nav"><h3>โครงการทั้งหมด</h3><label class="admin-department-filter" id="departmentFilterBox" hidden>เลือกฝ่าย<select id="departmentFilter"><option value="">ทุกฝ่าย</option><option value="general">ฝ่ายบริหารทั่วไป</option><option value="academic">ฝ่ายบริหารวิชาการ</option><option value="personnel">ฝ่ายบริหารงานบุคคล</option><option value="site">ฝ่ายสถานที่</option><option value="budget">ฝ่ายบริหารงบประมาณ</option></select></label><input id="search" type="search" placeholder="ค้นหาชื่อโครงการหรือฝ่าย"><select id="yearFilter"><option value="">ทุกปีงบประมาณ</option></select><div id="projectList" class="project-list"></div></aside>
 <article class="detail"><div id="empty" class="panel placeholder"><div class="large-icon">▤</div><h2>เลือกแฟ้มโครงการเพื่อดูข้อมูล</h2><p>รายการทางซ้ายจะแสดงโครงการจากฐานข้อมูลกลาง เมื่อเลือกแล้วจะเห็นงานและไฟล์ PDF ที่จัดเก็บจริง</p></div>
 <div id="projectDetail" hidden><div class="panel project-head"><div class="heading"><div><div class="eyebrow">PROJECT FILE</div><h2 id="projectName"></h2><p id="projectMeta"></p></div><span id="projectPermission" class="pill"></span></div><div class="project-facts"><div><small>งบจัดสรรโครงการ</small><b id="projectBudget"></b></div><div><small>งานจัดซื้อในโครงการ</small><b id="projectJobCount"></b></div><div><small>ยอดอนุมัติรวมของงาน</small><b id="projectJobTotal"></b></div></div></div>
 <div class="panel"><div class="sectionbar"><div><h3>รายการงานจัดซื้อ / จัดจ้าง</h3><p>เลือกงานเพื่อดูแฟ้มเอกสารตามรายการ</p></div><button id="addJob" class="button primary small">+ เพิ่มงาน</button></div><div id="jobList"></div></div>
