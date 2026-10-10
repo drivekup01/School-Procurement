@@ -41,3 +41,23 @@
 .official-footer{font-size:10px;color:#8a5360;margin-top:20px;text-align:center}
 .official-page:before{content:"ฉบับตรวจทาน";font-size:38px;color:rgba(149,72,39,.08)}
 @media print{.official-page{padding:16mm 17mm 13mm;font-size:16px}.official-page .official-paragraph{font-size:15.6px;line-height:1.27}}
+
+.departmentGate{max-width:920px;margin:12px auto 22px;padding:28px}
+.departmentGate .eyebrow{font-size:12px;letter-spacing:1px;color:#4c71b0;font-weight:600}
+.departmentCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}
+.departmentCard{display:flex;flex-direction:column;gap:7px;text-align:left;border:1px solid #dce6f3;border-radius:13px;padding:17px;background:#fbfdff;color:#344a6d;min-height:120px}
+.departmentCard:hover,.departmentCard.active{background:#edf4ff;border-color:#7197e4}
+.departmentCard .departmentMark{font-size:24px;color:#4b70b9}
+.departmentCard strong{font-size:15px}
+.departmentCard small{font-size:11px;color:#78899f}
+.gateActions{display:flex;justify-content:flex-end;margin:16px 0 26px}
+.savedCopiesList{border:1px solid #e6ebf3;border-radius:12px;max-height:350px;overflow:auto}
+.savedCopyRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px;border-bottom:1px solid #ebeff5}
+.savedCopyRow:last-child{border:0}
+.savedCopyRow strong,.savedCopyRow small{display:block}
+.savedCopyRow small{font-size:11px;color:#7d8ea5}
+.emptyCopies{padding:13px}
+.activeDepartment{display:grid;gap:7px;background:#f1f6ff;border:1px solid #dfe8f7;border-radius:9px;padding:12px;margin-bottom:14px}
+.activeDepartment span{color:#7a8ca4;font-size:11px}
+.activeDepartment strong{color:#335ca3}
+@media(max-width:650px){.departmentCards{grid-template-columns:1fr}.departmentGate{padding:16px}.savedCopyRow{align-items:start;flex-direction:column}}
