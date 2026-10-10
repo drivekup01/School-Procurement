@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function userPath() { return /databases/$(database)/documents/procurement_users/$(request.auth.uid); }
+    function member() { return signedIn() && exists(userPath()); }
+    function profile() { return get(userPath()).data; }
+    function admin() { return member() && profile().role == 'admin'; }
+    function owns(dept) { return member() && (admin() || (profile().role == 'staff' && profile().departmentId == dept)); }
+    function validDept(v) { return v is string && v.size() > 0 && v.size() <= 80; }
+    function amount(v) { return v is number && v >= 0 && v <= 1000000000; }
+    function projectMatches(p,dept) {
+      return exists(/databases/$(database)/documents/procurement_projects/$(p)) &&
+      get(/databases/$(database)/documents/procurement_projects/$(p)).data.departmentId == dept;
+    }
+    match /procurement_users/{uid} {
+      allow read: if member() && (admin() || request.auth.uid == uid);
+      // User accounts and role assignments are created by admin in Firebase Console/Admin SDK.
+      allow create, update, delete: if false;
+    }
+    match /procurement_projects/{projectId} {
+      allow read: if member();
+      allow create: if member() && owns(request.resource.data.departmentId) &&
+        request.resource.data.keys().hasOnly(['name','fiscalYear','departmentId','budget','createdBy','createdAt']) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 250 && validDept(request.resource.data.departmentId) &&
+        request.resource.data.fiscalYear is int && request.resource.data.fiscalYear >= 2500 &&
+        request.resource.data.fiscalYear <= 2700 && amount(request.resource.data.budget) &&
+        request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+    match /procurement_jobs/{jobId} {
+      allow read: if member();
+      allow create: if member() && owns(request.resource.data.departmentId) &&
+        projectMatches(request.resource.data.projectId,request.resource.data.departmentId) &&
+        request.resource.data.keys().hasOnly(['projectId','departmentId','title','budget','referencePrice','approved','status','createdBy','createdAt']) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.title is string && request.resource.data.title.size() > 0 &&
+        request.resource.data.title.size() <= 250 &&
+        amount(request.resource.data.budget) && amount(request.resource.data.referencePrice) &&
+        amount(request.resource.data.approved) && request.resource.data.status == 'draft' &&
+        request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+    match /procurement_documents/{documentId} {
+      allow read: if member();
+      allow create: if member() && owns(request.resource.data.departmentId) &&
+        projectMatches(request.resource.data.projectId,request.resource.data.departmentId) &&
+        exists(/databases/$(database)/documents/procurement_jobs/$(request.resource.data.jobId)) &&
+        get(/databases/$(database)/documents/procurement_jobs/$(request.resource.data.jobId)).data.projectId == request.resource.data.projectId &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.status == 'uploading' &&
+        request.resource.data.storagePath == 'procurement/projects/' + request.resource.data.projectId + '/files/' + documentId &&
+        request.resource.data.keys().hasOnly(['projectId','jobId','departmentId','title','filename','storagePath','status','createdBy','createdAt']) &&
+        request.resource.data.createdAt == request.time;
+      allow update: if member() && owns(resource.data.departmentId) &&
+        resource.data.createdBy == request.auth.uid &&
+        resource.data.status == 'uploading' && request.resource.data.status == 'ready' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+      allow delete: if false;
+    }
+    // School-Budget collections remain closed, matching its current repository rules.
+    // Additional School-Budget permissions must be merged here after review.
+    match /{other=**} { allow read, write: if false; }
+  }
+}
