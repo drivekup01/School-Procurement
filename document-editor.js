@@ -174,7 +174,7 @@ if(!configured){$("banner").textContent="ยังไม่มี Firebase confi
 const app=initializeApp(firebaseConfig),auth=getAuth(app);db=getFirestore(app);
 onAuthStateChanged(auth,async u=>{user=u;
 if(!u){$("banner").textContent="กรุณาเข้าสู่ระบบ School Procurement ก่อนเปิดหน้านี้";$("login-state").textContent="ยังไม่ได้เข้าสู่ระบบ";$("editorRoot").hidden=true;return}
-try{const d=await getDoc(doc(db,"procurement_users",u.uid));if(!d.exists())throw Error("ไม่พบบัญชีที่ได้รับสิทธิ์");profile=d.data();if(!["admin","staff"].includes(profile.role))throw Error("สิทธิ์ผู้ใช้งานไม่ถูกต้อง");renderDepartmentSelection();await refreshSavedCopies();$("editorRoot").hidden=false;$("banner").textContent="เอกสารชุดแรก: กรอกข้อมูลแล้วบันทึกสำเนาใน Firestore • ดูต้นฉบับจาก Storage หากติดตั้งแล้ว";$("login-state").textContent=profile.displayName||u.email;}
+try{const d=await getDoc(doc(db,"procurement_users",u.uid));if(!d.exists())throw Error("ไม่พบบัญชีที่ได้รับสิทธิ์");profile=d.data();if(!["admin","staff"].includes(profile.role))throw Error("สิทธิ์ผู้ใช้งานไม่ถูกต้อง");renderDepartmentSelection();await refreshSavedCopies();$("editorRoot").hidden=false;$("banner").textContent="เลือกฝ่ายเพื่อเริ่มงานหรือเปิดสำเนาที่บันทึกไว้ • เอกสารชุดแรกใช้แบบจัดพิมพ์ที่ถอดจากต้นฉบับ";$("login-state").textContent=profile.displayName||u.email;}
 catch(e){$("banner").textContent="ตรวจสิทธิ์ไม่สำเร็จ: "+(e.code||e.message);$("editorRoot").hidden=true}
 });
 }
