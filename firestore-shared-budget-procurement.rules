@@ -50,8 +50,8 @@ service cloud.firestore {
         owns(request.resource.data.departmentId) &&
         request.resource.data.keys().hasOnly(['schemaVersion','templateId','title','departmentId','createdBy','createdAt','values','items','selectedPages','documentCount']) &&
         request.resource.data.schemaVersion == 1 &&
-        request.resource.data.templateId == 'first-set-v1' &&
-        request.resource.data.documentCount == 10 &&
+        request.resource.data.templateId in ['first-set-v1', 'first-set-word16-v1'] &&
+        request.resource.data.documentCount in [10, 16] &&
         request.resource.data.createdBy == request.auth.uid &&
         request.resource.data.createdAt == request.time &&
         validDept(request.resource.data.departmentId) &&
@@ -64,7 +64,7 @@ service cloud.firestore {
         request.resource.data.items is list &&
         request.resource.data.items.size() <= 80 &&
         request.resource.data.selectedPages is list &&
-        request.resource.data.selectedPages.size() <= 10;
+        request.resource.data.selectedPages.size() <= 16;
       allow update, delete: if false;
     }
     match /procurement_documents/{documentId} {
