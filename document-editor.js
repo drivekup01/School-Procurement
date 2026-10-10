@@ -146,6 +146,7 @@ $("saveBtn").onclick=saveDraft;$("previewBtn").onclick=()=>goStage("review");
 $("addItem").onclick=()=>{state.items.push({description:"",quantity:"",unit:"",unitPrice:""});renderItems();renderPaper()};
 $("selectAll").onclick=()=>{state.selected=Array.from({length:10},(_,i)=>i+1);renderReview()};
 $("selectNone").onclick=()=>{state.selected=[];renderReview()};
+$("quickPrint").onclick=()=>{$("printSelected").click()};
 $("printSelected").onclick=()=>{if(!state.selected.length){alert("กรุณาเลือกอย่างน้อย 1 หน้า");return}renderReview();$("printArea").innerHTML=state.selected.slice().sort((a,b)=>a-b).map(htmlForPage).join("");window.print()};
 $("prev").onclick=()=>goPage(page-1);$("next").onclick=()=>goPage(page+1);
 document.querySelectorAll("[data-stage]").forEach(btn=>btn.onclick=()=>goStage(btn.dataset.stage));
