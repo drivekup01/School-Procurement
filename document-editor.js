@@ -9,7 +9,7 @@ const departments=[["general","ฝ่ายบริหารทั่วไป"
 const commonFields=[
 ["school","ชื่อสถานศึกษา","โรงเรียนค่ายบางระจันวิทยาคม"],
 ["agency","หน่วยงานต้นสังกัด","สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาสิงห์บุรี อ่างทอง"],
-["department","ฝ่ายเจ้าของงาน","general","select",departments],
+
 ["fiscalYear","ปีงบประมาณ","2569","number"],
 ["project","ชื่อโครงการหลัก","","text"],
 ["activity","ชื่อกิจกรรม","","text"],
@@ -55,13 +55,14 @@ const specificFields=[
 const sections=new Set(["people","supplier","dates","payment"]);
 let user=null,profile=null,db=null,step="common",page=1;
 let savedCopies=[];
+let activeDepartment=null;
 function referenceMessage(msg){$("sourceMessage").textContent=msg}
 function showOfficialPage(){
  $("sourceViewerBox").hidden=true;
  $("generatedPreview").hidden=false;
  referenceMessage("แสดงแบบเอกสารชุดแรกจากต้นฉบับที่ถอดเป็นโครงหน้าและข้อความ พร้อมเติมข้อมูลที่กรอก • ต้องตรวจเทียบกับ Word ภาพสแกนก่อนใช้ลงนาม");
 }
-const blank=()=>({values:Object.fromEntries([...commonFields,...specificFields.filter(f=>!sections.has(f[0]))].map(f=>[f[0],f[2]||""])),items:[{description:"",quantity:"",unit:"",unitPrice:""}],selected:Array.from({length:10},(_,i)=>i+1)});
+const blank=()=>({values:{...Object.fromEntries([...commonFields,...specificFields.filter(f=>!sections.has(f[0]))].map(f=>[f[0],f[2]||""])),department:activeDepartment||""},items:[{description:"",quantity:"",unit:"",unitPrice:""}],selected:Array.from({length:10},(_,i)=>i+1)});
 let state=blank();
 const fmt=n=>Number(n||0).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2});
 const v=k=>state.values[k]||"";
@@ -94,34 +95,70 @@ function safeSnapshot(d){
  items:Array.isArray(d.items)?d.items.slice(0,80).map(i=>({description:String(i.description||"").slice(0,500),quantity:String(i.quantity||""),unit:String(i.unit||""),unitPrice:String(i.unitPrice||"")})):[],
  selected:Array.isArray(d.selected)?d.selected.filter(n=>Number.isInteger(n)&&n>=1&&n<=10):Array.from({length:10},(_,i)=>i+1)};
 }
+async function departmentName(key){return departments.find(d=>d[0]===key)?.[1]||key}
+function usableDepartments(){return profile?.role==="admin"?departments:departments.filter(d=>d[0]===profile?.departmentId)}
+function renderDepartmentSelection(){
+ const allowed=usableDepartments();
+ $("departmentCards").innerHTML=allowed.map(([key,name])=>'<button type="button" class="departmentCard '+(activeDepartment===key?"active":"")+'" data-dept="'+esc(key)+'"><span class="departmentMark">▣</span><strong>'+esc(name)+'</strong><small>'+ (key==="general"?"ใช้เอกสารชุดแรก 10 หน้า":"ใช้ชุดเอกสารพื้นฐาน 10 หน้า (รอแม่แบบเฉพาะฝ่าย)")+'</small></button>').join("");
+ $("departmentCards").querySelectorAll("[data-dept]").forEach(b=>b.onclick=()=>selectDepartment(b.dataset.dept));
+}
+function selectDepartment(key){
+ if(!usableDepartments().some(d=>d[0]===key))return;
+ activeDepartment=key;
+ $("departmentNext").hidden=false;
+ $("activeDepartmentName").textContent=departmentName(key);
+ renderDepartmentSelection();
+ renderSavedCopiesList();
+}
+function startDepartmentDraft(){
+ if(!activeDepartment)return;
+ state=blank();state.values.department=activeDepartment;
+ $("departmentGate").hidden=true;$("workArea").hidden=false;
+ renderInputs();renderItems();renderPaper();goStage("common");showOfficialPage();
+ $("banner").textContent="กำลังจัดทำเอกสารของ"+departmentName(activeDepartment)+" · กรอกข้อมูลครั้งเดียวสำหรับทั้งชุด";
+}
+$("startNew").onclick=startDepartmentDraft;
+$("changeDepartment").onclick=()=>{
+ const containsData=!!state.values.subject||!!state.values.project||state.items.some(i=>i.description);
+ if(containsData&&!confirm("มีข้อมูลที่กำลังกรอกอยู่ หากยังไม่บันทึกข้อมูลจะไม่ถูกเก็บ ต้องการกลับไปเลือกฝ่ายหรือไม่?"))return;
+ $("workArea").hidden=true;$("departmentGate").hidden=false;activeDepartment=null;$("departmentNext").hidden=true;renderDepartmentSelection();
+};
+function renderSavedCopiesList(){
+ const selected=savedCopies.filter(c=>c.departmentId===activeDepartment && (profile?.role==="admin"||c.createdBy===user.uid));
+ $("savedCopiesList").innerHTML=selected.map(c=>'<div class="savedCopyRow"><div><strong>'+esc(c.title||"ไม่มีชื่อเอกสาร")+'</strong><small>'+esc(c.createdAt?.toDate?.().toLocaleString("th-TH")||"เพิ่งบันทึก")+'</small></div><button type="button" class="secondary" data-copy="'+esc(c.id)+'">เปิดทำงานต่อ</button></div>').join("")||'<p class="emptyCopies">ยังไม่มีสำเนาที่บันทึกไว้ในฝ่ายนี้</p>';
+ $("savedCopiesList").querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>loadSelectedCopy(b.dataset.copy));
+ $("gateStatus").textContent="สำเนาของ"+departmentName(activeDepartment)+" "+selected.length+" ชุด";
+}
+function loadSelectedCopy(id){
+ const c=savedCopies.find(x=>x.id===id);
+ if(!c||c.departmentId!==activeDepartment)return;
+ state=safeSnapshot({values:c.values,items:c.items,selected:c.selectedPages});
+ state.values.department=activeDepartment;
+ $("departmentGate").hidden=true;$("workArea").hidden=false;
+ renderInputs();renderItems();renderPaper();goStage("common");showOfficialPage();
+ $("banner").textContent="เปิดสำเนาจาก Firestore แล้ว · "+(c.title||id);
+}
 async function refreshSavedCopies(){
  if(!db||!user)return;
  try{
  const result=await getDocs(collection(db,"procurement_document_copies"));
- savedCopies=result.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.createdBy===user.uid).sort((x,y)=>(y.createdAt?.seconds||0)-(x.createdAt?.seconds||0));
- $("savedCopies").innerHTML='<option value="">เลือกสำเนาที่บันทึกไว้</option>'+savedCopies.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.title||"ไม่ระบุชื่อ")+" · "+esc(c.createdAt?.toDate?.().toLocaleString("th-TH")||"เพิ่งบันทึก")+'</option>').join("");
- $("savedStatus").textContent="มีสำเนาบันทึกไว้ "+savedCopies.length+" ชุด";
- }catch(e){$("savedStatus").textContent="อ่านสำเนาจาก Firestore ไม่ได้: "+(e.code||e.message)}
+ savedCopies=result.docs.map(d=>({id:d.id,...d.data()})).filter(d=>profile?.role==="admin"||d.createdBy===user.uid).sort((x,y)=>(y.createdAt?.seconds||0)-(x.createdAt?.seconds||0));
+ if(activeDepartment)renderSavedCopiesList();
+ }catch(e){$("banner").textContent="ยังอ่านสำเนาเก่าจากฐานข้อมูลไม่ได้: "+(e.code||e.message);}
 }
 async function saveDraft(){
  if(!user||!profile)return;
  const btn=$("saveBtn");btn.disabled=true;
  $("banner").textContent="กำลังสร้างสำเนาเอกสาร 10 หน้าใน Firestore…";
  try{
- const safe=safeSnapshot(state),copyName=safe.values.subject?.trim()||"เอกสารจัดซื้อจัดจ้างไม่มีชื่อ";
+ state.values.department=activeDepartment;const safe=safeSnapshot(state),copyName=safe.values.subject?.trim()||"เอกสารจัดซื้อจัดจ้างไม่มีชื่อ";
  const entry={schemaVersion:1,templateId:"first-set-v1",title:copyName,departmentId:safe.values.department||profile.departmentId,createdBy:user.uid,createdAt:serverTimestamp(),values:safe.values,items:safe.items,selectedPages:safe.selected,documentCount:10};
  const result=await addDoc(collection(db,"procurement_document_copies"),entry);
  $("banner").textContent="บันทึกสำเนาลง Firestore สำเร็จ · เลขอ้างอิง "+result.id+" · สามารถพิมพ์หรือบันทึก PDF ต่อได้";
- await refreshSavedCopies();$("savedCopies").value=result.id;
+ await refreshSavedCopies();
  }catch(e){$("banner").textContent="บันทึกลงฐานข้อมูลไม่สำเร็จ: "+(e.code||e.message)+" · ยังไม่ได้สร้างสำเนา อย่าเพิ่งถือว่าบันทึกแล้ว"}
  finally{btn.disabled=false}
 }
-$("loadCopy").onclick=()=>{
- const c=savedCopies.find(x=>x.id===$("savedCopies").value);
- if(!c)return alert("กรุณาเลือกสำเนา");
- state={...safeSnapshot({values:c.values,items:c.items,selected:c.selectedPages}),selected:c.selectedPages||Array.from({length:10},(_,i)=>i+1)};
- renderInputs();renderItems();renderPaper();renderReview();$("banner").textContent="เปิดข้อมูลสำเนา "+c.id+" จาก Firestore แล้ว";
-};
 $("saveBtn").onclick=saveDraft;$("previewBtn").onclick=()=>goStage("review");
 $("addItem").onclick=()=>{state.items.push({description:"",quantity:"",unit:"",unitPrice:""});renderItems();renderPaper()};
 $("selectAll").onclick=()=>{state.selected=Array.from({length:10},(_,i)=>i+1);renderReview()};
@@ -137,7 +174,7 @@ if(!configured){$("banner").textContent="ยังไม่มี Firebase confi
 const app=initializeApp(firebaseConfig),auth=getAuth(app);db=getFirestore(app);
 onAuthStateChanged(auth,async u=>{user=u;
 if(!u){$("banner").textContent="กรุณาเข้าสู่ระบบ School Procurement ก่อนเปิดหน้านี้";$("login-state").textContent="ยังไม่ได้เข้าสู่ระบบ";$("editorRoot").hidden=true;return}
-try{const d=await getDoc(doc(db,"procurement_users",u.uid));if(!d.exists())throw Error("ไม่พบบัญชีที่ได้รับสิทธิ์");profile=d.data();if(!["admin","staff"].includes(profile.role))throw Error("สิทธิ์ผู้ใช้งานไม่ถูกต้อง");renderInputs();renderItems();renderPaper();await refreshSavedCopies();showOfficialPage();$("editorRoot").hidden=false;$("banner").textContent="เอกสารชุดแรก: กรอกข้อมูลแล้วบันทึกสำเนาใน Firestore • ดูต้นฉบับจาก Storage หากติดตั้งแล้ว";$("login-state").textContent=profile.displayName||u.email;}
+try{const d=await getDoc(doc(db,"procurement_users",u.uid));if(!d.exists())throw Error("ไม่พบบัญชีที่ได้รับสิทธิ์");profile=d.data();if(!["admin","staff"].includes(profile.role))throw Error("สิทธิ์ผู้ใช้งานไม่ถูกต้อง");renderDepartmentSelection();await refreshSavedCopies();$("editorRoot").hidden=false;$("banner").textContent="เอกสารชุดแรก: กรอกข้อมูลแล้วบันทึกสำเนาใน Firestore • ดูต้นฉบับจาก Storage หากติดตั้งแล้ว";$("login-state").textContent=profile.displayName||u.email;}
 catch(e){$("banner").textContent="ตรวจสิทธิ์ไม่สำเร็จ: "+(e.code||e.message);$("editorRoot").hidden=true}
 });
 }
