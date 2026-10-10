@@ -30,6 +30,7 @@ function fontBytes(){
 async function geometry(bytes){
  if(!globalThis.pdfjsLib?.getDocument)throw Error("ระบบอ่านตำแหน่งข้อความ PDF ไม่พร้อม");
  // Avoid transferring/detaching the source buffer used later by pdf-lib.
+ pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
  const document=await pdfjsLib.getDocument({data:new Uint8Array(bytes.slice(0))}).promise;
  const result=[];
  try{
