@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function userPath() { return /databases/$(database)/documents/users/$(request.auth.uid); }
+    function userPath() { return /databases/$(database)/documents/procurement_users/$(request.auth.uid); }
     function member() { return signedIn() && exists(userPath()); }
     function profile() { return get(userPath()).data; }
     function admin() { return member() && profile().role == 'admin'; }
@@ -10,15 +10,15 @@ service cloud.firestore {
     function validDept(v) { return v is string && v.size() > 0 && v.size() <= 80; }
     function amount(v) { return v is number && v >= 0 && v <= 1000000000; }
     function projectMatches(p,dept) {
-      return exists(/databases/$(database)/documents/projects/$(p)) &&
-      get(/databases/$(database)/documents/projects/$(p)).data.departmentId == dept;
+      return exists(/databases/$(database)/documents/procurement_projects/$(p)) &&
+      get(/databases/$(database)/documents/procurement_projects/$(p)).data.departmentId == dept;
     }
-    match /users/{uid} {
+    match /procurement_users/{uid} {
       allow read: if member() && (admin() || request.auth.uid == uid);
       // User accounts and role assignments are created by admin in Firebase Console/Admin SDK.
       allow create, update, delete: if false;
     }
-    match /projects/{projectId} {
+    match /procurement_projects/{projectId} {
       allow read: if member();
       allow create: if member() && owns(request.resource.data.departmentId) &&
         request.resource.data.keys().hasOnly(['name','fiscalYear','departmentId','budget','createdBy','createdAt']) &&
@@ -30,7 +30,7 @@ service cloud.firestore {
         request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
-    match /jobs/{jobId} {
+    match /procurement_jobs/{jobId} {
       allow read: if member();
       allow create: if member() && owns(request.resource.data.departmentId) &&
         projectMatches(request.resource.data.projectId,request.resource.data.departmentId) &&
@@ -43,15 +43,15 @@ service cloud.firestore {
         request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
-    match /documents/{documentId} {
+    match /procurement_documents/{documentId} {
       allow read: if member();
       allow create: if member() && owns(request.resource.data.departmentId) &&
         projectMatches(request.resource.data.projectId,request.resource.data.departmentId) &&
-        exists(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)) &&
-        get(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)).data.projectId == request.resource.data.projectId &&
+        exists(/databases/$(database)/documents/procurement_jobs/$(request.resource.data.jobId)) &&
+        get(/databases/$(database)/documents/procurement_jobs/$(request.resource.data.jobId)).data.projectId == request.resource.data.projectId &&
         request.resource.data.createdBy == request.auth.uid &&
         request.resource.data.status == 'uploading' &&
-        request.resource.data.storagePath == 'projects/' + request.resource.data.projectId + '/files/' + documentId &&
+        request.resource.data.storagePath == 'procurement/projects/' + request.resource.data.projectId + '/files/' + documentId &&
         request.resource.data.keys().hasOnly(['projectId','jobId','departmentId','title','filename','storagePath','status','createdBy','createdAt']) &&
         request.resource.data.createdAt == request.time;
       allow update: if member() && owns(resource.data.departmentId) &&
