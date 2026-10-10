@@ -201,11 +201,11 @@ function safeSnapshot(d){
  items:Array.isArray(d.items)?d.items.slice(0,80).map(i=>({description:String(i.description||"").slice(0,500),quantity:String(i.quantity||""),unit:String(i.unit||""),unitPrice:String(i.unitPrice||"")})):[],
  selected:Array.isArray(d.selected)?d.selected.filter(n=>Number.isInteger(n)&&n>=1&&n<=16):Array.from({length:16},(_,i)=>i+1)};
 }
-async function departmentName(key){return departments.find(d=>d[0]===key)?.[1]||key}
+function departmentName(key){return departments.find(d=>d[0]===key)?.[1]||key}
 function usableDepartments(){return profile?.role==="admin"?departments:departments.filter(d=>d[0]===profile?.departmentId)}
 function renderDepartmentSelection(){
  const allowed=usableDepartments();
- $("departmentCards").innerHTML=allowed.map(([key,name])=>'<button type="button" class="departmentCard '+(activeDepartment===key?"active":"")+'" data-dept="'+esc(key)+'"><span class="departmentMark">▣</span><strong>'+esc(name)+'</strong><small>'+ (key==="general"?"ใช้เอกสารชุดแรก 10 หน้า":"ใช้ชุดเอกสารพื้นฐาน 10 หน้า (รอแม่แบบเฉพาะฝ่าย)")+'</small></button>').join("");
+ $("departmentCards").innerHTML=allowed.map(([key,name])=>'<button type="button" class="departmentCard '+(activeDepartment===key?"active":"")+'" data-dept="'+esc(key)+'"><span class="departmentMark">▣</span><strong>'+esc(name)+'</strong><small>'+ (key==="general"?"ใช้แม่แบบ Word ชุดแรก 16 หน้า":"ใช้แม่แบบกลาง 16 หน้า จนกว่าจะติดตั้งฉบับเฉพาะฝ่าย")+'</small></button>').join("");
  $("departmentCards").querySelectorAll("[data-dept]").forEach(b=>b.onclick=()=>selectDepartment(b.dataset.dept));
 }
 async function selectDepartment(key){
