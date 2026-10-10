@@ -14,6 +14,15 @@ service firebase.storage {
     }
     // Official template: read-only to authenticated procurement members.
     // Upload/replacement must be done by a trusted administrator via Firebase Console or Admin SDK.
+    // One-time official DOCX master installation, accessible to authenticated school staff.
+    // Admin may replace a department's current template after confirming in the UI.
+    match /procurement/templates/departments/{department}/source.docx {
+      allow read: if member();
+      allow create, update: if isAdmin() &&
+        request.resource.size <= 20 * 1024 * 1024 &&
+        request.resource.contentType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      allow delete: if false;
+    }
     match /procurement/templates/first-set/source.pdf {
       allow read: if member();
       allow write: if false;
