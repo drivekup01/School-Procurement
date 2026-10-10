@@ -7,7 +7,7 @@
 </style></head><body>
 <header><div class="brand">✦ School Procurement<small>ระบบจัดซื้อจัดจ้างโรงเรียน · Online Preview</small></div><nav id="nav">
 <button data-page="dashboard" class="active">ภาพรวม</button><button data-page="projects">โครงการ</button><button data-page="jobs">งานจัดซื้อ</button><button data-page="settings">ตั้งค่า/สำรอง</button></nav></header>
-<main><div class="notice">⚠️ <b>รุ่นทดลอง (DEMO)</b> — ข้อมูลเก็บเฉพาะในเบราว์เซอร์เครื่องนี้ ยังไม่มี Login หรือ Firebase จริง ห้ามกรอกข้อมูลราชการ/ข้อมูลส่วนบุคคลจริง และยังไม่รองรับ Word</div>
+<main><div class="notice">⚠️ <b>รุ่นทดลอง (DEMO)</b> — มีรายการตัวอย่างจัดซื้อสีทาสนามจากเอกสารเดิม (ปิดบังชื่อบุคคลและผู้ขาย) เพื่อทดลองดูโครงการ — ข้อมูลเก็บเฉพาะในเบราว์เซอร์เครื่องนี้ ยังไม่มี Login หรือ Firebase จริง ห้ามกรอกข้อมูลราชการ/ข้อมูลส่วนบุคคลจริง และยังไม่รองรับ Word</div>
 <div id="dashboard" class="page"><div class="headline"><div><h1>ภาพรวมการจัดซื้อจัดจ้าง</h1><p>ข้อมูลทดลองในเบราว์เซอร์ · สรุปแยกฝ่ายและโครงการ</p></div><button class="primary" onclick="go('jobs');newJob()">+ เพิ่มงานจัดซื้อ</button></div>
 <div class="cards"><div class="card"><small>โครงการทั้งหมด</small><div class="num" id="d-projects">0</div></div><div class="card"><small>งานจัดซื้อทั้งหมด</small><div class="num" id="d-jobs">0</div></div><div class="card"><small>ยอดจัดซื้ออนุมัติ</small><div class="num" id="d-approved">฿0</div></div><div class="card"><small>ยอดเบิกจ่ายจริง</small><div class="num" id="d-paid">฿0</div></div></div>
 <div class="split"><section class="card"><h2>ยอดอนุมัติแยกฝ่าย</h2><div id="d-bars"></div></section><section class="card"><h2>งานล่าสุด</h2><div id="d-recent"></div></section></div></div>
@@ -16,14 +16,23 @@
 <div id="jobForm" class="card hidden"><h2 id="jobFormTitle">เพิ่มงานจัดซื้อ</h2><input type="hidden" id="j-id"><div class="grid"><div class="field"><label>โครงการหลัก</label><select id="j-project" onchange="syncJobDept()"></select></div><div class="field"><label>ฝ่ายเจ้าของงาน (ตามโครงการ)</label><input id="j-dept" disabled></div><div class="field"><label>ชื่องานจัดซื้อ/จัดจ้าง</label><input id="j-name" maxlength="250"></div><div class="field"><label>ผู้ขาย/ผู้รับจ้าง (ข้อมูลทดลอง)</label><input id="j-vendor"></div><div class="field"><label>วงเงินงบประมาณ</label><input id="j-budget" type="number" min="0" step=".01"></div><div class="field"><label>ยอดอนุมัติ</label><input id="j-approved" type="number" min="0" step=".01"></div><div class="field"><label>ยอดเบิกจ่ายจริง</label><input id="j-paid" type="number" min="0" step=".01"></div><div class="field"><label>สถานะ</label><select id="j-status"><option value="draft">ฉบับร่าง</option><option value="pending">รอดำเนินการ</option><option value="approved">อนุมัติแล้ว</option><option value="received">ตรวจรับแล้ว</option><option value="paid">เบิกจ่ายแล้ว</option></select></div></div><div class="actions"><button class="muted-btn" onclick="hide('jobForm')">ยกเลิก</button><button class="primary" onclick="saveJob()">บันทึกงาน</button></div></div>
 <div class="card tablewrap"><table><thead><tr><th>ชื่องาน</th><th>โครงการ / ฝ่าย</th><th>ยอดอนุมัติ</th><th>สถานะ</th><th></th></tr></thead><tbody id="jobRows"></tbody></table></div><div class="card" style="margin-top:16px"><h2>รายละเอียด / ประวัติการเปลี่ยนแปลง</h2><div id="jobDetails" class="muted">เลือก “ดู” จากรายการด้านบน</div></div></div>
 <div id="settings" class="page hidden"><h1>ตั้งค่าและสำรองข้อมูลทดลอง</h1><div class="split"><section class="card"><h2>โหมดใช้งาน</h2><p>รุ่นนี้ยังไม่มีระบบบัญชีจริงหรือการแยกสิทธิ์ที่เซิร์ฟเวอร์ เพื่อป้องกันข้อมูลรั่วไหลจึงใช้เฉพาะข้อมูลจำลองเท่านั้น</p><p>ฝ่ายตัวอย่าง: สถานที่, วิชาการ, บุคคล, บริหารทั่วไป</p></section><section class="card"><h2>ข้อมูลในเบราว์เซอร์</h2><p>ส่งออก JSON เพื่อสำรองข้อมูลทดลองหรือย้ายเครื่อง (อย่าใส่ข้อมูลจริง)</p><div class="actions"><button class="muted-btn" onclick="backup()">ดาวน์โหลด JSON</button><button class="muted-btn danger" onclick="resetDemo()">ล้างข้อมูลทดลอง</button></div></section></div></div>
-<div class="footer">School Procurement · Preview V0.3 · GitHub Pages · ยังไม่ได้เชื่อมฐานข้อมูลออนไลน์</div></main>
+<div class="footer">School Procurement · Preview V0.3 + Sample · GitHub Pages · ยังไม่ได้เชื่อมฐานข้อมูลออนไลน์</div></main>
 <script>
 "use strict";
 const KEY="schoolProcurementPreviewV03";
 const departments=[["place","ฝ่ายสถานที่"],["academic","ฝ่ายวิชาการ"],["personnel","ฝ่ายบุคคล"],["general","ฝ่ายบริหารทั่วไป"]];
-const initial={projects:[],jobs:[],logs:[]};
+const DEMO_PROJECT_ID="sample-project-2569-sports-paint";
+const DEMO_JOB_ID="sample-purchase-2569-sports-paint";
+const sampleProject={id:DEMO_PROJECT_ID,name:"โครงการจัดซื้อสื่อและวัสดุอุปกรณ์การเรียนการสอน เพื่อยกระดับผลสัมฤทธิ์ทางการเรียน",departmentId:"academic",year:2569,budget:0,isExample:true};
+const sampleJob={id:DEMO_JOB_ID,projectId:DEMO_PROJECT_ID,departmentId:"academic",name:"จัดซื้อวัสดุอุปกรณ์ทำสนามกีฬา (สีน้ำมัน)",vendor:"ผู้จำหน่ายตามเอกสารต้นฉบับ (ซ่อนชื่อในเว็บสาธารณะ)",budget:140,approved:140,paid:0,status:"received",updatedAt:"2026-08-26T00:00:00.000Z",isExample:true};
+const initial={projects:[sampleProject],jobs:[sampleJob],logs:[{id:"sample-log-sports-paint",kind:"job",target:DEMO_JOB_ID,at:"26 สิงหาคม 2569 (ตามเอกสารตัวอย่าง)",message:"นำเข้าตัวอย่างเอกสารเดิมเพื่อแสดงผล (ไม่ใช่หลักฐานการบันทึกหรือแก้ไขในระบบจริง)"}]};
+
 let db;try{db=JSON.parse(localStorage.getItem(KEY))||structuredClone(initial)}catch{db=structuredClone(initial)}
 if(!Array.isArray(db.projects)||!Array.isArray(db.jobs)||!Array.isArray(db.logs))db=structuredClone(initial);
+if(!db.projects.some(p=>p.id===DEMO_PROJECT_ID))db.projects.push({...sampleProject});
+if(!db.jobs.some(j=>j.id===DEMO_JOB_ID))db.jobs.push({...sampleJob});
+if(!db.logs.some(l=>l.id==="sample-log-sports-paint"))db.logs.push({...initial.logs[0]});
+
 const $=id=>document.getElementById(id), id=()=>crypto.randomUUID(), money=n=>"฿"+Number(n||0).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2}), esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])), dept=id=>departments.find(x=>x[0]===id)?.[1]||"ไม่ระบุ", project=id=>db.projects.find(x=>x.id===id), stamp=()=>new Date().toLocaleString("th-TH");
 function persist(){localStorage.setItem(KEY,JSON.stringify(db));render()}
 function hide(id){$(id).classList.add("hidden")}
@@ -47,6 +56,6 @@ function saveJob(){let old=db.jobs.find(x=>x.id===$("j-id").value),p=project($("
 function renderJobs(){let q=$("jobSearch").value.trim().toLowerCase(),d=$("jobDept").value,y=$("jobYear").value;let rows=db.jobs.filter(j=>(!d||j.departmentId===d)&&(!y||String(project(j.projectId)?.year)===y)&&j.name.toLowerCase().includes(q));$("jobRows").innerHTML=rows.map(j=>'<tr><td><b>'+esc(j.name)+'</b></td><td>'+esc(project(j.projectId)?.name||"—")+'<div class="muted">'+esc(dept(j.departmentId))+'</div></td><td>'+money(j.approved)+'</td><td><span class="chip">'+esc(status(j.status))+'</span></td><td><button class="link" onclick="showJob('+JSON.stringify(j.id).replace(/"/g,"&quot;")+')">ดู</button> · <button class="link" onclick="editJob('+JSON.stringify(j.id).replace(/"/g,"&quot;")+')">แก้ไข</button></td></tr>').join("")||'<tr><td colspan="5" class="empty">ไม่พบงานจัดซื้อ</td></tr>'}
 function showJob(i){let j=db.jobs.find(x=>x.id===i);if(!j)return;let logs=db.logs.filter(x=>x.target===i).slice().reverse();$("jobDetails").innerHTML='<h2>'+esc(j.name)+'</h2><div>โครงการ: '+esc(project(j.projectId)?.name||"—")+' · '+esc(dept(j.departmentId))+'</div><div>ผู้ขาย: '+esc(j.vendor||"—")+'</div><div>วงเงิน: '+money(j.budget)+' · อนุมัติ: '+money(j.approved)+' · เบิกจ่าย: '+money(j.paid)+'</div><div class="details"><b>ประวัติแก้ไข</b>'+(logs.map(x=>'<p><small>'+esc(x.at)+'</small> '+esc(x.message)+'</p>').join("")||'<p>ไม่มีประวัติ</p>')+'</div>'}
 function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="school-procurement-preview-backup.json";a.click();URL.revokeObjectURL(url)}
-function resetDemo(){if(confirm("ล้างข้อมูลทดลองทั้งหมดในเบราว์เซอร์นี้?")){db=structuredClone(initial);persist()}}
+function resetDemo(){if(confirm("ล้างข้อมูลส่วนตัวที่ทดลองกรอกและคืนรายการตัวอย่าง?")){db=structuredClone(initial);persist()}}
 render();
 </script></body></html>
