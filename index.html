@@ -12,7 +12,7 @@
 <div class="intro"><div><div class="eyebrow">DOCUMENT MANAGEMENT</div><h1>แฟ้มโครงการจัดซื้อจัดจ้าง</h1><p>ค้นหาประวัติ เปิดดู PDF ต้นฉบับ และตรวจหลักฐานทุกฝ่ายในระบบเดียว</p></div><div style="display:flex;gap:9px;flex-wrap:wrap"><a class="button primary" style="text-decoration:none" href="./prepare.html">จัดทำชุดเอกสารราชการ 10 หน้า</a><button id="addProject" class="button subtle">+ สร้างโครงการ</button></div></div>
 
 <section id="adminHub" class="admin-hub panel" hidden>
-<div class="sectionbar"><div><div class="eyebrow">ADMIN WORKSPACE</div><h2>ศูนย์จัดการระบบจัดซื้อจัดจ้าง</h2><p>เข้าถึงทุกฝ่าย จัดทำเอกสาร และติดตามข้อมูลในฐานข้อมูลกลาง</p></div><span class="pill">ผู้ดูแลระบบ • ทุกฝ่าย</span></div>
+<div class="sectionbar"><div><div class="eyebrow">ADMIN WORKSPACE</div><h2>ศูนย์จัดการระบบจัดซื้อจัดจ้าง</h2><p>เข้าถึงทุกฝ่าย จัดทำเอกสาร และติดตามข้อมูลในฐานข้อมูลกลาง</p></div><div class="admin-tools"><span class="pill">ผู้ดูแลระบบ • ทุกฝ่าย</span><button type="button" id="toggleDiagnostics" class="button subtle small">ตรวจสอบระบบ</button></div></div>
 <div class="admin-actions">
 <button type="button" id="adminProjects" class="admin-action"><span>▣</span><b>โครงการและงานจัดซื้อ</b><small>เลือกดูหรือสร้างโครงการจริง</small></button>
 <a href="./prepare.html" class="admin-action"><span>▤</span><b>จัดทำเอกสารราชการ</b><small>เลือกฝ่ายและกรอกข้อมูล 10 หน้า</small></a>
@@ -30,4 +30,4 @@
 </section></main>
 <dialog id="editor"><form method="dialog" id="editorForm" class="edit-form"><div class="sectionbar"><h2 id="editorTitle">เพิ่มข้อมูล</h2><button class="button subtle small" value="cancel" type="button" id="cancelEditor">ปิด</button></div><div id="editorFields"></div><div class="formactions"><button class="button primary" id="editorSave" type="submit">บันทึกข้อมูล</button></div></form></dialog>
 <input id="filePicker" type="file" accept="application/pdf,.pdf" hidden>
-<script type="module" src="./production.js"></script></body></html>
+<script type="module" src="./production.js?v=20261011-admin-fix2"></script></body></html>
