@@ -1,7 +1,7 @@
 import {firebaseConfig} from "./firebase-config.js";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,collection,doc,getDoc,getDocs,query,orderBy,addDoc,setDoc,serverTimestamp,onSnapshot} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getFirestore,collection,doc,getDoc,getDocs,query,limit,orderBy,addDoc,setDoc,serverTimestamp,onSnapshot} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import {getStorage,ref,uploadBytes,getBlob} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
 
 const $=id=>document.getElementById(id);
@@ -96,6 +96,47 @@ await setDoc(docRef,{status:"ready"},{merge:true});notify("อัปโหลด
 }catch(e){notify("อัปโหลดไม่สำเร็จ: "+(e.message||e)+". หากอัปโหลดค้าง โปรดแจ้งผู้ดูแลเพื่อตรวจรายการไฟล์")} };
 $("loginForm").onsubmit=async e=>{e.preventDefault();notify("กำลังเข้าสู่ระบบ...");try{await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value);$("password").value="";notify("")}catch(x){notify("เข้าสู่ระบบไม่สำเร็จ: โปรดตรวจบัญชีและรหัสผ่าน")}};
 $("signout").onclick=()=>signOut(auth);
+
+const diagnosticCollections=[
+["procurement_projects","โครงการ"],
+["procurement_jobs","งานจัดซื้อ"],
+["procurement_documents","แฟ้ม PDF"]
+];
+function diagRow(ok,label,details){
+return '<div class="diagnostic-row"><span class="'+(ok?"diagnostic-ok":"diagnostic-fail")+'">'+(ok?"✓":"!")+'</span><div><b>'+esc(label)+'</b><small>'+esc(details)+'</small></div></div>';
+}
+async function checkDatabaseAccess(){
+const btn=$("checkDatabase"),out=$("connectionResults");btn.disabled=true;out.textContent="กำลังตรวจสอบสิทธิ์จาก Firebase…";
+let results=[];
+try{
+if(!auth.currentUser){out.innerHTML=diagRow(false,"Authentication","ยังไม่ได้ Login");return}
+const active=auth.currentUser;
+results.push(diagRow(true,"Authentication","เข้าสู่ระบบแล้ว: "+(active.email||"บัญชีผู้ใช้")));
+let userDoc=null;
+try{
+ userDoc=await getDoc(doc(db,"procurement_users",active.uid));
+ if(!userDoc.exists()){results.push(diagRow(false,"ข้อมูลสิทธิ์ Admin","ไม่พบ Document ที่มี ID ตรงกับ UID ของบัญชีที่ Login"));out.innerHTML=results.join("");return}
+ const u=userDoc.data();
+ if(!["admin","staff"].includes(u.role)||!u.departmentId){results.push(diagRow(false,"ข้อมูลสิทธิ์ Admin","ฟิลด์ role หรือ departmentId ไม่ถูกต้อง"));out.innerHTML=results.join("");return}
+ results.push(diagRow(true,"ข้อมูลสิทธิ์ผู้ใช้",u.role+" • "+department(u.departmentId)));
+}catch(e){
+ results.push(diagRow(false,"อ่าน procurement_users ไม่สำเร็จ",e.code==="permission-denied"?"Rules ยังไม่อนุญาตให้อ่านข้อมูลสิทธิ์ของบัญชีนี้":(e.code||e.message)));
+ out.innerHTML=results.join("");return;
+}
+for(const [name,label] of diagnosticCollections){
+ try{
+ const snap=await getDocs(query(collection(db,name),limit(1)));
+ results.push(diagRow(true,label,"อ่าน Collection "+name+" ได้ • พบเอกสารในการทดสอบ "+snap.size+" รายการ (ตรวจสูงสุด 1 รายการ)"));
+ }catch(e){
+ results.push(diagRow(false,label,e.code==="permission-denied"?"Firestore Rules ปฏิเสธการอ่าน Collection "+name:(e.code||e.message)));
+ }
+}
+out.innerHTML=results.join("");
+}catch(e){out.innerHTML=results.join("")+diagRow(false,"เกิดข้อผิดพลาด",e.code||e.message||String(e))}
+finally{btn.disabled=false}
+}
+$("checkDatabase").onclick=checkDatabaseAccess;
+
 if(ready){
 try{
 const app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app);storage=getStorage(app);
