@@ -5,7 +5,7 @@
 <style>
 :root{font-family:Prompt,Arial,sans-serif;color:#172c46;background:#f4f7fc}*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}header{background:#fff;border-bottom:1px solid #e4ebf4;padding:17px 28px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.brand{font-size:21px;font-weight:700;color:#254e99}.brand small{display:block;font-size:12px;color:#72839b;font-weight:400}nav{display:flex;gap:7px;flex-wrap:wrap}nav button,.muted-btn{border:1px solid #dce5f2;background:#fff;border-radius:11px;padding:9px 13px;color:#3b5676}nav button.active{background:#294ca8;color:white}main{max-width:1180px;margin:27px auto;padding:0 18px}.notice{background:#fff6df;border:1px solid #f4dfa0;padding:12px 16px;border-radius:13px;margin-bottom:20px;color:#765817;font-size:13px}.headline{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}h1{margin:0;font-size:27px}h2{margin:0 0 12px;font-size:18px}p{color:#677a91}.primary{background:#3156c1;color:white;border:0;padding:11px 17px;border-radius:12px}.danger{color:#bc3744;border-color:#f0d5d8}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.card{background:white;border-radius:17px;padding:20px;box-shadow:0 5px 20px #243c6410;border:1px solid #edf1f7}.card small{color:#798ba0}.num{font-size:25px;font-weight:700;margin:6px 0}.split{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:18px}.bar{display:flex;align-items:center;gap:12px;margin:11px 0}.bar span{width:95px;font-size:13px}.track{height:11px;border-radius:10px;background:#edf2fa;flex:1;overflow:hidden}.fill{height:100%;border-radius:10px;background:linear-gradient(90deg,#5978dc,#46bdc2)}.bar b{width:95px;text-align:right;font-size:12px}.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}td,th{text-align:left;border-bottom:1px solid #ebeff5;padding:13px 9px}th{color:#6d7d95;font-weight:500}.chip{background:#eaf1ff;color:#3157ad;padding:3px 9px;border-radius:100px;font-size:12px}.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:15px}input,select{border:1px solid #dce4ef;border-radius:10px;padding:10px 12px;background:#fff;width:100%}.controls input{max-width:300px}.controls select{max-width:220px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;color:#5d718a;font-size:13px;margin-bottom:5px}.field{margin-bottom:12px}.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}.empty{padding:32px;text-align:center;color:#8897a7}.hidden{display:none!important}.tag{color:#a46b13;background:#fff5df;border-radius:7px;padding:3px 7px;font-size:12px}.details{background:#f6f9ff;padding:14px;border-radius:12px;margin-top:12px}.link{background:none;border:none;color:#2958af;text-decoration:underline;padding:0}.muted{font-size:12px;color:#8c9caf}.footer{text-align:center;margin:28px;color:#95a0ae;font-size:12px}@media(max-width:760px){.cards,.split,.grid{grid-template-columns:1fr}.num{font-size:22px}header{padding:14px}.bar span{width:75px}.bar b{width:75px}} 
 .doc-actions{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.docbtn{background:#eef3ff;border:1px solid #d4def6;color:#2854ad;padding:9px 12px;border-radius:10px}.detail-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:start}.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:15px 0}.fact{padding:11px 13px;border:1px solid #e2e9f3;border-radius:11px}.fact small{display:block;color:#76879e}.audit{border-left:3px solid #9ab1e5;padding:7px 12px;margin:9px 0;background:#f8faff;overflow-wrap:anywhere}dialog{border:0;border-radius:18px;box-shadow:0 25px 80px #071b4266;width:min(900px,96vw);max-height:94vh;padding:18px}dialog::backdrop{background:#07172d99}.preview-frame{width:100%;height:min(72vh,850px);border:1px solid #d8e0ed;border-radius:9px;background:white}.modalbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}@media(max-width:760px){.facts{grid-template-columns:1fr}}
-</style></head><body>
+.docgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.docrow{border:1px solid #e1e8f2;border-radius:12px;padding:14px;background:#fff}.docrow p{margin:5px 0;font-size:12px}.docrow strong{font-size:14px}.docrow .doc-actions{margin:8px 0 0}.section-title{margin:18px 0 8px;font-size:17px}.lineage{border-left:3px solid #4c76ce;padding:8px 14px;background:#f5f8ff;margin:10px 0}.docno{font-size:11px;color:#6381b7;font-weight:700}@media(max-width:760px){.docgrid{grid-template-columns:1fr}}</style></head><body>
 <header><div class="brand">✦ School Procurement<small>ระบบจัดซื้อจัดจ้างโรงเรียน · Online Preview</small></div><nav id="nav">
 <button data-page="dashboard" class="active">ภาพรวม</button><button data-page="projects">โครงการ</button><button data-page="jobs">งานจัดซื้อ</button><button data-page="settings">ตั้งค่า/สำรอง</button></nav></header>
 <main><div class="notice">⚠️ <b>รุ่นทดลอง (DEMO)</b> — มีรายการตัวอย่างจัดซื้อสีทาสนามจากเอกสารเดิม (ปิดบังชื่อบุคคลและผู้ขาย) เพื่อทดลองดูโครงการ — ข้อมูลเก็บเฉพาะในเบราว์เซอร์เครื่องนี้ ยังไม่มี Login หรือ Firebase จริง ห้ามกรอกข้อมูลราชการ/ข้อมูลส่วนบุคคลจริง และยังไม่รองรับ Word</div>
@@ -21,6 +21,18 @@
 <div class="footer">School Procurement · Preview V0.3 + Sample · GitHub Pages · ยังไม่ได้เชื่อมฐานข้อมูลออนไลน์</div></main>
 <script>
 "use strict";
+const DOC_TYPES=[
+["01","บันทึกมอบหมายผู้กำหนดคุณลักษณะ","เริ่มต้นจัดซื้อ","มอบหมายบุคลากรเพื่อกำหนดรายละเอียดพัสดุ"],
+["02","บันทึกขอความเห็นชอบ TOR","กำหนดรายละเอียด","เสนอขอความเห็นชอบคุณลักษณะ"],
+["03","ขอบเขตงาน / คุณลักษณะเฉพาะ (TOR)","กำหนดรายละเอียด","ระบุลักษณะพัสดุ วงเงิน และเงื่อนไข"],
+["04","รายงานขอซื้อ / ขอจ้าง","ขออนุมัติ","เหตุผลความจำเป็น ราคา และวิธีจัดซื้อ"],
+["05","บัญชีรายการพัสดุแนบท้าย","ขออนุมัติ","ตารางรายการ จำนวน หน่วย และราคา"],
+["06","รายงานผลพิจารณาและขออนุมัติสั่งซื้อ","คัดเลือก","สรุปผลการพิจารณาและเสนออนุมัติ"],
+["07","ประกาศผู้ชนะการเสนอราคา","ประกาศผล","ผลการคัดเลือกผู้ขาย / ผู้รับจ้าง"],
+["08","ใบตรวจรับพัสดุ","ตรวจรับ","รายละเอียดการส่งมอบและผลตรวจรับ"],
+["09","รายงานผลตรวจรับและอนุมัติเบิกจ่าย","เบิกจ่าย","เสนอผลการตรวจรับเพื่อดำเนินการเบิกจ่าย"],
+["10","ใบเบิกพัสดุ","เบิกพัสดุ","รายการเบิกใช้พัสดุในโรงเรียน"]
+];
 const KEY="schoolProcurementPreviewV03";
 const departments=[["place","ฝ่ายสถานที่"],["academic","ฝ่ายวิชาการ"],["personnel","ฝ่ายบุคคล"],["general","ฝ่ายบริหารทั่วไป"]];
 const DEMO_PROJECT_ID="sample-project-2569-sports-paint";
@@ -69,7 +81,7 @@ $("jobDetails").innerHTML='<div class="detail-head"><div><h2>'+esc(j.name)+'</h2
 +'<div class="facts">'+detailFact("ฝ่ายเจ้าของงาน",dept(j.departmentId))+detailFact("ปีงบประมาณ",p?.year||"—")+detailFact("สถานะ",status(j.status))+detailFact("วงเงินของงาน",money(j.budget))+detailFact("ยอดอนุมัติ",money(j.approved))+detailFact("ยอดเบิกจ่ายที่บันทึก",money(j.paid))+'</div>'
 +'<div class="details"><b>ข้อมูลการดำเนินการ</b><p>ผู้ขาย: '+esc(j.vendor||"ไม่ระบุ")+'</p>'+(j.isExample?'<p>วิธีเฉพาะเจาะจง · สีน้ำมัน 1 กระป๋อง · กำหนดใช้ภายใน 3 วัน</p><p>วันที่จัดทำเรื่อง 24 ส.ค. 2569 · ประกาศ 25 ส.ค. 2569 · ตรวจรับ 26 ส.ค. 2569</p><p class="muted">ยอด 140 บาทเป็นของงานนี้ ไม่ใช่งบทั้งหมดของโครงการ และยังไม่มีหลักฐานยืนยันการเบิกจ่ายเงินจริง</p>':'<p class="muted">รายการทดลองยังไม่มีวันที่ เอกสารแนบ หรือข้อมูลตรวจรับแบบละเอียด</p>')+'</div>'
 +'<div class="details"><b>เอกสารในชุดจัดซื้อ</b><p>แม่แบบ Word ต้นฉบับ 18 หน้า — <strong>ยังไม่ได้อัปโหลดเป็นไฟล์ PDF หรือเชื่อมระบบจัดเก็บเอกสาร</strong></p><p class="muted">ปุ่มดูตัวอย่างและ PDF จะสร้างใบสรุปรายละเอียดจากข้อมูลที่แสดง ไม่ใช่สำเนาเอกสารราชการฉบับลงนาม</p></div>'
-+'<div class="details"><b>ประวัติที่บันทึกในโหมดทดลอง</b>'+(logs.map(x=>'<div class="audit"><small>'+esc(x.at)+'</small><div>'+esc(x.message)+'</div></div>').join("")||'<p>ไม่มีประวัติ</p>')+'</div>';
++'<h3 class="section-title">แฟ้มเอกสารจัดซื้อจัดจ้างทั้งหมด (10 รายการ)</h3><p class="muted">คลิก Preview แต่ละรายการเพื่อดูข้อมูลที่ใช้สร้างเอกสาร และตรวจช่องข้อมูลที่ยังต้องกรอก — ขณะนี้ยังไม่ใช่ Word/PDF ต้นฉบับ</p><div class="docgrid">'+DOC_TYPES.map(d=>'<div class="docrow"><span class="docno">DOC '+d[0]+' · '+esc(d[2])+'</span><div><strong>'+esc(d[1])+'</strong></div><p>'+esc(d[3])+'</p><span class="tag">โครงสร้างตัวอย่าง</span><div class="doc-actions"><button class="docbtn" onclick="previewDocument(\''+d[0]+'\')">Preview</button><button class="muted-btn" onclick="previewDocument(\''+d[0]+'\',true)">PDF</button></div></div>').join("")+'</div>'+'<div class="details"><b>ประวัติที่บันทึกในโหมดทดลอง</b>'+(logs.map(x=>'<div class="audit"><small>'+esc(x.at)+'</small><div>'+esc(x.message)+'</div></div>').join("")||'<p>ไม่มีประวัติ</p>')+'</div>';
 $("jobDetails").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function previewHtml(j){
@@ -85,6 +97,31 @@ function previewJob(printNow=false){
 const j=db.jobs.find(x=>x.id===selectedJobId);if(!j)return;
 const frame=$("docFrame");frame.onload=()=>{if(printNow)setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(e){alert("ไม่สามารถเปิดหน้าพิมพ์ได้ โปรดกดปุ่มพิมพ์ในหน้าตัวอย่าง")}},200)};
 frame.srcdoc=previewHtml(j);$("docModal").showModal();
+}
+
+function previewDocument(number,printNow=false){
+const j=db.jobs.find(x=>x.id===selectedJobId);if(!j)return;
+const d=DOC_TYPES.find(x=>x[0]===number);if(!d)return;
+const p=project(j.projectId);
+const fields=[
+["โรงเรียน","โรงเรียนค่ายบางระจันวิทยาคม (จากตัวอย่างเดิม)"],
+["ฝ่ายเจ้าของงาน",dept(j.departmentId)],
+["โครงการ",p?.name||"ยังไม่ได้ระบุ"],
+["ปีงบประมาณ",String(p?.year||"ยังไม่ได้ระบุ")],
+["เรื่องจัดซื้อ",j.name],
+["วงเงินงานจัดซื้อ",money(j.budget)],
+["จำนวนเงินอนุมัติที่บันทึก",money(j.approved)],
+["สถานะในเว็บทดลอง",status(j.status)]
+];
+if(["06","07","08","09"].includes(number))fields.push(["ผู้ขาย/ผู้รับจ้าง",j.isExample?"[ซ่อนข้อมูลผู้ขายบนเว็บสาธารณะ]":j.vendor||"ยังไม่ได้ระบุ"]);
+if(j.isExample){
+const dates=({"01":"24 สิงหาคม 2569","02":"24 สิงหาคม 2569","03":"24 สิงหาคม 2569","04":"24 สิงหาคม 2569","05":"24 สิงหาคม 2569","06":"24 สิงหาคม 2569","07":"25 สิงหาคม 2569","08":"26 สิงหาคม 2569","09":"26 สิงหาคม 2569","10":"ยังไม่ยืนยันวันที่"}) ;
+fields.push(["วันที่ในตัวอย่าง",dates[number]]);
+if(["03","05","08","10"].includes(number))fields.push(["รายการพัสดุ","สีน้ำมัน 1 กระป๋อง (ตารางฉบับจริงให้กรอก/ตรวจทานภายหลัง)"]);
+}
+const stillMissing=["เลขที่หนังสือ/เลขที่คำสั่ง (ตามเอกสารจริง)","ข้อมูลผู้ลงนามและลายมือชื่อ","รายละเอียดข้อความราชการและรูปแบบหน้ากระดาษต้นฉบับ","หลักฐานไฟล์ Word/PDF ที่ได้รับรองแล้ว"];
+const html='<!doctype html><html lang="th"><head><meta charset="utf-8"><title>'+d[1]+'</title><style>@page{size:A4;margin:20mm}body{font:14px Tahoma,Arial,sans-serif;max-width:850px;margin:auto;padding:20px;line-height:1.7;color:#24324a}h1{font-size:20px;text-align:center}h2{font-size:16px;margin-top:24px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #c7d0df;padding:8px;text-align:left;vertical-align:top}th{background:#f2f6fc;width:36%}.warning{border:1px solid #eed6a0;background:#fff5dc;padding:12px}li{margin:6px 0}.meta{text-align:center;color:#66809e}@media print{body{padding:0}}</style></head><body><h1>'+esc(d[1])+'</h1><div class="meta">เอกสารลำดับ '+d[0]+' / 10 · ขั้นตอน '+esc(d[2])+'</div><p class="warning">ตัวอย่างโครงสร้างข้อมูลสำหรับตรวจสอบระบบเท่านั้น ไม่ใช่เอกสารราชการรูปแบบสมบูรณ์ ไม่มีลายมือชื่อและไม่ใช่ PDF ต้นฉบับ</p><h2>ข้อมูลที่ระบบสามารถนำมาใช้ในเอกสารนี้</h2><table>'+fields.map(x=>'<tr><th>'+esc(x[0])+'</th><td>'+esc(x[1])+'</td></tr>').join('')+'</table><h2>วัตถุประสงค์ของเอกสาร</h2><p>'+esc(d[3])+'</p><h2>ส่วนที่ยังต้องจัดเตรียม / ตรวจสอบ</h2><ul>'+stillMissing.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><p class="meta">School Procurement · โครงร่างตรวจข้อมูล · ไม่ใช่เอกสารทางการ</p></body></html>';
+const frame=$("docFrame");frame.onload=()=>{if(printNow)setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(e){alert("กรุณาเลือกพิมพ์จาก Preview")}},200)};frame.srcdoc=html;$("docModal").showModal();
 }
 function printPreview(){const frame=$("docFrame");frame.contentWindow.focus();frame.contentWindow.print()}
 function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="school-procurement-preview-backup.json";a.click();URL.revokeObjectURL(url)}
