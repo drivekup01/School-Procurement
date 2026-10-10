@@ -16,6 +16,14 @@ service firebase.storage {
     // Upload/replacement must be done by a trusted administrator via Firebase Console or Admin SDK.
     // One-time official DOCX master installation, accessible to authenticated school staff.
     // Admin may replace a department's current template after confirming in the UI.
+    // Verified PDF master: signed-in members may view, only Admin may install/replace.
+    match /procurement/templates/departments/{department}/source.pdf {
+      allow read: if signedIn();
+      allow create, update: if isAdmin() &&
+        request.resource.size <= 25 * 1024 * 1024 &&
+        request.resource.contentType == 'application/pdf';
+      allow delete: if false;
+    }
     match /procurement/templates/departments/{department}/source.docx {
       // Template viewing requires login but not a secondary Firestore lookup.
       allow read: if signedIn();
