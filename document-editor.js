@@ -1,8 +1,17 @@
 import {renderGovernmentPage} from "./official-forms.js";
 import {firebaseConfig} from "./firebase-config.js";
-import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,collection,addDoc,getDocs,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+
+
+let firebaseFns=null;
+async function loadFirebaseSdk(){
+ const [app, auth, firestore]=await Promise.all([
+ import("https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js"),
+ import("https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js"),
+ import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js")
+ ]);
+ firebaseFns={...app,...auth,...firestore};return firebaseFns;
+}
 const $=s=>document.getElementById(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pages=["บันทึกมอบหมายผู้กำหนดคุณลักษณะ","บันทึกขอความเห็นชอบ TOR","ขอบเขตงาน TOR (หน้า 1)","ขอบเขตงาน TOR (หน้า 2)","รายงานขอซื้อ","รายละเอียดพัสดุแนบท้าย","รายงานผลและขออนุมัติสั่งซื้อ","ใบตรวจรับพัสดุ","รายงานผลตรวจรับและอนุมัติเบิกจ่าย","ใบเบิกพัสดุ"];
 const departments=[["general","ฝ่ายบริหารทั่วไป"],["academic","ฝ่ายบริหารวิชาการ"],["personnel","ฝ่ายบริหารงานบุคคล"],["site","ฝ่ายสถานที่"],["budget","ฝ่ายบริหารงบประมาณ"]];
@@ -141,7 +150,7 @@ function loadSelectedCopy(id){
 async function refreshSavedCopies(){
  if(!db||!user)return;
  try{
- const result=await getDocs(collection(db,"procurement_document_copies"));
+ const result=await firebaseFns.getDocs(firebaseFns.collection(db,"procurement_document_copies"));
  savedCopies=result.docs.map(d=>({id:d.id,...d.data()})).filter(d=>profile?.role==="admin"||d.createdBy===user.uid).sort((x,y)=>(y.createdAt?.seconds||0)-(x.createdAt?.seconds||0));
  if(activeDepartment)renderSavedCopiesList();
  }catch(e){$("banner").textContent="ยังอ่านสำเนาเก่าจากฐานข้อมูลไม่ได้: "+(e.code||e.message);}
@@ -152,8 +161,8 @@ async function saveDraft(){
  $("banner").textContent="กำลังสร้างสำเนาเอกสาร 10 หน้าใน Firestore…";
  try{
  state.values.department=activeDepartment;const safe=safeSnapshot(state),copyName=safe.values.subject?.trim()||"เอกสารจัดซื้อจัดจ้างไม่มีชื่อ";
- const entry={schemaVersion:1,templateId:"first-set-v1",title:copyName,departmentId:safe.values.department||profile.departmentId,createdBy:user.uid,createdAt:serverTimestamp(),values:safe.values,items:safe.items,selectedPages:safe.selected,documentCount:10};
- const result=await addDoc(collection(db,"procurement_document_copies"),entry);
+ const entry={schemaVersion:1,templateId:"first-set-v1",title:copyName,departmentId:safe.values.department||profile.departmentId,createdBy:user.uid,createdAt:firebaseFns.serverTimestamp(),values:safe.values,items:safe.items,selectedPages:safe.selected,documentCount:10};
+ const result=await firebaseFns.addDoc(firebaseFns.collection(db,"procurement_document_copies"),entry);
  $("banner").textContent="บันทึกสำเนาลง Firestore สำเร็จ · เลขอ้างอิง "+result.id+" · สามารถพิมพ์หรือบันทึก PDF ต่อได้";
  await refreshSavedCopies();
  }catch(e){$("banner").textContent="บันทึกลงฐานข้อมูลไม่สำเร็จ: "+(e.code||e.message)+" · ยังไม่ได้สร้างสำเนา อย่าเพิ่งถือว่าบันทึกแล้ว"}
@@ -169,12 +178,37 @@ $("prev").onclick=()=>goPage(page-1);$("next").onclick=()=>goPage(page+1);
 document.querySelectorAll("[data-stage]").forEach(btn=>btn.onclick=()=>goStage(btn.dataset.stage));
 $("pageNav").innerHTML=pages.map((title,i)=>'<button class="pageButton" data-page-button="'+(i+1)+'" type="button"><b>หน้า '+(i+1)+'</b>'+esc(title)+'</button>').join("");
 document.querySelectorAll("[data-page-button]").forEach(btn=>btn.onclick=()=>goPage(Number(btn.dataset.pageButton)));
+// Render a meaningful interface immediately; do not leave the user at a perpetual "checking account".
+$("editorRoot").hidden=false;
+$("departmentCards").innerHTML='<div class="loadingDepartments">กำลังตรวจสิทธิ์และโหลดรายการฝ่าย…</div>';
+$("departmentNext").hidden=true;
+$("workArea").hidden=true;
+$("banner").textContent="กำลังเชื่อมบัญชีผู้ใช้…";
+$("login-state").textContent="กำลังเชื่อมต่อ";
 const configured=Boolean(firebaseConfig.apiKey&&firebaseConfig.projectId);
-if(!configured){$("banner").textContent="ยังไม่มี Firebase config";}else{
-const app=initializeApp(firebaseConfig),auth=getAuth(app);db=getFirestore(app);
-onAuthStateChanged(auth,async u=>{user=u;
-if(!u){$("banner").textContent="กรุณาเข้าสู่ระบบ School Procurement ก่อนเปิดหน้านี้";$("login-state").textContent="ยังไม่ได้เข้าสู่ระบบ";$("editorRoot").hidden=true;return}
-try{const d=await getDoc(doc(db,"procurement_users",u.uid));if(!d.exists())throw Error("ไม่พบบัญชีที่ได้รับสิทธิ์");profile=d.data();if(!["admin","staff"].includes(profile.role))throw Error("สิทธิ์ผู้ใช้งานไม่ถูกต้อง");renderDepartmentSelection();await refreshSavedCopies();$("editorRoot").hidden=false;$("banner").textContent="เลือกฝ่ายเพื่อเริ่มงานหรือเปิดสำเนาที่บันทึกไว้ • เอกสารชุดแรกใช้แบบจัดพิมพ์ที่ถอดจากต้นฉบับ";$("login-state").textContent=profile.displayName||u.email;}
-catch(e){$("banner").textContent="ตรวจสิทธิ์ไม่สำเร็จ: "+(e.code||e.message);$("editorRoot").hidden=true}
-});
+async function boot(){
+ if(!configured){$("banner").textContent="ยังไม่มีการตั้งค่า Firebase สำหรับระบบนี้";$("login-state").textContent="ยังไม่พร้อม";return}
+ try{
+  const sdk=await loadFirebaseSdk();
+  const app=sdk.initializeApp(firebaseConfig);
+  const auth=sdk.getAuth(app);db=sdk.getFirestore(app);
+  sdk.onAuthStateChanged(auth,async u=>{
+   user=u;
+   if(!u){profile=null;$("editorRoot").hidden=true;$("banner").innerHTML='ยังไม่ได้เข้าสู่ระบบ กรุณา <a href="./index.html">กลับไปเข้าสู่ระบบ</a> ก่อนจัดทำเอกสาร';$("login-state").textContent="ยังไม่ได้เข้าสู่ระบบ";return}
+   $("login-state").textContent="กำลังโหลดสิทธิ์…";
+   try{
+    const d=await sdk.getDoc(sdk.doc(db,"procurement_users",u.uid));
+    if(!d.exists())throw Error("ไม่พบบัญชีใน procurement_users");
+    profile=d.data();
+    if(!["admin","staff"].includes(profile.role))throw Error("สิทธิ์ผู้ใช้งานไม่ถูกต้อง");
+    $("editorRoot").hidden=false;
+    renderDepartmentSelection();
+    $("login-state").textContent=(profile.role==="admin"?"Admin • ":"")+(profile.displayName||u.email);
+    $("banner").textContent=profile.role==="admin"?"ผู้ดูแลระบบ: เลือกฝ่ายได้ทั้งหมด และเปิดสำเนาแต่ละฝ่ายได้":"เลือกฝ่ายที่ได้รับสิทธิ์เพื่อเริ่มจัดทำเอกสาร";
+    // Saved records are supplementary. A failure must not prevent a new document.
+    await refreshSavedCopies();
+   }catch(e){$("editorRoot").hidden=true;$("login-state").textContent="ตรวจสิทธิ์ไม่ผ่าน";$("banner").textContent="เข้าสู่ระบบแล้ว แต่ตรวจสิทธิ์ไม่สำเร็จ: "+(e.code||e.message)}
+  },e=>{$("banner").textContent="ระบบ Login มีปัญหา: "+(e.code||e.message);$("login-state").textContent="เชื่อมต่อไม่ได้"});
+ }catch(e){$("banner").textContent="โหลดระบบ Firebase ไม่สำเร็จ: "+(e.message||e)+" — กรุณาลองรีเฟรช หากยังไม่หายให้ตรวจเครือข่าย";$("login-state").textContent="เชื่อมต่อไม่สำเร็จ";}
 }
+boot();
