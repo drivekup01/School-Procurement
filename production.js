@@ -11,7 +11,7 @@ const notify=(s)=>{$("alert").textContent=s||""};
 const ready=Boolean(firebaseConfig.apiKey&&firebaseConfig.projectId&&firebaseConfig.authDomain&&firebaseConfig.storageBucket&&firebaseConfig.appId);
 $("setup").hidden=ready;$("login").hidden=!ready;
 let auth,db,storage,me=null,profile=null,projects=[],jobs=[],documents=[],currentProject=null,currentJob=null,viewerUrl=null,unsubs=[];
-const deptLabels={site:"ฝ่ายสถานที่",academic:"ฝ่ายวิชาการ",general:"ฝ่ายบริหารทั่วไป",personnel:"ฝ่ายบุคคล"};
+const deptLabels={site:"ฝ่ายสถานที่",academic:"ฝ่ายวิชาการ",general:"ฝ่ายบริหารทั่วไป",personnel:"ฝ่ายบริหารงานบุคคล",budget:"ฝ่ายบริหารงบประมาณ"};
 const department=id=>deptLabels[id]||id||"ไม่ระบุ";
 const canEdit=d=>profile?.role==="admin"||(profile?.role==="staff"&&profile?.departmentId===d);
 const cleanMoney=n=>Number(n)||0;
@@ -36,7 +36,8 @@ const ys=[...new Set(projects.map(p=>String(p.fiscalYear)))].sort((a,b)=>b.local
 $("yearFilter").innerHTML='<option value="">ทุกปีงบประมาณ</option>'+ys.map(y=>'<option value="'+esc(y)+'">'+esc(y)+'</option>').join("");
 $("yearFilter").value=ys.includes(selectedYear)?selectedYear:"";
 const term=$("search").value.trim().toLowerCase();
-const subset=projects.filter(p=>(!$("yearFilter").value||String(p.fiscalYear)===$("yearFilter").value)&&(!term||(p.name+" "+department(p.departmentId)).toLowerCase().includes(term)));
+const filterDept=$("departmentFilter").value;
+const subset=projects.filter(p=>(!filterDept||p.departmentId===filterDept)&&(!$("yearFilter").value||String(p.fiscalYear)===$("yearFilter").value)&&(!term||(p.name+" "+department(p.departmentId)).toLowerCase().includes(term)));
 $("projectList").innerHTML=subset.map(p=>'<button class="project-item '+(currentProject===p.id?"chosen":"")+'" data-p="'+esc(p.id)+'"><b>'+esc(p.name)+'</b><small>'+esc(department(p.departmentId))+' · ปีงบประมาณ '+esc(p.fiscalYear)+'</small></button>').join("")||'<div class="empty-list">ไม่พบโครงการในฐานข้อมูล</div>';
 $("projectList").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>selectProject(b.dataset.p));
 if(currentProject)renderProject();
@@ -70,6 +71,42 @@ const d=documents.find(x=>x.id===id);if(!d)return;notify("กำลังโห�
 try{const blob=await getBlob(ref(storage,d.storagePath));if(blob.type!=="application/pdf"&&!d.filename.toLowerCase().endsWith(".pdf"))throw Error("ไฟล์ไม่ใช่ PDF");closeViewer();viewerUrl=URL.createObjectURL(blob);$("pdfView").src=viewerUrl+"#page=1&view=FitH";$("pdfTitle").textContent=d.title||d.filename;$("pdfArea").hidden=false;$("pdfDownload").onclick=()=>{const a=document.createElement("a");a.href=viewerUrl;a.download=d.filename||"document.pdf";a.click()};notify("");$("pdfArea").scrollIntoView({behavior:"smooth",block:"start"})}catch(e){notify("เปิด PDF ไม่สำเร็จ: "+(e.message||e)+". อาจต้องตั้งค่า CORS ของ Cloud Storage ตามคู่มือ")}}
 $("pdfClose").onclick=closeViewer;
 $("search").oninput=refresh;$("yearFilter").onchange=refresh;
+
+$("departmentFilter").onchange=refresh;
+function showAdminPanel(html){
+ $("adminExpanded").hidden=false;$("adminExpanded").innerHTML=html;
+ $("adminExpanded").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+$("adminProjects").onclick=()=>{
+ $("adminExpanded").hidden=true;
+ $("search").focus();
+ $("projectList").scrollIntoView({behavior:"smooth",block:"start"});
+};
+$("adminDocuments").onclick=()=>{
+ const readyFiles=documents.filter(d=>d.status==="ready");
+ const list=readyFiles.map(d=>{
+  const p=projects.find(p=>p.id===d.projectId),j=jobs.find(j=>j.id===d.jobId);
+  return '<div class="admin-list-item"><div><b>'+esc(d.title||d.filename||"เอกสาร")+'</b><small>'+esc(p?.name||"ไม่มีโครงการ")+" • "+esc(j?.title||"ไม่พบงาน")+" • "+esc(department(d.departmentId))+'</small></div><button class="button subtle small" data-openfile="'+esc(d.jobId)+'" data-project="'+esc(d.projectId)+'">เปิดแฟ้ม</button></div>';
+ }).join("");
+ showAdminPanel('<div class="sectionbar"><h3>แฟ้ม PDF ทั้งระบบ</h3><button class="button subtle small" id="closeAdminPanel">ปิด</button></div>'+(list||'<p>ยังไม่มีเอกสาร PDF ที่อัปโหลดสำเร็จในฐานข้อมูล</p>'));
+ $("closeAdminPanel").onclick=()=>{$("adminExpanded").hidden=true};
+ $("adminExpanded").querySelectorAll("[data-openfile]").forEach(b=>b.onclick=()=>{
+   selectProject(b.dataset.project);selectJob(b.dataset.openfile);
+   $("adminExpanded").hidden=true;
+ });
+};
+$("adminUsers").onclick=async()=>{
+ showAdminPanel('<h3>บัญชีผู้ใช้งาน</h3><p>กำลังอ่านรายการบัญชีที่มีสิทธิ์ในระบบ…</p>');
+ try{
+ const result=await getDocs(collection(db,"procurement_users"));
+ const rows=result.docs.map(x=>({id:x.id,...x.data()}));
+ showAdminPanel('<div class="sectionbar"><h3>บัญชีและสิทธิ์ผู้ใช้งาน ('+rows.length+')</h3><button class="button subtle small" id="closeAdminPanel">ปิด</button></div>'+
+ rows.map(u=>'<div class="admin-list-item"><div><b>'+esc(u.displayName||"ไม่มีชื่อแสดงผล")+'</b><small>'+esc(department(u.departmentId))+' • '+esc(u.role==="admin"?"Admin":"Staff")+'</small></div><span class="pill '+(u.role==="admin"?"":"readonly")+'">'+esc(u.role||"ไม่มีสิทธิ์")+'</span></div>').join("")+
+ '<p class="admin-footnote">การสร้างบัญชีและเปลี่ยนสิทธิ์ยังทำใน Firebase Console เท่านั้น เพื่อไม่ให้ผู้ใช้แก้สิทธิ์ตัวเองผ่านเว็บ</p>');
+ $("closeAdminPanel").onclick=()=>{$("adminExpanded").hidden=true};
+ }catch(e){showAdminPanel('<h3>บัญชีผู้ใช้งาน</h3><p>อ่านข้อมูลผู้ใช้ไม่ได้: '+esc(e.code||e.message||String(e))+'</p>')}
+};
+
 $("addProject").onclick=()=>{
 if(!profile)return;
 const allowed=profile.role==="admin"?Object.keys(deptLabels):[profile.departmentId];
@@ -145,7 +182,7 @@ resetListeners();me=user;profile=null;$("signout").hidden=!user;$("identity").te
 if(!user){notify("");return}
 notify("กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...");
 try{const userDoc=await getDoc(doc(db,"procurement_users",user.uid));if(!userDoc.exists())throw Error("ยังไม่ได้กำหนดสิทธิ์ผู้ใช้ โปรดให้ Admin เพิ่มข้อมูล procurement_users/"+user.uid);
-profile=userDoc.data();if(!["admin","staff"].includes(profile.role)||!profile.departmentId)throw Error("สิทธิ์ผู้ใช้ไม่สมบูรณ์");$("workspace").hidden=false;notify("");
+profile=userDoc.data();if(!["admin","staff"].includes(profile.role)||!profile.departmentId)throw Error("สิทธิ์ผู้ใช้ไม่สมบูรณ์");$("workspace").hidden=false;$("adminHub").hidden=profile.role!=="admin";$("departmentFilterBox").hidden=profile.role!=="admin";$("identity").textContent=(profile.role==="admin"?"Admin • ":"")+(profile.displayName||user.email);notify("");
 for(const key of ["procurement_projects","procurement_jobs","procurement_documents"]){
 const off=onSnapshot(collection(db,key),snapshot=>{const items=snapshot.docs.map(d=>({id:d.id,...d.data()}));if(key==="procurement_projects")projects=items;if(key==="procurement_jobs")jobs=items;if(key==="procurement_documents")documents=items;refresh()},err=>notify("อ่านข้อมูล "+key+" ไม่สำเร็จ: "+(err.message||err)));unsubs.push(off)}
 }catch(err){notify(err.message||String(err))}
