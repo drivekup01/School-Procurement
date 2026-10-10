@@ -2,6 +2,7 @@ import {firebaseConfig} from "./firebase-config.js";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {getFirestore,doc,getDoc,collection,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {getStorage,ref,getBlob} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
 const $=s=>document.getElementById(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pages=["บันทึกมอบหมายผู้กำหนดคุณลักษณะ","บันทึกขอความเห็นชอบ TOR","ขอบเขตงาน TOR (หน้า 1)","ขอบเขตงาน TOR (หน้า 2)","รายงานขอซื้อ","รายละเอียดพัสดุแนบท้าย","รายงานผลและขออนุมัติสั่งซื้อ","ใบตรวจรับพัสดุ","รายงานผลตรวจรับและอนุมัติเบิกจ่าย","ใบเบิกพัสดุ"];
 const departments=[["general","ฝ่ายบริหารทั่วไป"],["academic","ฝ่ายบริหารวิชาการ"],["personnel","ฝ่ายบริหารงานบุคคล"],["site","ฝ่ายสถานที่"],["budget","ฝ่ายบริหารงบประมาณ"]];
@@ -53,6 +54,23 @@ const specificFields=[
 ];
 const sections=new Set(["people","supplier","dates","payment"]);
 let user=null,profile=null,db=null,step="common",page=1;
+let sourceStorage=null,sourceUrl=null,sourceMode="generated";
+const ORIGINAL_TEMPLATE_STORAGE_PATH="procurement/templates/first-set/source.pdf";
+function referenceMessage(message){$("sourceMessage").textContent=message}
+async function showSource(){
+ sourceMode="source";$("generatedPreview").hidden=true;$("sourceViewerBox").hidden=false;
+ if(sourceUrl){$("sourceViewer").src=sourceUrl+"#page="+page+"&view=FitH";referenceMessage("กำลังแสดงต้นฉบับจริงที่จัดเก็บใน Firebase Storage");return}
+ if(!sourceStorage||!user){referenceMessage("กรุณาเข้าสู่ระบบก่อนดูเอกสารต้นฉบับ");return}
+ referenceMessage("กำลังตรวจไฟล์ต้นฉบับจาก Firebase Storage…");
+ try{const blob=await getBlob(ref(sourceStorage,ORIGINAL_TEMPLATE_STORAGE_PATH));
+ if(blob.type!=="application/pdf")throw Error("แม่แบบบน Storage ไม่ใช่ PDF");
+ sourceUrl=URL.createObjectURL(blob);$("sourceViewer").src=sourceUrl+"#page="+page+"&view=FitH";referenceMessage("ต้นฉบับจริงจาก Firebase Storage • แสดงหน้า "+page+" / 10");
+ }catch(e){$("sourceViewerBox").hidden=true;referenceMessage("ยังไม่สามารถแสดงต้นฉบับจริงได้: "+(e.code==="storage/object-not-found"?"ยังไม่ได้เก็บสำเนาต้นฉบับที่ผ่านการตรวจและอนุญาตลง Storage":e.code==="storage/unauthorized"?"สิทธิ์อ่านแม่แบบยังไม่อนุญาต":e.code||e.message)+" • ขณะนี้จะไม่ใช้หน้ากระดาษที่สร้างเองแทนโดยอ้างว่าเป็นต้นฉบับ");}
+}
+function showGenerated(){sourceMode="generated";$("generatedPreview").hidden=false;$("sourceViewerBox").hidden=true;referenceMessage("ฉบับนี้สร้างจากข้อมูลที่กรอก ยังไม่ใช่แบบราชการต้นฉบับที่ผ่านการตรวจจัดหน้า")}
+$("showOfficialSource").onclick=showSource;
+$("showGenerated").onclick=showGenerated;
+
 const blank=()=>({values:Object.fromEntries([...commonFields,...specificFields.filter(f=>!sections.has(f[0]))].map(f=>[f[0],f[2]||""])),items:[{description:"",quantity:"",unit:"",unitPrice:""}],selected:Array.from({length:10},(_,i)=>i+1)});
 let state=blank();
 const fmt=n=>Number(n||0).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -92,7 +110,7 @@ function renderItems(){ $("itemsRows").innerHTML=state.items.map((r,i)=>'<div cl
 function renderTotals(){$("itemTotals").innerHTML='รวมมูลค่ารายการพัสดุที่กรอก: <b>'+fmt(total())+' บาท</b>　(โปรดตรวจเทียบวงเงินงาน '+fmt(v("budget"))+' บาท)'}
 function renderPaper(){$("paperLabel").textContent="ตัวอย่างเอกสาร · หน้า "+page+" / 10";$("paperHolder").innerHTML=htmlForPage(page);document.querySelectorAll("[data-page-button]").forEach(b=>b.classList.toggle("selected",Number(b.dataset.pageButton)===page))}
 function goStage(target){step=target;document.querySelectorAll(".stage").forEach(el=>el.hidden=el.id!==target);document.querySelectorAll("[data-stage]").forEach(el=>el.classList.toggle("selected",el.dataset.stage===target));if(target==="review")renderReview()}
-function goPage(n){page=Math.min(10,Math.max(1,n));renderPaper()}
+function goPage(n){page=Math.min(10,Math.max(1,n));renderPaper();if(sourceMode==="source"&&sourceUrl){$("sourceViewer").src=sourceUrl+"#page="+page+"&view=FitH";referenceMessage("ต้นฉบับจริงจาก Firebase Storage • หน้า "+page+" / 10")}}
 function renderReview(){$("reviewPages").innerHTML=pages.map((title,i)=>'<label class="reviewRow"><input type="checkbox" data-print-page="'+(i+1)+'" '+(state.selected.includes(i+1)?"checked":"")+'><span>หน้า '+(i+1)+' — '+esc(title)+'</span><button type="button" class="secondary" data-jump="'+(i+1)+'">ดูหน้า</button></label>').join("");document.querySelectorAll("[data-print-page]").forEach(el=>el.onchange=()=>{const n=Number(el.dataset.printPage);state.selected=el.checked?[...new Set([...state.selected,n])]:state.selected.filter(x=>x!==n)});document.querySelectorAll("[data-jump]").forEach(el=>el.onclick=e=>{e.preventDefault();goPage(Number(el.dataset.jump))});const mandatory=[["project","ชื่อโครงการ"],["subject","ชื่องานจัดซื้อ"],["budget","วงเงิน"],["requestDate","วันที่เริ่มเรื่อง"],["procOfficer","เจ้าหน้าที่"],["headOfficer","หัวหน้าเจ้าหน้าที่"],["director","ผู้อำนวยการ"],["specPreparer","ผู้จัดทำ TOR"],["vendor","ชื่อผู้ขาย"],["inspector","ผู้ตรวจรับ"]].filter(([k])=>!v(k));$("missing").textContent=mandatory.length?"ข้อมูลที่ควรตรวจให้ครบก่อนพิมพ์: "+mandatory.map(x=>x[1]).join(" • "):"ข้อมูลหลักครบตามรายการตรวจเบื้องต้นแล้ว (ต้องอ่านตรวจถ้อยคำทุกหน้าก่อนนำไปใช้จริง)";}
 function saveDraft(){try{const key="schoolProcurementDraft:"+user.uid;localStorage.setItem(key,JSON.stringify({...state,savedAt:new Date().toISOString()}));$("banner").textContent="บันทึกร่างไว้ในเบราว์เซอร์เครื่องนี้แล้ว (ยังไม่ได้บันทึกลง Firestore)";}catch(e){$("banner").textContent="ไม่สามารถบันทึกร่างในเบราว์เซอร์ได้: "+e.message}}
 function loadDraft(){try{const data=JSON.parse(localStorage.getItem("schoolProcurementDraft:"+user.uid)||"null");if(data?.values&&Array.isArray(data.items)){state=data;state.selected=state.selected||[1,2,3,4,5,6,7,8,9,10]}}catch(e){}}
@@ -107,8 +125,8 @@ $("pageNav").innerHTML=pages.map((title,i)=>'<button class="pageButton" data-pag
 document.querySelectorAll("[data-page-button]").forEach(btn=>btn.onclick=()=>goPage(Number(btn.dataset.pageButton)));
 const configured=Boolean(firebaseConfig.apiKey&&firebaseConfig.projectId);
 if(!configured){$("banner").textContent="ยังไม่มี Firebase config";}else{
-const app=initializeApp(firebaseConfig),auth=getAuth(app);db=getFirestore(app);
-onAuthStateChanged(auth,async u=>{user=u;
+const app=initializeApp(firebaseConfig),auth=getAuth(app);db=getFirestore(app);sourceStorage=getStorage(app);
+onAuthStateChanged(auth,async u=>{user=u;if(!u&&sourceUrl){URL.revokeObjectURL(sourceUrl);sourceUrl=null;$("sourceViewer").src="about:blank"}
 if(!u){$("banner").textContent="กรุณาเข้าสู่ระบบ School Procurement ก่อนเปิดหน้านี้";$("login-state").textContent="ยังไม่ได้เข้าสู่ระบบ";$("editorRoot").hidden=true;return}
 try{const d=await getDoc(doc(db,"procurement_users",u.uid));if(!d.exists())throw Error("ไม่พบบัญชีที่ได้รับสิทธิ์");profile=d.data();if(!["admin","staff"].includes(profile.role))throw Error("สิทธิ์ผู้ใช้งานไม่ถูกต้อง");loadDraft();renderInputs();renderItems();renderPaper();$("editorRoot").hidden=false;$("banner").textContent="เอกสารชุดแรก: กรอกข้อมูล ไม่ต้องอัปโหลดไฟล์ • ร่างยังเก็บเฉพาะเครื่องนี้ • ตรวจต้นฉบับก่อนใช้งานจริง";$("login-state").textContent=profile.displayName||u.email;}
 catch(e){$("banner").textContent="ตรวจสิทธิ์ไม่สำเร็จ: "+(e.code||e.message);$("editorRoot").hidden=true}
