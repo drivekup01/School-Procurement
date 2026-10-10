@@ -1,6 +1,7 @@
 import {renderGovernmentPage} from "./official-forms.js";
 
 import {firebaseConfig} from "./firebase-config.js";
+import {fillProcurementPdf} from "./pdf-form-overlay.js?v=1";
 
 
 
@@ -67,10 +68,38 @@ const sections=new Set(["people","supplier","dates","payment"]);
 let user=null,profile=null,db=null,step="common",page=1;
 let savedCopies=[];
 let activeDepartment=null;
-let templateStorage=null,templateBlob=null,pdfObjectUrl=null,activeTemplateUpload=null;
+let templateStorage=null,templateBlob=null,previewBlob=null,pdfObjectUrl=null,activeTemplateUpload=null,pdfRenderToken=0,pdfRenderTimer=null;
 const templatePath=(dept=activeDepartment)=>"procurement/templates/departments/"+dept+"/source.pdf";
 const referenceMessage=msg=>{$("sourceMessage").textContent=msg};
 const fileFrame=()=>$("actualPdfFrame");
+async function refreshPdfPreview(){
+ if(!templateBlob)return;
+ const token=++pdfRenderToken;
+ referenceMessage("กำลังเติมข้อมูลจากฟอร์มลง PDF ต้นฉบับ…");
+ try{
+  const filled=await fillProcurementPdf(templateBlob,state.values);
+  if(token!==pdfRenderToken)return;
+  previewBlob=filled.blob;
+  if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
+  pdfObjectUrl=URL.createObjectURL(previewBlob);
+  fileFrame().style.display="block";
+  setPdfPage();
+  referenceMessage("Preview จาก PDF จริง "+filled.pageCount+" หน้า • เติมข้อมูล "+filled.count+" จุด • พิกัดรุ่นแรก ต้องตรวจตำแหน่งก่อนใช้ลงนาม");
+ }catch(error){
+  if(token!==pdfRenderToken)return;
+  previewBlob=templateBlob;
+  if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
+  pdfObjectUrl=URL.createObjectURL(previewBlob);
+  fileFrame().style.display="block";setPdfPage();
+  referenceMessage("แสดง PDF ต้นฉบับได้ แต่เติมข้อมูลยังไม่สำเร็จ: "+(error.message||error));
+ }
+}
+function queueTemplateRefresh(){
+ if(!templateBlob)return;
+ clearTimeout(pdfRenderTimer);
+ pdfRenderTimer=setTimeout(refreshPdfPreview,550);
+}
+
 const setPdfPage=()=>{
  $("paperLabel").textContent="PDF ต้นฉบับจริง · หน้า "+page+" / "+pages.length;
  if(pdfObjectUrl){const next=pdfObjectUrl+"#page="+page+"&zoom=page-width";if(fileFrame().src!==next)fileFrame().src=next;}
@@ -91,7 +120,7 @@ async function loadPdfBlob(dept){
 }
 async function ensureTemplate(){
  const requested=activeDepartment;
- templateBlob=null;
+ templateBlob=null;previewBlob=null;
  if(pdfObjectUrl){URL.revokeObjectURL(pdfObjectUrl);pdfObjectUrl=null}
  fileFrame().src="about:blank";fileFrame().style.display="none";
  if(!requested||!templateStorage)return;
@@ -105,10 +134,8 @@ async function ensureTemplate(){
   }
   if(activeDepartment!==requested)return;
   if(templateBlob.type!=="application/pdf"&&templateBlob.type!=="application/octet-stream")throw Error("ไฟล์ใน Storage ไม่ใช่ PDF");
-  pdfObjectUrl=URL.createObjectURL(new Blob([templateBlob],{type:"application/pdf"}));
-  fileFrame().style.display="block";
-  setPdfPage();
-  referenceMessage("แสดง PDF ต้นฉบับจริง · "+pages.length+" หน้า · "+(templateBlob.size/1024).toFixed(1)+" KB"+(loadedDept!==requested?" · ใช้แม่แบบกลาง":"")+" · ข้อมูลในฟอร์มยังไม่ถูกเติมลง PDF");
+  $("templateInstallStatus").textContent="PDF ต้นฉบับพร้อมแล้ว · "+(templateBlob.size/1024).toFixed(1)+" KB";
+  await refreshPdfPreview();
   $("templateInstallStatus").textContent="พบแม่แบบ PDF ใน Storage แล้ว ไม่ต้องอัปโหลดซ้ำ";
  }catch(e){
   if(activeDepartment!==requested)return;
@@ -161,7 +188,7 @@ const n=(content)=>'<p>'+content+'</p>';
 function officialPage(i){return renderGovernmentPage(i,{value:v,escape:esc,items:state.items,department:dept()})}
 function fieldMarkup(f){let [key,label,def,type="text",opts]=f;return '<label class="'+(type==="textarea"?"wide":"")+'">'+esc(label)+(type==="select"?'<select data-key="'+key+'">'+opts.map(([value,title])=>'<option value="'+esc(value)+'" '+(v(key)===value?"selected":"")+'>'+esc(title)+'</option>').join("")+'</select>':type==="textarea"?'<textarea data-key="'+key+'">'+esc(v(key))+'</textarea>':'<input data-key="'+key+'" type="'+type+'" '+(type==="number"?'min="0" step="any"':'')+' value="'+esc(v(key))+'">')+'</label>'}
 function renderInputs(){ $("commonFields").innerHTML=commonFields.map(fieldMarkup).join("");$("specificFields").innerHTML=specificFields.map(f=>sections.has(f[0])?'<div class="sectiontitle">'+esc(f[1])+'</div>':fieldMarkup(f)).join("");
-document.querySelectorAll("[data-key]").forEach(el=>el.oninput=()=>{state.values[el.dataset.key]=el.value;renderPaper();renderTotals();queueTemplateRefresh();});}
+document.querySelectorAll("[data-key]").forEach(el=>el.oninput=()=>{state.values[el.dataset.key]=el.value;renderPaper();renderTotals();queueTemplateRefresh();queueTemplateRefresh();});}
 function renderItems(){ $("itemsRows").innerHTML=state.items.map((r,i)=>'<div class="itemRow"><strong>รายการที่ '+(i+1)+'</strong><div class="rowgrid">'+[["description","ชื่อรายการพัสดุ"],["quantity","จำนวน"],["unit","หน่วยนับ"],["unitPrice","ราคาต่อหน่วย"]].map(([k,name])=>'<label>'+name+'<input data-item="'+i+'" data-col="'+k+'" value="'+esc(r[k])+'" '+(["quantity","unitPrice"].includes(k)?'type="number" min="0" step="any"':'')+'></label>').join("")+'</div><button data-remove="'+i+'" class="secondary">ลบรายการ</button></div>').join("");document.querySelectorAll("[data-item]").forEach(el=>el.oninput=()=>{state.items[Number(el.dataset.item)][el.dataset.col]=el.value;renderPaper();renderTotals()});document.querySelectorAll("[data-remove]").forEach(el=>el.onclick=()=>{if(state.items.length===1)return;state.items.splice(Number(el.dataset.remove),1);renderItems();renderPaper();queueTemplateRefresh()});renderTotals()}
 function renderTotals(){$("itemTotals").innerHTML='รวมมูลค่ารายการพัสดุที่กรอก: <b>'+fmt(total())+' บาท</b>　(โปรดตรวจเทียบวงเงินงาน '+fmt(v("budget"))+' บาท)'}
 function renderPaper(){setPdfPage();document.querySelectorAll("[data-page-button]").forEach(b=>b.classList.toggle("selected",Number(b.dataset.pageButton)===page))}
@@ -246,12 +273,12 @@ $("selectAll").onclick=()=>{state.selected=Array.from({length:11},(_,i)=>i+1);re
 $("selectNone").onclick=()=>{state.selected=[];renderReview()};
 $("quickPrint").onclick=()=>{$("printSelected").click()};
 $("printSelected").onclick=async()=>{
- if(!templateBlob)return alert("ยังไม่มี PDF ต้นฉบับ กรุณาติดตั้งแม่แบบก่อน");
+ if(!previewBlob)return alert("PDF ยังไม่พร้อม กรุณารอให้ Preview เติมข้อมูลเสร็จ");
  const selection=state.selected.slice().sort((a,b)=>a-b).filter(n=>n>=1&&n<=11);
  if(!selection.length)return alert("กรุณาเลือกหน้าที่ต้องการพิมพ์");
  try{
   if(!window.PDFLib?.PDFDocument)throw Error("โหลดตัวช่วยเลือกหน้า PDF ไม่สำเร็จ");
-  const original=await PDFLib.PDFDocument.load(await templateBlob.arrayBuffer());
+  const original=await PDFLib.PDFDocument.load(await previewBlob.arrayBuffer());
   const doc=await PDFLib.PDFDocument.create();
   const copied=await doc.copyPages(original,selection.filter(n=>n<=original.getPageCount()).map(n=>n-1));
   copied.forEach(p=>doc.addPage(p));
@@ -259,7 +286,7 @@ $("printSelected").onclick=async()=>{
   const link=document.createElement("a");const url=URL.createObjectURL(new Blob([bytes],{type:"application/pdf"}));
   link.href=url;link.download="สำเนาเอกสารราชการ_"+(state.values.subject||"ต้นฉบับ")+".pdf";
   document.body.appendChild(link);link.click();link.remove();
-  $("banner").textContent="ส่งออก PDF จากหน้าต้นฉบับจริง "+copied.length+" หน้าแล้ว · เปิดไฟล์ที่ดาวน์โหลดเพื่อพิมพ์ได้ (ยังไม่เติมค่าจากฟอร์ม)";
+  $("banner").textContent="ส่งออก PDF จากหน้าต้นฉบับจริง "+copied.length+" หน้าแล้ว · เปิดไฟล์ที่ดาวน์โหลดเพื่อพิมพ์ได้ (ข้อมูลที่กรอกถูกเติมในจุดที่แมปแล้ว)";
   setTimeout(()=>URL.revokeObjectURL(url),60000);
  }catch(e){alert("ส่งออก PDF ไม่สำเร็จ: "+(e.message||e))}
 };
