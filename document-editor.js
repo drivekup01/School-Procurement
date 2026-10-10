@@ -124,12 +124,27 @@ $("installTemplate").onclick=async()=>{
  if(file.size>20*1024*1024)return alert("ไฟล์ Word ต้องไม่เกิน 20 MB");
  if(templateBlob&&!confirm("มีแม่แบบอยู่แล้ว การติดตั้งใหม่จะแทนไฟล์ปัจจุบันของฝ่ายนี้ ต้องการดำเนินการหรือไม่?"))return;
  const button=$("installTemplate");button.disabled=true;
+ // Fail clearly instead of spending several minutes retrying a Storage endpoint
+ // that may be unavailable on the project's current billing plan.
+ if(firebaseFns.setMaxUploadRetryTime)firebaseFns.setMaxUploadRetryTime(templateStorage,20000);
  $("templateInstallStatus").textContent="กำลังบันทึกแม่แบบจริงลง Firebase…";
  try{
   await firebaseFns.uploadBytes(firebaseFns.ref(templateStorage,templatePath()),file,{contentType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
   $("templateInstallStatus").textContent="ติดตั้ง Word แม่แบบจริงสำเร็จ สามารถเปิดดูได้ทุกครั้ง";
   await ensureTemplate();
- }catch(e){$("templateInstallStatus").textContent="ติดตั้งไม่สำเร็จ: "+(e.code||e.message)}
+ }catch(e){
+ const reason=e.code||"unknown";
+ const help=reason==="storage/retry-limit-exceeded"
+ ? "อัปโหลดไม่สำเร็จภายในเวลาที่กำหนด โปรดตรวจ Firebase Storage > Files ว่าสร้าง Bucket แล้ว และตรวจแพ็กเกจ Blaze / Billing รวมถึง Network จากนั้นค่อยลองอีกครั้ง"
+ : reason==="storage/unauthorized"
+ ? "Storage Rules ไม่อนุญาตบัญชีนี้อัปโหลด ตรวจว่าใช้ Admin และ Publish Storage Rules ล่าสุดแล้ว"
+ : reason==="storage/unauthenticated"
+ ? "กรุณาเข้าสู่ระบบใหม่ก่อนอัปโหลด"
+ : reason==="storage/bucket-not-found"||reason==="storage/no-default-bucket"
+ ? "ไม่พบ Storage Bucket โปรดเปิด Storage ให้เรียบร้อยและตรวจชื่อ Bucket ใน firebase-config.js"
+ : "ไม่สามารถอัปโหลด: "+(e.message||reason);
+ $("templateInstallStatus").textContent=help+" ["+reason+"]";
+}
  finally{button.disabled=false}
 };
 const blank=()=>({values:{...Object.fromEntries([...commonFields,...specificFields.filter(f=>!sections.has(f[0]))].map(f=>[f[0],f[2]||""])),department:activeDepartment||""},items:[{description:"",quantity:"",unit:"",unitPrice:""}],selected:Array.from({length:16},(_,i)=>i+1)});
