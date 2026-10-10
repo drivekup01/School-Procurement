@@ -1,77 +1,47 @@
-# ตั้งค่าระบบ School Procurement (สำหรับใช้งานจริง)
+# ตั้งค่าระบบจัดซื้อจัดจ้างกับ Firebase เดิมของ School-Budget
 
-**สถานะปัจจุบัน:** หน้าเว็บ Production เชื่อม Firebase ผ่านโค้ดแล้ว แต่ไม่มี Firebase Project ที่ตั้งค่าไว้ใน Repository นี้ และยังไม่มีผู้ใช้/ไฟล์จริงที่อัปโหลดได้จากบทสนทนานี้ **จึงยังไม่ใช่ระบบพร้อมใช้งาน** ห้ามกรอกเอกสารราชการจริงจนกว่าจะผ่านการตรวจสิทธิ์และทดสอบการเข้าถึงไฟล์
+**ใช้ Firebase Project เดียวกัน:** `school-budget-3e69d`
 
-## 1. สร้าง Firebase Project แยกต่างหาก
+## อัปเดตแล้ว
+- `firebase-config.js` ใช้ค่า Firebase Web App เดียวกับ School-Budget
+- เว็บ School Procurement ใช้ collections ชื่อขึ้นต้น `procurement_` เพื่อไม่ชนโครงสร้าง School-Budget:
+  - `procurement_users/{uid}`
+  - `procurement_projects/{id}`
+  - `procurement_jobs/{id}`
+  - `procurement_documents/{id}`
+- ไฟล์ PDF ใช้ Firebase Storage path `procurement/projects/{projectId}/files/{documentId}`
+- ทั้งสองเว็บยังแยก Repository และ Hosting ได้ แต่ใช้งาน Authentication / Firestore / Storage Project เดียวกัน
 
-สร้างโครงการใหม่ชื่อประมาณ `school-procurement-...` ใน Firebase Console (อย่าใช้ของ School-OS หรือ School-Budget ร่วมกัน)
-- Authentication → Sign-in method → **Email/Password**: Enable
-- Firestore Database → Create database → เลือก location ให้เหมาะสม
-- Storage → Get started → เลือก location/plan ที่รองรับการใช้งาน (อาจมีค่าใช้จ่าย)
-- Project settings → Your apps → Register web app แล้วนำค่า Web App Config มาใส่ที่ `firebase-config.js` (ค่า client config ไม่ใช่รหัสลับของ service account)
-- Authentication → Settings → Authorized domains: เพิ่ม `drivekup01.github.io` หากจำเป็น
-- ห้ามใส่ private service-account key ใน GitHub
+## สำคัญ: กฎเดิมของ School-Budget ยังปิดการอ่าน/เขียนทั้งหมด
+ตอนที่ตรวจ Repository `School-Budget` พบ `firestore.rules` มี catch-all `allow read, write: if false`.
+**ไฟล์กฎใน Repository ไม่ได้บอกยืนยันกฎที่ Publish อยู่บน Firebase Console**. ต้องตรวจ Rules ที่ Firebase Console จริงก่อน.
 
-## 2. เผยแพร่กฎการเข้าถึงข้อมูล
+**ห้ามนำไฟล์ firestore.rules และ storage.rules ของ School Procurement ไปกด Publish แทนที่กฎของ School-Budget ทันที** เพราะทั้งสองระบบใช้ Firebase Project เดียวกัน และ Rules ของ Firestore/Storage ใช้ร่วมกันทั้ง Project:
+1. เปิด Firebase Console → School-Budget → Firestore → Rules
+2. สำรองกฎปัจจุบันไว้ก่อน
+3. ผสานกฎสำหรับ `procurement_*` เข้ากับกฎ School-Budget ที่ใช้อยู่ โดยคง namespace และสิทธิ์ของ Budget เดิม
+4. ตรวจใน Rules Playground / Emulator ว่าสมาชิกแต่ละฝ่ายอ่านทุกฝ่ายได้ เขียนเฉพาะฝ่ายตัวเอง และบุคคลภายนอกอ่านไม่ได้
+5. Storage Rules ก็ต้องผสาน ไม่เขียนทับกฎไฟล์ระบบ Budget
+6. แล้วจึง Publish หลังผ่านการทดสอบ
 
-นำ `firestore.rules` ไปตั้งใน Firestore → Rules และ `storage.rules` ไปตั้งใน Storage → Rules แล้วกด Publish หลังตรวจทาน
+## บัญชีผู้ใช้
+1. เปิด Authentication → Email/Password
+2. สร้าง Admin 1 บัญชี และ Staff อีกประมาณ 4 บัญชี
+3. สร้างเอกสาร `procurement_users/{uid}` ตาม UID ใน Authentication:
+   - `role`: `admin` หรือ `staff`
+   - `departmentId`: `site` / `academic` / `general` / `personnel`
+   - `displayName`: ชื่อแสดงผล
+4. ชื่อฝ่ายเป็นค่าเริ่มต้น ต้องปรับให้ตรงหน่วยงานจริงก่อนใช้หลายฝ่าย
 
-การทำงานตามกฎ:
-- สมาชิกที่ลงชื่อเข้าใช้และมีเอกสาร `users/{uid}` อ่านทุกโครงการ งาน และไฟล์ได้
-- เจ้าหน้าที่ทั่วไปสร้างโครงการ/งาน และอัปโหลด PDF ได้เฉพาะฝ่ายตน
-- Admin สร้างในทุกฝ่ายได้
-- รอบแรก **ยังไม่เปิดสิทธิ์แก้ไข/ลบ** ข้อมูลที่บันทึกแล้ว เพื่อป้องกันการเปลี่ยนหลักฐานย้อนหลัง การแก้ข้อมูลและ versioning จะพัฒนาเป็นขั้นต่อไป
-- ผู้ใช้ไม่สามารถแก้ role/departmentId ของตัวเองผ่านเว็บ
+## Storage
+- เปิด Cloud Storage ใน Firebase Project เดิม (อาจต้องเปิด Billing ตามเงื่อนไขปัจจุบัน)
+- ไฟล์ PDF เก็บใน path แยกของ procurement ตามด้านบน
+- เว็บใช้ Firebase SDK `getBlob()` อ่านแบบผ่านสิทธิ์ ไม่สร้าง permanent public download token URL
+- อาจต้องตั้งค่า CORS ให้ origin `https://drivekup01.github.io` สำหรับโหลดไฟล์ผ่าน Browser; จำกัด CORS ให้เฉพาะเว็บนี้
 
-## 3. สร้างผู้ใช้ Admin คนแรก
-
-Authentication → Users → Add user → สร้าง Email/Password สำหรับ Admin
-นำ **UID ของบัญชีนั้น** ไปสร้าง Firestore Document:
-Collection: `users`
-Document ID: `<UID จาก Authentication>`
-Fields:
-- `role` (string): `admin`
-- `departmentId` (string): `site`
-- `displayName` (string): ชื่อที่ต้องการแสดง
-
-เจ้าหน้าที่ Staff อีก 4 บัญชี สร้างแบบเดียวกัน โดย role = `staff` และ departmentId เป็นหนึ่งใน `site`, `academic`, `general`, `personnel`.
-*ชื่อฝ่ายเหล่านี้เป็นค่าตั้งต้น ต้องกำหนดชื่อฝ่ายจริงก่อนเปิดใช้กับทุกคน*
-
-**สำคัญ:** กฎ Firestore ปิดการสร้าง/แก้ `users` ผ่านเว็บ สมาชิก/ผู้ดูแลต้องเพิ่มโดย Firebase Console หรือ trusted Admin SDK เท่านั้นในรุ่นแรก
-
-## 4. ตั้งค่า CORS สำหรับดู PDF จาก Cloud Storage
-
-ตัวดู PDF ใช้ `getBlob()` เพื่อให้เบราว์เซอร์โหลดไฟล์ที่ผ่าน Firebase Security Rules โดยไม่สร้างลิงก์ดาวน์โหลดแบบ token สาธารณะ หาก browser แจ้ง CORS ต้องตั้ง bucket CORS อนุญาต origin:
-`https://drivekup01.github.io`
-และ methods: `GET, HEAD`
-ตั้งค่า CORS ด้วย Google Cloud CLI / gsutil ที่ bucket ของ Storage **อย่าตั้ง `*` โดยไม่จำเป็น**
-
-ตัวอย่าง cors.json:
-```json
-[{"origin":["https://drivekup01.github.io"],"method":["GET","HEAD"],"responseHeader":["Content-Type"],"maxAgeSeconds":3600}]
-```
-ดูคำสั่งจริงตามคู่มือ Google Cloud Storage ของ bucket ของคุณ
-
-## 5. การทดสอบก่อนใช้เอกสารจริง
-
-1. Admin login ได้
-2. Staff login แล้วเห็นโครงการจากทุกฝ่าย
-3. Staff ฝ่าย A เพิ่มโครงการ/งานตนเองได้ แต่สร้างในฝ่าย B ไม่ได้
-4. Staff ฝ่าย A เปิด PDF ของฝ่าย B ได้
-5. Staff ฝ่าย A อัปโหลดทับไฟล์ฝ่าย B ไม่ได้
-6. ผู้ใช้ที่ไม่มี `users/{uid}` อ่านข้อมูลไม่ได้
-7. อัปโหลด PDF ที่ไม่ใช่ PDF/ใหญ่เกิน 25MB ถูกปฏิเสธ
-8. ทดสอบเปิด Preview และดาวน์โหลด PDF จริง รวมถึงตรวจชื่อไทย/จำนวนหน้า
-9. ทดสอบการเปลี่ยนบัญชีผู้ใช้และการ sign out แล้วเข้าถึงไฟล์ไม่ได้
-
-## 6. โครงสร้างข้อมูล
-
-- `users/{uid}`: role, departmentId, displayName
-- `projects/{id}`: name, fiscalYear, departmentId, budget, createdBy, createdAt
-- `jobs/{id}`: projectId, departmentId, title, budget, referencePrice, approved, status, createdBy, createdAt
-- `documents/{id}`: projectId, jobId, departmentId, title, filename, storagePath, status, createdBy, createdAt
-- Cloud Storage: `projects/{projectId}/files/{documentId}`
-
-**ข้อจำกัดรุ่นนี้:** ยังไม่มี server-side audit log, versioned documents, OCR/mapping DOCX, การปรับสถานะงานอย่างเป็นทางการ, แม่แบบ Word → PDF อัตโนมัติ, หรือ backup/restore ของ Firebase
-
-โปรดอย่านำเลข `0` ของเงินไปตีความว่าเป็น 'จ่ายแล้ว' เพราะหน้ารายงานยังเป็นเพียงยอดอนุมัติที่บันทึกในระบบ ไม่ใช่หลักฐานการเบิกจ่ายจริง
+## ข้อจำกัดระหว่างตั้งค่า
+- Firebase config ใส่แล้ว **แต่ยังไม่ได้ยืนยันว่าบริการ Auth, Firestore, Storage เปิดใช้งาน หรือ Rules ถูก Publish**
+- เว็บจึงอาจแสดง Login ได้ แต่การเข้าใช้ข้อมูลจริงยังไม่สำเร็จจนกว่าจะกำหนดสิทธิ์และตั้งค่าครบ
+- ไม่มีข้อมูลโครงการ/เอกสารจริงใดถูกอัปโหลดในขั้นตอนเปลี่ยน config นี้
+- ยังไม่ได้รวมข้อมูลโครงการกับ School-Budget โดยตรง ระยะแรกแยก collection เพื่อปลอดภัยก่อน แล้วค่อยกำหนด `budgetProjectId` ผูกงานจัดซื้อกับแผนงบประมาณจริงโดยไม่บันทึกซ้ำ
+- ยังไม่รองรับแก้ไข/ลบข้อมูลแบบมีประวัติ ไม่ควรนำเอกสารสำคัญมาใช้ผลิตจริงจนผ่านการทดสอบสิทธิ์และสำรองข้อมูล
