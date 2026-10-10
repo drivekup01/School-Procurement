@@ -2,20 +2,20 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     function signedIn() { return request.auth != null; }
-    function p() { return /databases/(default)/documents/users/$(request.auth.uid); }
+    function p() { return /databases/(default)/documents/procurement_users/$(request.auth.uid); }
     function member() { return signedIn() && firestore.exists(p()); }
     function profile() { return firestore.get(p()).data; }
     function isAdmin() { return member() && profile().role == 'admin'; }
     function permitted(projectId,docId) {
-      return member() && firestore.exists(/databases/(default)/documents/documents/$(docId)) &&
+      return member() && firestore.exists(/databases/(default)/documents/procurement_documents/$(docId)) &&
         (isAdmin() || profile().departmentId ==
-        firestore.get(/databases/(default)/documents/documents/$(docId)).data.departmentId) &&
-        firestore.get(/databases/(default)/documents/documents/$(docId)).data.projectId == projectId;
+        firestore.get(/databases/(default)/documents/procurement_documents/$(docId)).data.departmentId) &&
+        firestore.get(/databases/(default)/documents/procurement_documents/$(docId)).data.projectId == projectId;
     }
-    match /projects/{projectId}/files/{docId} {
-      allow read: if member() && firestore.exists(/databases/(default)/documents/documents/$(docId)) &&\n        firestore.get(/databases/(default)/documents/documents/$(docId)).data.projectId == projectId;
+    match /procurement/projects/{projectId}/files/{docId} {
+      allow read: if member() && firestore.exists(/databases/(default)/documents/procurement_documents/$(docId)) &&\n        firestore.get(/databases/(default)/documents/procurement_documents/$(docId)).data.projectId == projectId;
       allow create: if permitted(projectId,docId) &&
-        firestore.get(/databases/(default)/documents/documents/$(docId)).data.status == 'uploading' &&
+        firestore.get(/databases/(default)/documents/procurement_documents/$(docId)).data.status == 'uploading' &&
         request.resource.size <= 25 * 1024 * 1024 &&
         request.resource.contentType == 'application/pdf';
       allow update, delete: if false;
