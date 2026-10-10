@@ -61,7 +61,18 @@ export async function showWordDocument(blob,container,values){
  if(!globalThis.docx?.renderAsync)throw Error("ตัวแสดง Word ยังโหลดไม่สำเร็จ กรุณารีเฟรชหน้าเว็บ");
  const result=await fillOfficialDocx(blob,values);
  container.innerHTML="";
- await globalThis.docx.renderAsync(result.blob,container,null,{breakPages:true,inWrapper:true,ignoreLastRenderedPageBreak:false});
+ await globalThis.docx.renderAsync(result.blob,container,null,{
+  breakPages:true,
+  inWrapper:true,
+  ignoreFonts:false,
+  ignoreWidth:false,
+  ignoreHeight:false,
+  experimental:true, // calculate tab stops in government-form paragraphs
+  ignoreLastRenderedPageBreak:false,
+  renderHeaders:true,
+  renderFooters:true,
+  renderFootnotes:true
+ });
  const pages=[...container.querySelectorAll("section.docx")];
  return {pages,replacements:result.count,docx:result.blob};
 }
