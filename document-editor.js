@@ -67,7 +67,6 @@ const sections=new Set(["people","supplier","dates","payment"]);
 let user=null,profile=null,db=null,step="common",page=1;
 let savedCopies=[];
 let activeDepartment=null;
-function referenceMessage(msg){$("sourceMessage").textContent=msg}
 let templateStorage=null,templateBlob=null,renderedDocx=null,renderSerial=0,renderDelay=null;
 function templatePath(){return "procurement/templates/departments/"+activeDepartment+"/source.docx"}
 function referenceMessage(msg){$("sourceMessage").textContent=msg}
