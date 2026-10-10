@@ -92,16 +92,30 @@ function queueTemplateRefresh(){
 }
 async function ensureTemplate(){
  templateBlob=null;renderedDocx=null;$("actualWord").innerHTML="";
- if(!activeDepartment||!templateStorage)return;
- referenceMessage("กำลังเรียกแม่แบบ Word ของ"+departmentName(activeDepartment)+" จาก Storage…");
+ const requestedDept=activeDepartment;
+ if(!requestedDept||!templateStorage)return;
+ referenceMessage("กำลังเรียกแม่แบบ Word ของ"+departmentName(requestedDept)+" จาก Storage…");
  try{
   templateBlob=await firebaseFns.getBlob(firebaseFns.ref(templateStorage,templatePath()));
-  $("templateInstallStatus").textContent="มีแม่แบบ Word บน Firebase แล้ว";
+  if(activeDepartment!==requestedDept)return;
+  $("templateInstallStatus").textContent="มีแม่แบบ Word ของฝ่ายนี้แล้ว";
   renderTemplateWord();
  }catch(e){
+  if(activeDepartment!==requestedDept)return;
+  if(e.code==="storage/object-not-found"&&requestedDept!=="general"){
+    try{
+      templateBlob=await firebaseFns.getBlob(firebaseFns.ref(templateStorage,"procurement/templates/departments/general/source.docx"));
+      if(activeDepartment!==requestedDept)return;
+      referenceMessage("กำลังใช้แม่แบบกลางของฝ่ายบริหารทั่วไปสำหรับ"+departmentName(requestedDept)+" • สามารถติดตั้งแม่แบบเฉพาะฝ่ายทับภายหลัง");
+      $("templateInstallStatus").textContent="ใช้แม่แบบกลางชั่วคราว";
+      renderTemplateWord();return;
+    }catch(fallbackError){
+      if(fallbackError.code!=="storage/object-not-found")e=fallbackError;
+    }
+  }
   const missing=e.code==="storage/object-not-found";
-  referenceMessage(missing?"ยังไม่ได้ติดตั้งแม่แบบ Word ของฝ่ายนี้ ให้ Admin เลือกไฟล์แม่แบบครั้งแรก":"ไม่สามารถอ่านไฟล์ Word: "+(e.code||e.message));
-  $("templateInstallStatus").textContent=missing?"ยังไม่มีแม่แบบฝ่ายนี้":"โหลดแม่แบบไม่สำเร็จ: "+(e.code||e.message);
+  referenceMessage(missing?"ยังไม่มีแม่แบบ Word ใน Firebase: Admin ติดตั้งไฟล์ต้นฉบับของฝ่ายบริหารทั่วไปเพียงครั้งเดียวเพื่อเริ่มทดลอง":"โหลดแม่แบบ Word ไม่สำเร็จ: "+(e.code||e.message));
+  $("templateInstallStatus").textContent=missing?"ยังไม่มีแม่แบบ":"โหลดแม่แบบไม่สำเร็จ: "+(e.code||e.message);
  }
 }
 $("installTemplate").onclick=async()=>{
