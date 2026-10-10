@@ -141,7 +141,7 @@ if(ready){
 try{
 const app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app);storage=getStorage(app);
 onAuthStateChanged(auth,async user=>{
-resetListeners();me=user;profile=null;$("signout").hidden=!user;$("identity").textContent=user?.email||"ยังไม่ได้เข้าสู่ระบบ";$("login").hidden=!!user;$("workspace").hidden=true;
+resetListeners();me=user;profile=null;$("signout").hidden=!user;$("identity").textContent=user?.email||"ยังไม่ได้เข้าสู่ระบบ";$("login").hidden=!!user;$("workspace").hidden=true;$("healthcheck").hidden=!user;
 if(!user){notify("");return}
 notify("กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...");
 try{const userDoc=await getDoc(doc(db,"procurement_users",user.uid));if(!userDoc.exists())throw Error("ยังไม่ได้กำหนดสิทธิ์ผู้ใช้ โปรดให้ Admin เพิ่มข้อมูล procurement_users/"+user.uid);
