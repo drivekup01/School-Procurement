@@ -1,5 +1,5 @@
 import {renderGovernmentPage} from "./official-forms.js";
-import {showWordDocument} from "./official-word-preview.js";
+import {showWordDocument} from "./official-word-preview.js?v=word-layout3";
 import {firebaseConfig} from "./firebase-config.js";
 
 
