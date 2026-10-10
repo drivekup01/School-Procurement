@@ -1,19 +1,21 @@
 import {renderGovernmentPage} from "./official-forms.js";
+import {showWordDocument} from "./official-word-preview.js";
 import {firebaseConfig} from "./firebase-config.js";
 
 
 
 let firebaseFns=null;
 async function loadFirebaseSdk(){
- const [app, auth, firestore]=await Promise.all([
+ const [app, auth, firestore, storage]=await Promise.all([
  import("https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js"),
  import("https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js"),
- import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js")
+ import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"),
+ import("https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js")
  ]);
- firebaseFns={...app,...auth,...firestore};return firebaseFns;
+ firebaseFns={...app,...auth,...firestore,...storage};return firebaseFns;
 }
 const $=s=>document.getElementById(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const pages=["บันทึกมอบหมายผู้กำหนดคุณลักษณะ","บันทึกขอความเห็นชอบ TOR","ขอบเขตงาน TOR (หน้า 1)","ขอบเขตงาน TOR (หน้า 2)","รายงานขอซื้อ","รายละเอียดพัสดุแนบท้าย","รายงานผลและขออนุมัติสั่งซื้อ","ใบตรวจรับพัสดุ","รายงานผลตรวจรับและอนุมัติเบิกจ่าย","ใบเบิกพัสดุ"];
+const pages=["มอบหมายผู้กำหนดคุณลักษณะ","อนุมัติและขอความเห็นชอบ TOR","รายงานขอความเห็นชอบ TOR / เริ่ม TOR","TOR หลักการและเงื่อนไข","TOR ตารางพัสดุและกำหนดส่ง","TOR ต่อ / เริ่มรายงานขอซื้อ","รายงานขอซื้อ","อนุมัติรายงานขอซื้อ / ตารางแนบท้าย","ตารางแนบท้าย / รายงานผลพิจารณา","ขออนุมัติสั่งซื้อ","ประกาศผู้ชนะการเสนอราคา","ใบตรวจรับพัสดุ","ใบตรวจรับต่อ / เริ่มรายงานเบิกจ่าย","รายงานเบิกจ่ายและตารางการเงิน","อนุมัติเบิกจ่าย / ใบเบิกพัสดุ","ใบเบิกพัสดุและผู้ลงนาม"];
 const departments=[["general","ฝ่ายบริหารทั่วไป"],["academic","ฝ่ายบริหารวิชาการ"],["personnel","ฝ่ายบริหารงานบุคคล"],["site","ฝ่ายสถานที่"],["budget","ฝ่ายบริหารงบประมาณ"]];
 const commonFields=[
 ["school","ชื่อสถานศึกษา","โรงเรียนค่ายบางระจันวิทยาคม"],
@@ -66,12 +68,58 @@ let user=null,profile=null,db=null,step="common",page=1;
 let savedCopies=[];
 let activeDepartment=null;
 function referenceMessage(msg){$("sourceMessage").textContent=msg}
-function showOfficialPage(){
- $("sourceViewerBox").hidden=true;
- $("generatedPreview").hidden=false;
- referenceMessage("แสดงแบบเอกสารชุดแรกจากต้นฉบับที่ถอดเป็นโครงหน้าและข้อความ พร้อมเติมข้อมูลที่กรอก • ต้องตรวจเทียบกับ Word ภาพสแกนก่อนใช้ลงนาม");
+let templateStorage=null,templateBlob=null,renderedDocx=null,renderSerial=0,renderDelay=null;
+function templatePath(){return "procurement/templates/departments/"+activeDepartment+"/source.docx"}
+function referenceMessage(msg){$("sourceMessage").textContent=msg}
+function scrollWordPage(){
+ const el=renderedDocx?.pages?.[page-1];if(el)el.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
-const blank=()=>({values:{...Object.fromEntries([...commonFields,...specificFields.filter(f=>!sections.has(f[0]))].map(f=>[f[0],f[2]||""])),department:activeDepartment||""},items:[{description:"",quantity:"",unit:"",unitPrice:""}],selected:Array.from({length:10},(_,i)=>i+1)});
+async function renderTemplateWord(){
+ if(!templateBlob||!activeDepartment)return;
+ const serial=++renderSerial;
+ referenceMessage("กำลังแสดงหน้าเอกสารจาก Word แม่แบบจริง…");
+ try{
+  const view=await showWordDocument(templateBlob,$("actualWord"),state.values);
+  if(serial!==renderSerial)return;
+  renderedDocx=view;
+  $("paperLabel").textContent="Word แม่แบบจริง · หน้า "+page+" / "+view.pages.length;
+  referenceMessage("แม่แบบ Word จริง • "+view.pages.length+" หน้า • ทดลองเติมข้อมูลลงในตำแหน่งที่ระบบตรวจพบ "+view.replacements+" จุด (ตรวจข้อความก่อนพิมพ์)");
+ }catch(e){referenceMessage("ไม่สามารถเปิดแม่แบบ Word: "+(e.message||e))}
+}
+function queueTemplateRefresh(){
+ if(!templateBlob)return;
+ clearTimeout(renderDelay);renderDelay=setTimeout(renderTemplateWord,650);
+}
+async function ensureTemplate(){
+ templateBlob=null;renderedDocx=null;$("actualWord").innerHTML="";
+ if(!activeDepartment||!templateStorage)return;
+ referenceMessage("กำลังเรียกแม่แบบ Word ของ"+departmentName(activeDepartment)+" จาก Storage…");
+ try{
+  templateBlob=await firebaseFns.getBlob(firebaseFns.ref(templateStorage,templatePath()));
+  $("templateInstallStatus").textContent="มีแม่แบบ Word บน Firebase แล้ว";
+  renderTemplateWord();
+ }catch(e){
+  const missing=e.code==="storage/object-not-found";
+  referenceMessage(missing?"ยังไม่ได้ติดตั้งแม่แบบ Word ของฝ่ายนี้ ให้ Admin เลือกไฟล์แม่แบบครั้งแรก":"ไม่สามารถอ่านไฟล์ Word: "+(e.code||e.message));
+  $("templateInstallStatus").textContent=missing?"ยังไม่มีแม่แบบฝ่ายนี้":"โหลดแม่แบบไม่สำเร็จ: "+(e.code||e.message);
+ }
+}
+$("installTemplate").onclick=async()=>{
+ if(profile?.role!=="admin"||!activeDepartment)return;
+ const file=$("templateInput").files?.[0];
+ if(!file||!file.name.toLowerCase().endsWith(".docx"))return alert("กรุณาเลือกไฟล์ Word .docx");
+ if(file.size>20*1024*1024)return alert("ไฟล์ Word ต้องไม่เกิน 20 MB");
+ if(templateBlob&&!confirm("มีแม่แบบอยู่แล้ว การติดตั้งใหม่จะแทนไฟล์ปัจจุบันของฝ่ายนี้ ต้องการดำเนินการหรือไม่?"))return;
+ const button=$("installTemplate");button.disabled=true;
+ $("templateInstallStatus").textContent="กำลังบันทึกแม่แบบจริงลง Firebase…";
+ try{
+  await firebaseFns.uploadBytes(firebaseFns.ref(templateStorage,templatePath()),file,{contentType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+  $("templateInstallStatus").textContent="ติดตั้ง Word แม่แบบจริงสำเร็จ สามารถเปิดดูได้ทุกครั้ง";
+  await ensureTemplate();
+ }catch(e){$("templateInstallStatus").textContent="ติดตั้งไม่สำเร็จ: "+(e.code||e.message)}
+ finally{button.disabled=false}
+};
+const blank=()=>({values:{...Object.fromEntries([...commonFields,...specificFields.filter(f=>!sections.has(f[0]))].map(f=>[f[0],f[2]||""])),department:activeDepartment||""},items:[{description:"",quantity:"",unit:"",unitPrice:""}],selected:Array.from({length:16},(_,i)=>i+1)});
 let state=blank();
 const fmt=n=>Number(n||0).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2});
 const v=k=>state.values[k]||"";
@@ -91,18 +139,18 @@ const n=(content)=>'<p>'+content+'</p>';
 function officialPage(i){return renderGovernmentPage(i,{value:v,escape:esc,items:state.items,department:dept()})}
 function fieldMarkup(f){let [key,label,def,type="text",opts]=f;return '<label class="'+(type==="textarea"?"wide":"")+'">'+esc(label)+(type==="select"?'<select data-key="'+key+'">'+opts.map(([value,title])=>'<option value="'+esc(value)+'" '+(v(key)===value?"selected":"")+'>'+esc(title)+'</option>').join("")+'</select>':type==="textarea"?'<textarea data-key="'+key+'">'+esc(v(key))+'</textarea>':'<input data-key="'+key+'" type="'+type+'" '+(type==="number"?'min="0" step="any"':'')+' value="'+esc(v(key))+'">')+'</label>'}
 function renderInputs(){ $("commonFields").innerHTML=commonFields.map(fieldMarkup).join("");$("specificFields").innerHTML=specificFields.map(f=>sections.has(f[0])?'<div class="sectiontitle">'+esc(f[1])+'</div>':fieldMarkup(f)).join("");
-document.querySelectorAll("[data-key]").forEach(el=>el.oninput=()=>{state.values[el.dataset.key]=el.value;renderPaper();renderTotals();});}
-function renderItems(){ $("itemsRows").innerHTML=state.items.map((r,i)=>'<div class="itemRow"><strong>รายการที่ '+(i+1)+'</strong><div class="rowgrid">'+[["description","ชื่อรายการพัสดุ"],["quantity","จำนวน"],["unit","หน่วยนับ"],["unitPrice","ราคาต่อหน่วย"]].map(([k,name])=>'<label>'+name+'<input data-item="'+i+'" data-col="'+k+'" value="'+esc(r[k])+'" '+(["quantity","unitPrice"].includes(k)?'type="number" min="0" step="any"':'')+'></label>').join("")+'</div><button data-remove="'+i+'" class="secondary">ลบรายการ</button></div>').join("");document.querySelectorAll("[data-item]").forEach(el=>el.oninput=()=>{state.items[Number(el.dataset.item)][el.dataset.col]=el.value;renderPaper();renderTotals()});document.querySelectorAll("[data-remove]").forEach(el=>el.onclick=()=>{if(state.items.length===1)return;state.items.splice(Number(el.dataset.remove),1);renderItems();renderPaper()});renderTotals()}
+document.querySelectorAll("[data-key]").forEach(el=>el.oninput=()=>{state.values[el.dataset.key]=el.value;renderPaper();renderTotals();queueTemplateRefresh();queueTemplateRefresh();});}
+function renderItems(){ $("itemsRows").innerHTML=state.items.map((r,i)=>'<div class="itemRow"><strong>รายการที่ '+(i+1)+'</strong><div class="rowgrid">'+[["description","ชื่อรายการพัสดุ"],["quantity","จำนวน"],["unit","หน่วยนับ"],["unitPrice","ราคาต่อหน่วย"]].map(([k,name])=>'<label>'+name+'<input data-item="'+i+'" data-col="'+k+'" value="'+esc(r[k])+'" '+(["quantity","unitPrice"].includes(k)?'type="number" min="0" step="any"':'')+'></label>').join("")+'</div><button data-remove="'+i+'" class="secondary">ลบรายการ</button></div>').join("");document.querySelectorAll("[data-item]").forEach(el=>el.oninput=()=>{state.items[Number(el.dataset.item)][el.dataset.col]=el.value;renderPaper();renderTotals()});document.querySelectorAll("[data-remove]").forEach(el=>el.onclick=()=>{if(state.items.length===1)return;state.items.splice(Number(el.dataset.remove),1);renderItems();renderPaper();queueTemplateRefresh()});renderTotals()}
 function renderTotals(){$("itemTotals").innerHTML='รวมมูลค่ารายการพัสดุที่กรอก: <b>'+fmt(total())+' บาท</b>　(โปรดตรวจเทียบวงเงินงาน '+fmt(v("budget"))+' บาท)'}
-function renderPaper(){$("paperLabel").textContent="ตัวอย่างเอกสาร · หน้า "+page+" / 10";$("paperHolder").innerHTML=officialPage(page);document.querySelectorAll("[data-page-button]").forEach(b=>b.classList.toggle("selected",Number(b.dataset.pageButton)===page))}
+function renderPaper(){$("paperLabel").textContent="Word แม่แบบจริง · หน้า "+page+" / 16";$("paperHolder").innerHTML=officialPage(Math.min(page,10));document.querySelectorAll("[data-page-button]").forEach(b=>b.classList.toggle("selected",Number(b.dataset.pageButton)===page))}
 function goStage(target){step=target;document.querySelectorAll(".stage").forEach(el=>el.hidden=el.id!==target);document.querySelectorAll("[data-stage]").forEach(el=>el.classList.toggle("selected",el.dataset.stage===target));if(target==="review")renderReview()}
-function goPage(n){page=Math.min(10,Math.max(1,n));renderPaper();showOfficialPage()}
+function goPage(n){page=Math.min(16,Math.max(1,n));$("paperLabel").textContent="Word แม่แบบจริง · หน้า "+page+" / 16";scrollWordPage()}
 function renderReview(){$("reviewPages").innerHTML=pages.map((title,i)=>'<label class="reviewRow"><input type="checkbox" data-print-page="'+(i+1)+'" '+(state.selected.includes(i+1)?"checked":"")+'><span>หน้า '+(i+1)+' — '+esc(title)+'</span><button type="button" class="secondary" data-jump="'+(i+1)+'">ดูหน้า</button></label>').join("");document.querySelectorAll("[data-print-page]").forEach(el=>el.onchange=()=>{const n=Number(el.dataset.printPage);state.selected=el.checked?[...new Set([...state.selected,n])]:state.selected.filter(x=>x!==n)});document.querySelectorAll("[data-jump]").forEach(el=>el.onclick=e=>{e.preventDefault();goPage(Number(el.dataset.jump))});const mandatory=[["project","ชื่อโครงการ"],["subject","ชื่องานจัดซื้อ"],["budget","วงเงิน"],["requestDate","วันที่เริ่มเรื่อง"],["procOfficer","เจ้าหน้าที่"],["headOfficer","หัวหน้าเจ้าหน้าที่"],["director","ผู้อำนวยการ"],["specPreparer","ผู้จัดทำ TOR"],["vendor","ชื่อผู้ขาย"],["inspector","ผู้ตรวจรับ"]].filter(([k])=>!v(k));$("missing").textContent=mandatory.length?"ข้อมูลที่ควรตรวจให้ครบก่อนพิมพ์: "+mandatory.map(x=>x[1]).join(" • "):"ข้อมูลหลักครบตามรายการตรวจเบื้องต้นแล้ว (ต้องอ่านตรวจถ้อยคำทุกหน้าก่อนนำไปใช้จริง)";}
 function safeSnapshot(d){
  const vals=d&&typeof d.values==="object"&&!Array.isArray(d.values)?d.values:{};
  return {values:Object.fromEntries(Object.entries(vals).slice(0,75).map(([k,v])=>[k,String(v??"").slice(0,2000)])),
  items:Array.isArray(d.items)?d.items.slice(0,80).map(i=>({description:String(i.description||"").slice(0,500),quantity:String(i.quantity||""),unit:String(i.unit||""),unitPrice:String(i.unitPrice||"")})):[],
- selected:Array.isArray(d.selected)?d.selected.filter(n=>Number.isInteger(n)&&n>=1&&n<=10):Array.from({length:10},(_,i)=>i+1)};
+ selected:Array.isArray(d.selected)?d.selected.filter(n=>Number.isInteger(n)&&n>=1&&n<=16):Array.from({length:16},(_,i)=>i+1)};
 }
 async function departmentName(key){return departments.find(d=>d[0]===key)?.[1]||key}
 function usableDepartments(){return profile?.role==="admin"?departments:departments.filter(d=>d[0]===profile?.departmentId)}
@@ -111,19 +159,21 @@ function renderDepartmentSelection(){
  $("departmentCards").innerHTML=allowed.map(([key,name])=>'<button type="button" class="departmentCard '+(activeDepartment===key?"active":"")+'" data-dept="'+esc(key)+'"><span class="departmentMark">▣</span><strong>'+esc(name)+'</strong><small>'+ (key==="general"?"ใช้เอกสารชุดแรก 10 หน้า":"ใช้ชุดเอกสารพื้นฐาน 10 หน้า (รอแม่แบบเฉพาะฝ่าย)")+'</small></button>').join("");
  $("departmentCards").querySelectorAll("[data-dept]").forEach(b=>b.onclick=()=>selectDepartment(b.dataset.dept));
 }
-function selectDepartment(key){
+async function selectDepartment(key){
  if(!usableDepartments().some(d=>d[0]===key))return;
  activeDepartment=key;
  $("departmentNext").hidden=false;
  $("activeDepartmentName").textContent=departmentName(key);
  renderDepartmentSelection();
  renderSavedCopiesList();
+ $("templateSetup").hidden=profile?.role!=="admin";
+ await ensureTemplate();
 }
 function startDepartmentDraft(){
  if(!activeDepartment)return;
  state=blank();state.values.department=activeDepartment;
  $("departmentGate").hidden=true;$("workArea").hidden=false;
- renderInputs();renderItems();renderPaper();goStage("common");showOfficialPage();
+ renderInputs();renderItems();renderPaper();goStage("common");queueTemplateRefresh();
  $("banner").textContent="กำลังจัดทำเอกสารของ"+departmentName(activeDepartment)+" · กรอกข้อมูลครั้งเดียวสำหรับทั้งชุด";
 }
 $("startNew").onclick=startDepartmentDraft;
@@ -144,7 +194,7 @@ function loadSelectedCopy(id){
  state=safeSnapshot({values:c.values,items:c.items,selected:c.selectedPages});
  state.values.department=activeDepartment;
  $("departmentGate").hidden=true;$("workArea").hidden=false;
- renderInputs();renderItems();renderPaper();goStage("common");showOfficialPage();
+ renderInputs();renderItems();renderPaper();goStage("common");queueTemplateRefresh();
  $("banner").textContent="เปิดสำเนาจาก Firestore แล้ว · "+(c.title||id);
 }
 async function refreshSavedCopies(){
@@ -161,7 +211,7 @@ async function saveDraft(){
  $("banner").textContent="กำลังสร้างสำเนาเอกสาร 10 หน้าใน Firestore…";
  try{
  state.values.department=activeDepartment;const safe=safeSnapshot(state),copyName=safe.values.subject?.trim()||"เอกสารจัดซื้อจัดจ้างไม่มีชื่อ";
- const entry={schemaVersion:1,templateId:"first-set-v1",title:copyName,departmentId:safe.values.department||profile.departmentId,createdBy:user.uid,createdAt:firebaseFns.serverTimestamp(),values:safe.values,items:safe.items,selectedPages:safe.selected,documentCount:10};
+ const entry={schemaVersion:1,templateId:"first-set-word16-v1",title:copyName,departmentId:safe.values.department||profile.departmentId,createdBy:user.uid,createdAt:firebaseFns.serverTimestamp(),values:safe.values,items:safe.items,selectedPages:safe.selected,documentCount:16};
  const result=await firebaseFns.addDoc(firebaseFns.collection(db,"procurement_document_copies"),entry);
  $("banner").textContent="บันทึกสำเนาลง Firestore สำเร็จ · เลขอ้างอิง "+result.id+" · สามารถพิมพ์หรือบันทึก PDF ต่อได้";
  await refreshSavedCopies();
@@ -170,7 +220,7 @@ async function saveDraft(){
 }
 $("saveBtn").onclick=saveDraft;$("previewBtn").onclick=()=>goStage("review");
 $("addItem").onclick=()=>{state.items.push({description:"",quantity:"",unit:"",unitPrice:""});renderItems();renderPaper()};
-$("selectAll").onclick=()=>{state.selected=Array.from({length:10},(_,i)=>i+1);renderReview()};
+$("selectAll").onclick=()=>{state.selected=Array.from({length:16},(_,i)=>i+1);renderReview()};
 $("selectNone").onclick=()=>{state.selected=[];renderReview()};
 $("quickPrint").onclick=()=>{$("printSelected").click()};
 $("printSelected").onclick=()=>{if(!state.selected.length){alert("กรุณาเลือกอย่างน้อย 1 หน้า");return}renderReview();$("printArea").innerHTML=state.selected.slice().sort((a,b)=>a-b).map(officialPage).join("");window.print()};
@@ -191,7 +241,7 @@ async function boot(){
  try{
   const sdk=await loadFirebaseSdk();
   const app=sdk.initializeApp(firebaseConfig);
-  const auth=sdk.getAuth(app);db=sdk.getFirestore(app);
+  const auth=sdk.getAuth(app);db=sdk.getFirestore(app);templateStorage=sdk.getStorage(app);
   sdk.onAuthStateChanged(auth,async u=>{
    user=u;
    if(!u){profile=null;$("editorRoot").hidden=true;$("banner").innerHTML='ยังไม่ได้เข้าสู่ระบบ กรุณา <a href="./index.html">กลับไปเข้าสู่ระบบ</a> ก่อนจัดทำเอกสาร';$("login-state").textContent="ยังไม่ได้เข้าสู่ระบบ";return}
