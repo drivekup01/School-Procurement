@@ -1,7 +1,7 @@
 import {renderGovernmentPage} from "./official-forms.js";
 
 import {firebaseConfig} from "./firebase-config.js";
-import {fillProcurementPdf} from "./pdf-form-overlay.js?v=1";
+import {fillProcurementPdf} from "./pdf-form-overlay.js?v=2";
 
 
 
@@ -84,7 +84,7 @@ async function refreshPdfPreview(){
   pdfObjectUrl=URL.createObjectURL(previewBlob);
   fileFrame().style.display="block";
   setPdfPage();
-  referenceMessage("Preview จาก PDF จริง "+filled.pageCount+" หน้า • เติมข้อมูล "+filled.count+" จุด • พิกัดรุ่นแรก ต้องตรวจตำแหน่งก่อนใช้ลงนาม");
+  referenceMessage("Preview จาก PDF จริง "+filled.pageCount+" หน้า • เติมข้อมูล "+filled.count+" จุด • เว้นช่องที่ตรวจตำแหน่งไม่แน่ชัด "+filled.skipped+" จุด");
  }catch(error){
   if(token!==pdfRenderToken)return;
   previewBlob=templateBlob;
