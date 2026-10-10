@@ -8,3 +8,9 @@
 .sourceCaution{color:#916317;background:#fff6df;padding:8px;font-size:12px}
 #generatedPreview[hidden],#sourceViewerBox[hidden]{display:none!important}
 @media print{.referenceMode{display:none!important}}
+
+/* A generated draft must never be confused with the school's verified master document. */
+.sheet{position:relative}
+.sheet:before{content:"ร่างสำหรับตรวจสอบ";position:absolute;left:12%;top:48%;width:76%;text-align:center;transform:rotate(-28deg);font-family:Prompt,sans-serif;font-size:42px;font-weight:600;letter-spacing:2px;color:rgba(149,72,39,.10);pointer-events:none;z-index:0}
+.sheet>*{position:relative;z-index:1}
+@media print{.sheet:before{color:rgba(120,70,70,.16)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
