@@ -471,7 +471,28 @@ const itemTable=()=>'<table><thead><tr><th>ที่</th><th>รายการ�
 const dept=()=>departments.find(x=>x[0]===v("department"))?.[1]||v("department");
 const n=(content)=>'<p>'+content+'</p>';
 function officialPage(i){return renderGovernmentPage(i,{value:v,escape:esc,items:state.items,department:dept()})}
-function fieldMarkup(f){let [key,label,def,type="text",opts]=f;return '<label class="'+(type==="textarea"?"wide":"")+'">'+esc(label)+(type==="select"?'<select data-key="'+key+'">'+opts.map(([value,title])=>'<option value="'+esc(value)+'" '+(v(key)===value?"selected":"")+'>'+esc(title)+'</option>').join("")+'</select>':type==="textarea"?'<textarea data-key="'+key+'">'+esc(v(key))+'</textarea>':'<input data-key="'+key+'" type="'+type+'" '+(type==="number"?'min="0" step="any"':'')+' value="'+esc(v(key))+'">')+'</label>'}
+// Browser date input always stores YYYY-MM-DD, regardless of department locale.
+const TH_MONTHS=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+function normalizeDateInput(value){
+ const text=String(value||"").trim();
+ if(/^\d{4}-\d{2}-\d{2}$/.test(text))return text;
+ const m=text.match(/^(\d{1,2})\s+([^\s]+)\s+(\d{4})$/);
+ if(!m)return "";
+ const month=TH_MONTHS.findIndex(name=>name===m[2]);
+ if(month<0)return "";
+ const year=Number(m[3])-(Number(m[3])>=2400?543:0);
+ if(year<1900||year>2200)return "";
+ return year+"-"+String(month+1).padStart(2,"0")+"-"+String(m[1]).padStart(2,"0");
+}
+function fieldMarkup(f){
+ let [key,label,def,type="text",opts]=f;
+ const inputValue=type==="date"?normalizeDateInput(v(key)):v(key);
+ const control=type==="select"
+ ?'<select data-key="'+esc(key)+'">'+opts.map(([value,title])=>'<option value="'+esc(value)+'" '+(v(key)===value?"selected":"")+'>'+esc(title)+'</option>').join("")+'</select>'
+ :type==="textarea"?'<textarea data-key="'+esc(key)+'" rows="3">'+esc(v(key))+'</textarea>'
+ :'<input data-key="'+esc(key)+'" type="'+type+'" '+(type==="number"?'step="any"':'')+' value="'+esc(inputValue)+'">';
+ return '<label class="'+(type==="textarea"?"wide":"")+'">'+esc(label)+control+(type==="date"?'<small class="dateHelp">เลือกจากปฏิทิน • แสดงวันที่ไทย พ.ศ. ใน PDF</small>':"")+'</label>';
+}
 function renderInputs(){ $("commonFields").innerHTML=commonFields.map(commonFieldMarkup).join("");$("specificFields").innerHTML=specificFields.filter(f=>sections.has(f[0])||!commonFields.some(c=>c[0]===f[0])).map(f=>sections.has(f[0])?'<div class="sectiontitle">'+esc(f[1])+'</div>':fieldMarkup(f)).join("");
 document.querySelectorAll("[data-key]").forEach(el=>el.oninput=()=>{state.values[el.dataset.key]=el.value;renderPaper();renderTotals();queueTemplateRefresh();});
 document.querySelectorAll("[data-common-page]").forEach(btn=>btn.onclick=()=>{goPage(Number(btn.dataset.commonPage));$("paperLabel").scrollIntoView({behavior:"smooth",block:"nearest"});});}
