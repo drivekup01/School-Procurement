@@ -11,7 +11,11 @@ async function fontBytes(){
  if(!fontPromise)fontPromise=(async()=>{
   if(fontProvider){
    try{const bytes=await fontProvider();if(bytes?.byteLength)return bytes}
-   catch(e){if(e?.code!=="storage/object-not-found")throw e}
+   catch(e){
+    // A font read error must NEVER prevent rendering already-mapped form values.
+    // Unauthorized, unavailable, timeout, CORS, etc. all use the Thai-capable fallback.
+    console.warn("Private PDF font unavailable; using Sarabun fallback:",e?.code||e?.message||e);
+   }
   }
   // Temporary compatible fallback, never labelled as THSarabunIT๙.
   const url="https://raw.githubusercontent.com/google/fonts/main/ofl/sarabun/Sarabun-Regular.ttf";
