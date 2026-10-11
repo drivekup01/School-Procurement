@@ -18,23 +18,35 @@ async function loadFirebaseSdk(){
 const $=s=>document.getElementById(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pages=["บันทึกมอบหมายผู้กำหนดคุณลักษณะ","บันทึกขอความเห็นชอบ TOR","TOR หลักการและคุณสมบัติผู้เสนอราคา","TOR ตารางรายการพัสดุและเงื่อนไข","รายงานขอซื้อ","ตารางรายละเอียดพัสดุแนบท้าย","รายงานผลพิจารณาและขออนุมัติสั่งซื้อ","ประกาศผู้ชนะการเสนอราคา","ใบตรวจรับพัสดุ","รายงานตรวจรับและอนุมัติเบิกจ่าย","ใบเบิกพัสดุ"];
 const departments=[["general","ฝ่ายบริหารทั่วไป"],["academic","ฝ่ายบริหารวิชาการ"],["personnel","ฝ่ายบริหารงานบุคคล"],["site","ฝ่ายสถานที่"],["budget","ฝ่ายบริหารงบประมาณ"]];
+// Fields in first-appearance order in the 11-page official PDF.
 const commonFields=[
 ["school","ชื่อสถานศึกษา","โรงเรียนค่ายบางระจันวิทยาคม"],
 ["agency","หน่วยงานต้นสังกัด","สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาสิงห์บุรี อ่างทอง"],
-
+["memoNo","เลขที่บันทึกข้อความ","","text"],
+["requestDate","วันที่เริ่มเรื่อง (เช่น 2 มีนาคม 2569)","","text"],
+["subject","ชื่องานจัดซื้อ / จัดจ้าง","","text"],
 ["fiscalYear","ปีงบประมาณ","2569","number"],
 ["project","ชื่อโครงการหลัก","","text"],
 ["activity","ชื่อกิจกรรม","","text"],
-["subject","ชื่องานจัดซื้อ / จัดจ้าง","","text"],
+["budget","วงเงินงบประมาณครั้งนี้ (บาท)","","number"],
 ["purchaseType","ประเภทงาน","purchase","select",[["purchase","จัดซื้อ"],["hire","จัดจ้าง"]]],
 ["purpose","เหตุผลและความจำเป็น","","textarea"],
 ["budgetSource","แหล่งงบประมาณ","plan","select",[["plan","ตามแผนปฏิบัติราชการ"],["allocated","ตามเงินจัดสรร สพฐ."],["other","อื่น ๆ"]]],
-["budget","วงเงินงบประมาณครั้งนี้ (บาท)","","number"],
 ["referencePrice","ราคากลาง (บาท)","","number"],
-["requestDate","วันที่เริ่มเรื่อง (เช่น 2 มีนาคม 2569)","","text"],
-["memoNo","เลขที่บันทึกข้อความ","","text"],
 ["deliveryPlace","สถานที่ส่งมอบ","โรงเรียนค่ายบางระจันวิทยาคม"]
 ];
+// Page references indicate mentions in the source PDF, not completed field mappings.
+const commonPdfReferences={
+ school:[1,2,3,4,5,6,7,8,9,10,11],agency:[1,2,4,5,6,10],
+ memoNo:[1,2,5,6,7,9,10],requestDate:[1,2,5,6,7,8,9,10,11],
+ subject:[1,2,3,5,7,8,9,10],fiscalYear:[1],project:[1,5,8],
+ activity:[1,3,8],budget:[1,3,5,7],purchaseType:[1,3,5,7,8],
+ purpose:[3,5],budgetSource:[3,5],referencePrice:[3,5],deliveryPlace:[3,4]
+};
+function commonFieldMarkup(field,index){
+ const key=field[0],ref=commonPdfReferences[key]||[],first=ref[0]||1;
+ return '<div class="commonFieldRow"><div class="commonFieldNumber">'+(index+1)+'</div><div class="commonFieldBody">'+fieldMarkup(field)+'<div class="commonFieldMeta"><span>อ้างอิง PDF: หน้า '+esc(ref.join(", ")||"ยังไม่ระบุ")+'</span><button type="button" class="commonPageJump" data-common-page="'+first+'">ดูหน้า '+first+' →</button></div></div></div>';
+}
 const specificFields=[
 ["people","ผู้รับผิดชอบและผู้ลงนาม"],
 ["specPreparer","ผู้กำหนดคุณลักษณะ / จัดทำ TOR",""],
@@ -360,8 +372,9 @@ const dept=()=>departments.find(x=>x[0]===v("department"))?.[1]||v("department")
 const n=(content)=>'<p>'+content+'</p>';
 function officialPage(i){return renderGovernmentPage(i,{value:v,escape:esc,items:state.items,department:dept()})}
 function fieldMarkup(f){let [key,label,def,type="text",opts]=f;return '<label class="'+(type==="textarea"?"wide":"")+'">'+esc(label)+(type==="select"?'<select data-key="'+key+'">'+opts.map(([value,title])=>'<option value="'+esc(value)+'" '+(v(key)===value?"selected":"")+'>'+esc(title)+'</option>').join("")+'</select>':type==="textarea"?'<textarea data-key="'+key+'">'+esc(v(key))+'</textarea>':'<input data-key="'+key+'" type="'+type+'" '+(type==="number"?'min="0" step="any"':'')+' value="'+esc(v(key))+'">')+'</label>'}
-function renderInputs(){ $("commonFields").innerHTML=commonFields.map(fieldMarkup).join("");$("specificFields").innerHTML=specificFields.map(f=>sections.has(f[0])?'<div class="sectiontitle">'+esc(f[1])+'</div>':fieldMarkup(f)).join("");
-document.querySelectorAll("[data-key]").forEach(el=>el.oninput=()=>{state.values[el.dataset.key]=el.value;renderPaper();renderTotals();queueTemplateRefresh();});}
+function renderInputs(){ $("commonFields").innerHTML=commonFields.map(commonFieldMarkup).join("");$("specificFields").innerHTML=specificFields.map(f=>sections.has(f[0])?'<div class="sectiontitle">'+esc(f[1])+'</div>':fieldMarkup(f)).join("");
+document.querySelectorAll("[data-key]").forEach(el=>el.oninput=()=>{state.values[el.dataset.key]=el.value;renderPaper();renderTotals();queueTemplateRefresh();});
+document.querySelectorAll("[data-common-page]").forEach(btn=>btn.onclick=()=>{goPage(Number(btn.dataset.commonPage));$("paperLabel").scrollIntoView({behavior:"smooth",block:"nearest"});});}
 function renderItems(){ $("itemsRows").innerHTML=state.items.map((r,i)=>'<div class="itemRow"><strong>รายการที่ '+(i+1)+'</strong><div class="rowgrid">'+[["description","ชื่อรายการพัสดุ"],["quantity","จำนวน"],["unit","หน่วยนับ"],["unitPrice","ราคาต่อหน่วย"]].map(([k,name])=>'<label>'+name+'<input data-item="'+i+'" data-col="'+k+'" value="'+esc(r[k])+'" '+(["quantity","unitPrice"].includes(k)?'type="number" min="0" step="any"':'')+'></label>').join("")+'</div><button data-remove="'+i+'" class="secondary">ลบรายการ</button></div>').join("");document.querySelectorAll("[data-item]").forEach(el=>el.oninput=()=>{state.items[Number(el.dataset.item)][el.dataset.col]=el.value;renderPaper();renderTotals()});document.querySelectorAll("[data-remove]").forEach(el=>el.onclick=()=>{if(state.items.length===1)return;state.items.splice(Number(el.dataset.remove),1);renderItems();renderPaper();queueTemplateRefresh()});renderTotals()}
 function renderTotals(){$("itemTotals").innerHTML='รวมมูลค่ารายการพัสดุที่กรอก: <b>'+fmt(total())+' บาท</b>　(โปรดตรวจเทียบวงเงินงาน '+fmt(v("budget"))+' บาท)'}
 function renderPaper(){setPdfPage();if(mappingMode)renderMappingPage();document.querySelectorAll("[data-page-button]").forEach(b=>b.classList.toggle("selected",Number(b.dataset.pageButton)===page))}
