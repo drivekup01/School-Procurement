@@ -98,6 +98,22 @@ async function preview(blob){
  pages=[...$("docPreview").querySelectorAll("section.docx")];page=0;markPreview();
  $("studioLoading").textContent="ตัวอย่างจากต้นฉบับ • "+pages.length+" หน้า (โปรดตรวจอีกครั้งใน Word)";
 }
+async function showFilledPreview(){
+ try{
+  if(!original)throw Error("กรุณาเลือกไฟล์ Word ต้นฉบับก่อน");
+  const result=await build();
+  if(!$("studioDialog").open)$("studioDialog").showModal();
+  await preview(result);
+  $("studioSummary").textContent="เอกสารหลังเติมข้อมูลจากแฟ้มชุดเบิก • ตรวจทั้ง 18 หน้า รวมถึงตารางและลายเซ็น";
+  $("studioLoading").textContent="ตัวอย่างผลลัพธ์หลังกรอก (ไม่ใช่ Word ต้นฉบับเปล่า) • ตรวจจำนวนหน้าใน Microsoft Word อีกครั้ง";
+ }catch(e){
+  $("wordStatus").textContent="ตรวจ Word ไม่ผ่าน: "+e.message;
+  if(!$("studioDialog").open)$("studioDialog").showModal();
+  $("studioLoading").textContent="ยังแสดงตัวอย่างผลลัพธ์ไม่ได้: "+e.message;
+ }
+}
+$("previewFilled").onclick=showFilledPreview;
+$("studioRefresh").onclick=showFilledPreview;
 $("openStudio").onclick=async()=>{$("studioDialog").showModal();renderList();if(original)try{await preview(new Blob([original]))}catch(e){$("studioLoading").textContent=e.message}else $("studioLoading").textContent="กรุณาเลือกไฟล์ Word ก่อน"};
 $("studioClose").onclick=()=>$("studioDialog").close();
 function go(delta){page=Math.max(0,Math.min(pages.length-1,page+delta));pages[page]?.scrollIntoView({block:"start",behavior:"smooth"});$("studioSummary").textContent="ตัวอย่างหน้า "+(page+1)+" / "+pages.length}
