@@ -43,7 +43,7 @@ const NS="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const FIELDS=[
  ["school","ชื่อโรงเรียน","โรงเรียนค่ายบางระจันวิทยาคม","fixed"],["agency","หน่วยงานต้นสังกัด","สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาสิงห์บุรี อ่างทอง","fixed"],["director","ผู้อำนวยการในวงเล็บ","นายเรวัฒน์ พรหมสะโร","fixed"],["directorPosition","ตำแหน่งผู้อำนวยการ","ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม","fixed"],["division","ชื่อฝ่ายในเอกสาร","ฝ่ายบริหารวิชาการ","text"],
  ["requestDate","วันที่เริ่มเรื่อง","2026-08-24","date"],["subject","ชื่องานจัดซื้อ","วัสดุอุปกรณ์ทำสนามกีฬา","long"],["project","ชื่อโครงการ","จัดซื้อสื่อและวัสดุอุปกรณ์การเรียนการสอน เพื่อยกระดับผลสัมฤทธิ์ทางการเรียน","long"],["activity","ชื่อกิจกรรม","จัดซื้อสื่อและวัสดุอุปกรณ์การเรียนการสอน เพื่อยกระดับผลสัมฤทธิ์ทางการเรียน","long"],
- ["budget","วงเงินงบประมาณ","140.00 บาท","text"],["amountWords","จำนวนเงินตัวอักษร","หนึ่งร้อยสี่สิบบาทถ้วน","text"],["torPerson","ผู้จัดทำ TOR","นางสาวสุนิสา อิ่มรัง","text"],["officer","เจ้าหน้าที่พัสดุ","นางสาวณัฐมน กลิ่นผล","text"],["headOfficer","หัวหน้าเจ้าหน้าที่","นางสาวสุนิสา อิ่มรัง","text"],["inspector","ผู้ตรวจรับ","นางสาวปภาวิไล ชลอวงษ์","text"],["vendor","ชื่อผู้ขาย","บริษัท ศรีทอง วัสดุก่อสร้าง จำกัด","long"],
+ ["budget","วงเงินงบประมาณ","140.00 บาท","text"],["amountWords","จำนวนเงินตัวอักษร","หนึ่งร้อยสี่สิบบาทถ้วน","text"],["budgetPair","จำนวนเงินตัวเลข + ตัวอักษรที่ไฮไลต์ติดกัน","","text"],["torPerson","ผู้จัดทำ TOR","นางสาวสุนิสา อิ่มรัง","text"],["officer","เจ้าหน้าที่พัสดุ","นางสาวณัฐมน กลิ่นผล","text"],["headOfficer","หัวหน้าเจ้าหน้าที่","นางสาวสุนิสา อิ่มรัง","text"],["inspector","ผู้ตรวจรับ","นางสาวปภาวิไล ชลอวงษ์","text"],["vendor","ชื่อผู้ขาย","บริษัท ศรีทอง วัสดุก่อสร้าง จำกัด","long"],
  ["noticeDate","วันที่ประกาศผู้ชนะ","2026-08-25","date"],["deliveryDate","วันที่ส่งมอบ / ตรวจรับ","2026-08-26","date"],["eventDate","วันที่จัดกิจกรรม","2026-08-27","date"],["invoiceNo","เลขที่ใบส่งของ","ORNC69P0100821","text"],["year","ปีงบประมาณ","2569","text"]
 ];
 const EXTRA_FIELDS=[["memoNo","เลขที่บันทึกข้อความ","","text","1,2,7,10,14"],["torApprovalDate","วันที่เห็นชอบ TOR","2026-08-24","date","2–3"],["torTitle","ชื่อรายละเอียดคุณลักษณะ","","long","2–6"],["itemCount","จำนวนรายการพัสดุ","1","text","3–9"],["purpose","เหตุผลจำเป็นต้องซื้อ","","long","4,7"],["unitPrice","ราคาต่อหน่วย","140.00","text","5,8–9"],["unitName","หน่วยนับ","กระป๋อง","text","5,8–9,16–17"],["itemDescription","ชื่อ/รายละเอียดพัสดุ","สีน้ำมันตราเป็ดหงส์","long","5,8–9,16–17"],["quantity","จำนวนพัสดุ","1","text","5,8–9,16–17"],["vat","ภาษีมูลค่าเพิ่ม","0.00","text","5,9,15"],["budgetSource","แหล่งงบประมาณ","ตามแผนปฏิบัติราชการ","text","4"],["deliveryPlace","สถานที่ส่งมอบ","โรงเรียนค่ายบางระจันวิทยาคม","long","4"],["priceValidityDays","กำหนดยืนราคา (วัน)","","text","5"],["deliveryDays","กำหนดส่งมอบ (วัน)","3","text","5,7"],["warranty","ระยะเวลารับประกัน","","long","6"],["repairDays","ระยะเวลาแก้ไขความชำรุด","","text","6"],["procurementMethod","วิธีจัดซื้อ","เฉพาะเจาะจง","text","7,12"],["otherProposal","ข้อเสนออื่น ๆ","","long","7–8"],["agreementDate","วันที่อนุมัติสั่งซื้อ","2026-08-24","date","10–11"],["agreedPrice","ราคาที่ตกลงซื้อ","140.00","text","10–12"],["paymentWords","จำนวนเงินที่ตกลง (ตัวอักษร)","หนึ่งร้อยสี่สิบบาทถ้วน","text","10–12"],["orderNo","เลขที่ใบสั่งซื้อ","","text","13–15"],["orderDate","วันที่ใบสั่งซื้อ","2026-08-24","date","13–15"],["invoiceBook","เล่มที่ใบส่งของ","","text","13–15"],["invoiceDate","วันที่ใบส่งของ","2026-08-26","date","13–15"],["receiptDate","วันที่ตรวจรับ","2026-08-26","date","13–15"],["lateDays","ส่งมอบเกินกำหนด (วัน)","0","text","13"],["fine","ค่าปรับ","0.00","text","13,15"],["changeNote","รายการแก้ไขเปลี่ยนแปลง","ไม่มี","long","13"],["withholding","ภาษีหัก ณ ที่จ่าย","0.00","text","15"],["netPayment","ยอดสุทธิคงเหลือ","140.00","text","15"],["requisitionDate","วันที่เบิกพัสดุ","2026-08-26","date","16–17"],["requester","ชื่อผู้เบิก","นางสาวสุนิสา อิ่มรัง","text","16–17"],["recipient","ชื่อผู้รับพัสดุ","","text","17"],["proxy","ชื่อผู้รับแทน","","text","17"],["authorizer","ผู้อนุญาตให้เบิก","","text","17"]];
@@ -95,7 +95,7 @@ async function loadTemplate(bytes,name,shouldStore){
 function htmlEscape(s){return String(s).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
 function normalize(s){return String(s||"").replace(/[\s\u00a0\u200b.()…_]/g,"").toLowerCase()}
 function thaiDate(v){if(!/^\d{4}-\d{2}-\d{2}$/.test(v))return v;const a=v.split("-").map(Number);return a[2]+" "+months[a[1]-1]+" "+(a[0]+543)}
-function fieldValue(k){const model=ALL_FIELDS.find(f=>f[0]===k);if(!model)return "";const v=forms[k].value;return model[3]==="date"?thaiDate(v):v}
+function fieldValue(k){if(k==="budgetPair")return (forms.budget.value||"").trim()+" ("+(forms.amountWords.value||"").trim()+")";const model=ALL_FIELDS.find(f=>f[0]===k);if(!model)return "";const v=forms[k].value;return model[3]==="date"?thaiDate(v):v}
 function setup(){
  for(const f of ALL_FIELDS){
   const label=document.createElement("label");label.className="field";label.textContent=f[1]+(f[4]?" (หน้า "+f[4]+")":"");
@@ -138,6 +138,7 @@ function guess(s){
  if(n.includes("ปภาวิไลชลอวงษ์"))return "inspector";
  if(n.includes("เรวัฒน์พรหมสะโร"))return "director";
  if(n.includes("บริษัทศรีทอง")||n.includes("วัสดุก่อสร้างจำกัด"))return "vendor";
+ if(n.includes("หนึ่งร้อยสี่สิบบาท")&&/[0-9]/.test(s))return "budgetPair";
  if(n.includes("หนึ่งร้อยสี่สิบบาท"))return "amountWords";
  if(n.includes("14000")||n.includes("140บาท"))return "budget";
  if(n.includes("จัดซื้อสื่อและวัสดุ")||n.includes("ผลสัมฤทธิ์ทางการเรียน"))return "project";
@@ -200,6 +201,31 @@ $("resetMappings").onclick=()=>{
   else $("fileStatus").textContent="ยังไม่มีแม่แบบในเครื่อง • เลือกไฟล์ Word ต้นฉบับเพื่อติดตั้ง";
  }catch(e){$("fileStatus").textContent="ยังไม่สามารถอ่านแม่แบบจากเบราว์เซอร์ได้ กรุณาเลือก Word อีกครั้ง"}
 })();
+function ensureBudgetNumberInParagraphs(doc){
+ const amount=(String(forms.budget.value||"").match(/[0-9][0-9,]*(?:\.[0-9]+)?/)||[])[0];
+ if(!amount)return {checked:0,repaired:0};
+ let checked=0,repaired=0;
+ for(const p of doc.getElementsByTagNameNS(NS,"p")){
+  const runs=[...p.getElementsByTagNameNS(NS,"r")],full=runs.map(getText).join("");
+  const label="วงเงินงบประมาณ",idx=full.indexOf(label);
+  if(idx<0)continue;
+  checked++;
+  const tail=full.slice(idx+label.length).split("(")[0];
+  if(/[0-9]/.test(tail))continue;
+  const pos=idx+label.length;
+  let start=0;
+  for(const r of runs){
+   const t=getText(r),end=start+t.length;
+   if(t&&pos>=start&&pos<=end){
+    const node=r.getElementsByTagNameNS(NS,"t")[0];
+    if(node){const offset=pos-start;node.textContent=t.slice(0,offset)+" "+amount+" บาท"+t.slice(offset);node.setAttribute("xml:space","preserve");repaired++}
+    break;
+   }
+   start=end;
+  }
+ }
+ return {checked,repaired};
+}
 function replaceRun(run,text){
  let t=run.getElementsByTagNameNS(NS,"t")[0];if(!t){t=run.ownerDocument.createElementNS(NS,"w:t");run.appendChild(t)}
  t.textContent=text;t.setAttribute("xml:space","preserve");
@@ -229,11 +255,12 @@ $("export").onclick=async()=>{
    for(let j=1;j<found[i].runs.length;j++)replaceRun(found[i].runs[j],"");
    done++;
   }
+  const amountCheck=ensureBudgetNumberInParagraphs(d);
   z.file("word/document.xml",new XMLSerializer().serializeToString(d));
   const blob=await z.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
   const url=URL.createObjectURL(blob),a=document.createElement("a");
   a.href=url;a.download="เอกสารจัดซื้อ_กรอกข้อมูลแล้ว.docx";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-  $("output").textContent="สร้าง Word ฉบับจริงแล้ว • แทนข้อมูล "+done+" จุด • ต้องเปิดตรวจจำนวนหน้า ตาราง และลายเซ็นใน Word ก่อนพิมพ์หรือ Save as PDF";
+  $("output").textContent="สร้าง Word แล้ว • แทนข้อมูล "+done+" จุด • ตรวจวงเงิน "+amountCheck.checked+" จุด เติมตัวเลขที่ขาด "+amountCheck.repaired+" จุด • ตรวจหน้ากระดาษใน Word ก่อนใช้จริง";
  }catch(error){$("output").textContent="ส่งออกไม่สำเร็จ: "+(error.message||error)}
  finally{$("export").disabled=false}
 };
