@@ -129,7 +129,7 @@ document.addEventListener("keydown",event=>{
 });
 const setPdfPage=()=>{
  $("paperLabel").textContent="PDF ต้นฉบับจริง · หน้า "+page+" / "+pages.length;
- if(pdfObjectUrl){const next=pdfObjectUrl+"#page="+page+"&zoom=page-fit";if(fileFrame().src!==next)fileFrame().src=next;}
+ if(pdfObjectUrl){const next=pdfObjectUrl+"#page="+page+"&view=Fit";if(fileFrame().src!==next)fileFrame().src=next;}
 };
 async function loadPdfBlob(dept){
  const storageRef=firebaseFns.ref(templateStorage,templatePath(dept));
