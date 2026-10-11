@@ -96,6 +96,60 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
       allow delete: if false;
     }
+    // FY2570 school procurement dashboard: separate from legacy collections.
+    match /procurement_v2_departments/{departmentId} {
+      allow read: if member();
+      allow create: if admin() &&
+        request.resource.data.fiscalYear == '2570' &&
+        request.resource.data.id is string &&
+        request.resource.data.name is string &&
+        request.resource.data.budget is number;
+      allow update: if admin() &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.fiscalYear == resource.data.fiscalYear;
+      allow delete: if false;
+    }
+    match /procurement_v2_projects/{projectId} {
+      allow read: if member();
+      allow create: if admin() &&
+        request.resource.data.fiscalYear == '2570' &&
+        request.resource.data.id is int &&
+        request.resource.data.department is string &&
+        request.resource.data.name is string &&
+        request.resource.data.activities is list &&
+        request.resource.data.activities.size() <= 100;
+      allow update: if admin() &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.fiscalYear == resource.data.fiscalYear;
+      allow delete: if false;
+    }
+    match /procurement_v2_transactions/{transactionId} {
+      allow read: if member();
+      allow create: if member() && owns(request.resource.data.department) &&
+        request.resource.data.keys().hasOnly(['fiscalYear','type','amount','date','department','projectId','activityId','note','createdBy','createdAt']) &&
+        request.resource.data.fiscalYear == '2570' &&
+        request.resource.data.type in ['income','expense'] &&
+        request.resource.data.amount is number &&
+        request.resource.data.amount > 0 &&
+        request.resource.data.amount <= 100000000 &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+    match /procurement_v2_requests/{requestId} {
+      allow read: if member();
+      allow create: if member() && owns(request.resource.data.department) &&
+        request.resource.data.keys().hasOnly(['fiscalYear','department','projectId','activityId','title','requestedAmount','requestedDate','status','createdBy','createdAt']) &&
+        request.resource.data.fiscalYear == '2570' &&
+        request.resource.data.requestedAmount is number &&
+        request.resource.data.requestedAmount > 0 &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() > 0 &&
+        request.resource.data.status == 'draft' &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
     match /{other=**} { allow read, write: if false; }
   }
 }
