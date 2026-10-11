@@ -163,3 +163,13 @@
  #actualPdfFrame{height:1100px;min-height:1000px}
  .paperToolbar{flex-wrap:wrap}
 }
+
+/* Official 13-page sample input ordering (existing PDF and mappings unchanged). */
+#commonFields .commonSectionHeading{grid-column:1/-1;display:flex;flex-direction:column;gap:3px;margin:16px 0 4px;padding:12px;background:#eef4ff;border-left:3px solid #7297d9;border-radius:8px}
+#commonFields .commonSectionHeading strong{font-size:13px;color:#284e87}
+#commonFields .commonSectionHeading span{font-size:11px;color:#61758c}
+#commonFields .commonReuse{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-size:11px;color:#46648b;font-weight:400}
+#commonFields .commonReuse input{width:14px;height:14px;margin:0;accent-color:#3677bc;opacity:1}
+#commonFields .commonFieldBody label.wide{display:block}
+#commonFields .commonFieldBody textarea{min-height:88px;line-height:1.5;resize:vertical}
+#commonFields .dateHelp{display:block;margin-top:4px;color:#8292a7;font-size:11px}
