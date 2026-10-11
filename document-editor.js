@@ -512,47 +512,47 @@ function safeSnapshot(d){
  selected:Array.isArray(d.selected)?d.selected.filter(n=>Number.isInteger(n)&&n>=1&&n<=11):Array.from({length:11},(_,i)=>i+1)};
 }
 function departmentName(key){return departments.find(d=>d[0]===key)?.[1]||key}
-function usableDepartments(){return profile?.role==="admin"?departments:departments.filter(d=>d[0]===profile?.departmentId)}
+// Single shared PDF workflow. Historical department IDs stay intact in old saved copies.
+function usableDepartments(){return [["general","แม่แบบเอกสารกลาง"]]}
 function renderDepartmentSelection(){
- const allowed=usableDepartments();
- $("departmentCards").innerHTML=allowed.map(([key,name])=>'<button type="button" class="departmentCard '+(activeDepartment===key?"active":"")+'" data-dept="'+esc(key)+'"><span class="departmentMark">▣</span><strong>'+esc(name)+'</strong><small>'+ (key==="general"?"ใช้ PDF ต้นฉบับ 11 หน้า":"ใช้ PDF ส่วนกลาง 11 หน้า จนกว่าจะมีฉบับเฉพาะฝ่าย")+'</small></button>').join("");
- $("departmentCards").querySelectorAll("[data-dept]").forEach(b=>b.onclick=()=>selectDepartment(b.dataset.dept));
+ $("departmentCards").innerHTML="";
 }
-async function selectDepartment(key){
- if(!usableDepartments().some(d=>d[0]===key))return;
- activeDepartment=key;
+async function selectDepartment(){
+ activeDepartment="general";
  $("departmentNext").hidden=false;
- $("activeDepartmentName").textContent=departmentName(key);
- renderDepartmentSelection();
+ $("activeDepartmentName").textContent="เอกสารชุดกลาง";
  renderSavedCopiesList();
  $("templateSetup").hidden=profile?.role!=="admin";
  await ensureTemplate();
 }
 function startDepartmentDraft(){
- if(!activeDepartment)return;
- state=blank();state.values.department=activeDepartment;
+ activeDepartment="general";
+ state=blank();state.values.department="general";
+ delete state.values.departmentName;
  $("departmentGate").hidden=true;$("workArea").hidden=false;
  $("mappingToolbar").hidden=profile?.role!=="admin";
  renderInputs();renderItems();renderPaper();goStage("common");queueTemplateRefresh();
- $("banner").textContent="กำลังจัดทำเอกสารของ"+departmentName(activeDepartment)+" · กรอกข้อมูลครั้งเดียวสำหรับทั้งชุด";
+ $("banner").textContent="จัดทำเอกสารจากแม่แบบกลาง · กรอกข้อมูลครั้งเดียวใช้ได้ทุกหน้าที่ผูกไว้";
 }
 $("startNew").onclick=startDepartmentDraft;
 $("changeDepartment").onclick=()=>{
  const containsData=!!state.values.subject||!!state.values.project||state.items.some(i=>i.description);
- if(containsData&&!confirm("มีข้อมูลที่กำลังกรอกอยู่ หากยังไม่บันทึกข้อมูลจะไม่ถูกเก็บ ต้องการกลับไปเลือกฝ่ายหรือไม่?"))return;
- $("workArea").hidden=true;$("departmentGate").hidden=false;activeDepartment=null;$("departmentNext").hidden=true;renderDepartmentSelection();
+ if(containsData&&!confirm("ยังมีข้อมูลที่ไม่ได้บันทึก ต้องการกลับไปยังรายการเอกสารหรือไม่?"))return;
+ $("workArea").hidden=true;$("departmentGate").hidden=false;activeDepartment="general";
+ renderSavedCopiesList();
 };
 function renderSavedCopiesList(){
- const selected=savedCopies.filter(c=>c.departmentId===activeDepartment && (profile?.role==="admin"||c.createdBy===user.uid));
- $("savedCopiesList").innerHTML=selected.map(c=>'<div class="savedCopyRow"><div><strong>'+esc(c.title||"ไม่มีชื่อเอกสาร")+'</strong><small>'+esc(c.createdAt?.toDate?.().toLocaleString("th-TH")||"เพิ่งบันทึก")+'</small></div><button type="button" class="secondary" data-copy="'+esc(c.id)+'">เปิดทำงานต่อ</button></div>').join("")||'<p class="emptyCopies">ยังไม่มีสำเนาที่บันทึกไว้ในฝ่ายนี้</p>';
+ const selected=savedCopies.filter(c=>profile?.role==="admin"||c.createdBy===user.uid);
+ $("savedCopiesList").innerHTML=selected.map(c=>'<div class="savedCopyRow"><div><strong>'+esc(c.title||"ไม่มีชื่อเอกสาร")+'</strong><small>'+esc(c.createdAt?.toDate?.().toLocaleString("th-TH")||"เพิ่งบันทึก")+(c.departmentId!=="general"?" · งานเก่าจากโครงสร้างเดิม":"")+'</small></div><button type="button" class="secondary" data-copy="'+esc(c.id)+'">เปิดทำงานต่อ</button></div>').join("")||'<p class="emptyCopies">ยังไม่มีเอกสารที่บันทึกไว้</p>';
  $("savedCopiesList").querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>loadSelectedCopy(b.dataset.copy));
- $("gateStatus").textContent="สำเนาของ"+departmentName(activeDepartment)+" "+selected.length+" ชุด";
+ $("gateStatus").textContent="เอกสารที่บันทึกไว้ "+selected.length+" ชุด";
 }
 function loadSelectedCopy(id){
  const c=savedCopies.find(x=>x.id===id);
- if(!c||c.departmentId!==activeDepartment)return;
+ if(!c||(profile?.role!=="admin"&&c.createdBy!==user.uid))return;
  state=safeSnapshot({values:c.values,items:c.items,selected:c.selectedPages});
- state.values.department=activeDepartment;
+ state.values.department="general";
+ $("mappingToolbar").hidden=profile?.role!=="admin";
  $("departmentGate").hidden=true;$("workArea").hidden=false;
  renderInputs();renderItems();renderPaper();goStage("common");queueTemplateRefresh();
  $("banner").textContent="เปิดสำเนาจาก Firestore แล้ว · "+(c.title||id);
@@ -570,8 +570,8 @@ async function saveDraft(){
  const btn=$("saveBtn");btn.disabled=true;
  $("banner").textContent="กำลังสร้างสำเนาเอกสาร 11 หน้าใน Firestore…";
  try{
- state.values.department=activeDepartment;const safe=safeSnapshot(state),copyName=safe.values.subject?.trim()||"เอกสารจัดซื้อจัดจ้างไม่มีชื่อ";
- const entry={schemaVersion:1,templateId:"first-set-pdf11-v1",title:copyName,departmentId:safe.values.department||profile.departmentId,createdBy:user.uid,createdAt:firebaseFns.serverTimestamp(),values:safe.values,items:safe.items,selectedPages:safe.selected,documentCount:11};
+ state.values.department="general";const safe=safeSnapshot(state),copyName=safe.values.subject?.trim()||"เอกสารจัดซื้อจัดจ้างไม่มีชื่อ";
+ const entry={schemaVersion:1,templateId:"first-set-pdf11-v1",title:copyName,departmentId:"general",createdBy:user.uid,createdAt:firebaseFns.serverTimestamp(),values:safe.values,items:safe.items,selectedPages:safe.selected,documentCount:11};
  const result=await firebaseFns.addDoc(firebaseFns.collection(db,"procurement_document_copies"),entry);
  $("banner").textContent="บันทึกข้อมูลสำเนาลง Firestore สำเร็จ · เลขอ้างอิง "+result.id+" · สามารถพิมพ์หรือบันทึก PDF ต่อได้";
  await refreshSavedCopies();
@@ -607,7 +607,7 @@ $("pageNav").innerHTML=pages.map((title,i)=>'<button class="pageButton" data-pag
 document.querySelectorAll("[data-page-button]").forEach(btn=>btn.onclick=()=>goPage(Number(btn.dataset.pageButton)));
 // Render a meaningful interface immediately; do not leave the user at a perpetual "checking account".
 $("editorRoot").hidden=false;
-$("departmentCards").innerHTML='<div class="loadingDepartments">กำลังตรวจสิทธิ์และโหลดรายการฝ่าย…</div>';
+$("departmentCards").innerHTML='<div class="loadingDepartments">กำลังตรวจสิทธิ์และโหลดแม่แบบเอกสาร…</div>';
 $("departmentNext").hidden=true;
 $("workArea").hidden=true;
 $("banner").textContent="กำลังเชื่อมบัญชีผู้ใช้…";
@@ -630,8 +630,9 @@ async function boot(){
     if(!["admin","staff"].includes(profile.role))throw Error("สิทธิ์ผู้ใช้งานไม่ถูกต้อง");
     $("editorRoot").hidden=false;
     renderDepartmentSelection();
+    await selectDepartment();
     $("login-state").textContent=(profile.role==="admin"?"Admin • ":"")+(profile.displayName||u.email);
-    $("banner").textContent=profile.role==="admin"?"ผู้ดูแลระบบ: เลือกฝ่ายได้ทั้งหมด และเปิดสำเนาแต่ละฝ่ายได้":"เลือกฝ่ายที่ได้รับสิทธิ์เพื่อเริ่มจัดทำเอกสาร";
+    $("banner").textContent="ระบบเอกสารชุดกลางพร้อมใช้งาน • สร้างงานใหม่หรือเปิดงานที่บันทึกไว้";
     // Saved records are supplementary. A failure must not prevent a new document.
     await refreshSavedCopies();
    }catch(e){$("editorRoot").hidden=true;$("login-state").textContent="ตรวจสิทธิ์ไม่ผ่าน";$("banner").textContent="เข้าสู่ระบบแล้ว แต่ตรวจสิทธิ์ไม่สำเร็จ: "+(e.code||e.message)}
