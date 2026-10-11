@@ -1,4 +1,4 @@
-import {DEPARTMENTS,PROJECTS} from "./dashboard-data-2570.js";
+import {DEPARTMENTS,PROJECTS,PROJECT_OWNERS} from "./dashboard-data-2570.js";
 import {firebaseConfig} from "./firebase-config.js";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
@@ -17,7 +17,7 @@ function ownerCache(){try{return JSON.parse(localStorage.getItem(OWNER_CACHE_KEY
 function defaults(){try{return {...SCHOOL_DEFAULTS,...JSON.parse(localStorage.getItem(SAVED_DEFAULTS_KEY)||"{}")}}catch(e){return {...SCHOOL_DEFAULTS}}}
 const EXTRA_IDS=()=>[...document.querySelectorAll("[data-extra]")].map(x=>x.dataset.extra);
 function populateExtras(details={}){
- const values={...defaults(),projectOwner:ownerCache()[String($("projectId").value)]||"",...details};
+ const values={...defaults(),projectOwner:ownerCache()[String($("projectId").value)]||PROJECT_OWNERS[String($("projectId").value)]||"",...details};
  for(const input of document.querySelectorAll("[data-extra]"))input.value=values[input.dataset.extra]??"";
 }
 function gatherExtras(){return Object.fromEntries([...document.querySelectorAll("[data-extra]")].map(x=>[x.dataset.extra,x.value.trim()]))}
@@ -185,7 +185,7 @@ $("sourceWord").onchange=async e=>{
 inspectSavedTemplate();
 $("deptFilter").innerHTML='<option value="">ทุกฝ่าย</option>'+DEPARTMENTS.map(d=>'<option value="'+esc(d.id)+'">'+esc(d.name)+'</option>').join("");
 $("deptFilter").onchange=renderList;$("filter").oninput=renderList;
-$("projectId").onchange=()=>{syncProjectActivity();const owner=document.querySelector('[data-extra="projectOwner"]');if(owner)owner.value=ownerCache()[String($("projectId").value)]||"";setDirty()};
+$("projectId").onchange=()=>{syncProjectActivity();const owner=document.querySelector('[data-extra="projectOwner"]');if(owner)owner.value=ownerCache()[String($("projectId").value)]||PROJECT_OWNERS[String($("projectId").value)]||"";setDirty()};
 $("activityId").onchange=setDirty;
 $("form").oninput=()=>{setDirty();if(document.activeElement?.name==="requestedAmount")calculate()};
 $("addItem").onclick=()=>{const tb=$("items");tb.appendChild(itemRow(freshItem(),tb.children.length));calculate();setDirty()};
