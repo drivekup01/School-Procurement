@@ -9,7 +9,7 @@ const app=initializeApp(firebaseConfig,"school-procurement-dashboard-2570"),auth
 const FY="2570",DEPTCOL="procurement_v2_departments",PROJCOL="procurement_v2_projects",TXCOL="procurement_v2_transactions",REQCOL="procurement_v2_requests";
 let user=null,role=null,activeDept="academic",cloudProjects=[],tx=[],requests=[],loaded=false;
 function status(s,error=false){$("status").textContent=s;$("status").classList.toggle("error",error)}
-function projList(){return cloudProjects.length?cloudProjects:PROJECTS}
+function projList(){const byId=new Map(PROJECTS.map(p=>[String(p.id),p]));cloudProjects.forEach(p=>byId.set(String(p.id),p));return [...byId.values()].sort((a,b)=>Number(a.id)-Number(b.id))}
 function allActivities(){return projList().flatMap(p=>(p.activities||[]).map(a=>({...a,projectId:p.id,department:p.department})))}
 function spentForProject(p){return tx.filter(t=>t.type==="expense"&&String(t.projectId)===String(p.id)).reduce((n,t)=>n+Number(t.amount||0),0)}
 function spentForActivity(p,a){return tx.filter(t=>t.type==="expense"&&String(t.projectId)===String(p.id)&&String(t.activityId)===String(a.id)).reduce((n,t)=>n+Number(t.amount||0),0)}
@@ -82,12 +82,17 @@ function ledgerForm(){
  input("วันที่เกิดรายการจริง","date","date",new Date().toISOString().slice(0,10))+
  select("ฝ่าย","department",DEPARTMENTS.map(d=>[d.id,d.name]))+
  select("โครงการ (ถ้ามี)","projectId",[["","รายการระดับฝ่าย/ไม่ระบุโครงการ"],...ps.map(p=>[p.id,p.name])])+
+ select("กิจกรรม (ถ้ามี)","activityId",[["","ไม่ระบุกิจกรรม"]])+
  input("รายละเอียดรายการ","note");
  modal("บันทึกรายรับ–รายจ่าย",fields,async v=>{
   if(!(Number(v.amount)>0))throw Error("จำนวนเงินต้องมากกว่า 0");
   const p=ps.find(p=>String(p.id)===v.projectId);
-  await addDoc(collection(db,TXCOL),{fiscalYear:FY,type:v.type,amount:Number(v.amount),date:v.date,department:p?.department||v.department,projectId:p?.id||null,activityId:null,note:v.note.trim(),createdBy:user.uid,createdAt:serverTimestamp()});
+  await addDoc(collection(db,TXCOL),{fiscalYear:FY,type:v.type,amount:Number(v.amount),date:v.date,department:p?.department||v.department,projectId:p?.id||null,activityId:v.activityId||null,note:v.note.trim(),createdBy:user.uid,createdAt:serverTimestamp()});
  });
+ const psEl=$("formFields").querySelector('[name="projectId"]'),actEl=$("formFields").querySelector('[name="activityId"]'),depEl=$("formFields").querySelector('[name="department"]');
+ const sync=()=>{const selected=ps.find(p=>String(p.id)===psEl.value);if(selected)depEl.value=selected.department;actEl.innerHTML='<option value="">ไม่ระบุกิจกรรม</option>'+(selected?.activities||[]).map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>').join("")};
+ psEl.onchange=sync;
+ sync();
 }
 function loginForm(){
  modal("เข้าสู่ระบบ Firebase",input("อีเมล","email","email")+input("รหัสผ่าน","password","password"),async v=>{await signInWithEmailAndPassword(auth,v.email,v.password)});
