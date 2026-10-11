@@ -29,21 +29,22 @@ function syncProjectActivity(selectedActivity=""){
  sel.innerHTML='<option value="">ไม่ระบุ / ไม่มีรายการย่อยในแผน</option>'+(p?.activities||[]).map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>').join("");
  if(selectedActivity&&[...sel.options].some(x=>x.value===selectedActivity))sel.value=selectedActivity;
 }
-function freshItem(n=1){return {description:"",qty:1,unit:"",unitPrice:0}}
+function freshItem(n=1){return {description:"",qty:1,unit:"",referencePrice:0,unitPrice:0}}
 function itemRow(item,i){
  const tr=document.createElement("tr");
  tr.innerHTML='<td>'+(i+1)+'</td>'+
  '<td><input data-item="description" maxlength="300" value="'+esc(item.description||"")+'" aria-label="ชื่อรายการ '+(i+1)+'"></td>'+
  '<td><input data-item="qty" type="number" min="0.01" step="any" value="'+esc(item.qty??1)+'" aria-label="จำนวน"></td>'+
  '<td><input data-item="unit" maxlength="40" value="'+esc(item.unit||"")+'" aria-label="หน่วย"></td>'+
- '<td><input data-item="unitPrice" type="number" min="0" step="0.01" value="'+esc(item.unitPrice??0)+'" aria-label="ราคาต่อหน่วย"></td>'+
+ '<td><input data-item="referencePrice" type="number" min="0" step="0.01" value="'+esc(item.referencePrice??0)+'" aria-label="ราคาอ้างอิง"></td>'+ 
+ '<td><input data-item="unitPrice" type="number" min="0" step="0.01" value="'+esc(item.unitPrice??0)+'" aria-label="ราคาที่จะซื้อหน่วยละ"></td>'+
  '<td><input data-item="lineTotal" readonly tabindex="-1" value="'+esc(((Number(item.qty)||0)*(Number(item.unitPrice)||0)).toFixed(2))+'" aria-label="รวมรายการ"></td>'+
  '<td><button class="itemRemove" type="button" aria-label="ลบรายการ">×</button></td>';
  tr.querySelector(".itemRemove").onclick=()=>{tr.remove();renumber();calculate();setDirty()};
  for(const input of tr.querySelectorAll("input:not([readonly])"))input.oninput=()=>{calculate();setDirty()};
  return tr
 }
-function itemsFromForm(){return [...$("items").querySelectorAll("tr")].map(tr=>Object.fromEntries([...tr.querySelectorAll("[data-item]:not([readonly])")].map(x=>[x.dataset.item,x.value]))).map(x=>({description:x.description.trim(),qty:Number(x.qty),unit:x.unit.trim(),unitPrice:Number(x.unitPrice)}))}
+function itemsFromForm(){return [...$("items").querySelectorAll("tr")].map(tr=>Object.fromEntries([...tr.querySelectorAll("[data-item]:not([readonly])")].map(x=>[x.dataset.item,x.value]))).map(x=>({description:x.description.trim(),qty:Number(x.qty),unit:x.unit.trim(),referencePrice:Number(x.referencePrice||0),unitPrice:Number(x.unitPrice)}))}
 function renumber(){[...$("items").children].forEach((tr,i)=>tr.firstElementChild.textContent=i+1)}
 function calculate(){
  const arr=itemsFromForm(),total=arr.reduce((n,x)=>n+(x.qty||0)*(x.unitPrice||0),0);
