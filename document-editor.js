@@ -199,10 +199,10 @@ const mappingFieldOptions=()=>[...commonFields,...specificFields.filter(f=>!sect
 $("mappingField").innerHTML=mappingFieldOptions().map(f=>'<option value="'+esc(f[0])+'">'+esc(f[1])+'</option>').join("");
 const mappingBackupKey=()=>["procurement-map-v2",firebaseConfig.projectId,user?.uid||"guest",activeDepartment].join(":");
 let mappingDirty=false,mappingAutoSaveTimer=null,mappingSaving=false,mappingRevision=0;
-function saveLocalMapping(){
+function saveLocalMapping(cloudStamp){
  if(!activeDepartment)return;
  try{
-  const data={version:2,department:activeDepartment,updatedAt:Date.now(),fields:fieldMappings};
+  const data={version:2,department:activeDepartment,updatedAt:cloudStamp??Date.now(),fields:fieldMappings};
   localStorage.setItem(mappingBackupKey(),JSON.stringify(data));
   $("mappingSaveStatus").textContent="สำรองในเบราว์เซอร์แล้ว • รอซิงก์ Firebase";
  }catch(e){$("mappingSaveStatus").textContent="ไม่สามารถสำรองในเบราว์เซอร์: "+(e.message||e)}
@@ -212,6 +212,11 @@ function mappingChanged(){
  saveLocalMapping();
  clearTimeout(mappingAutoSaveTimer);
  mappingAutoSaveTimer=setTimeout(()=>persistFieldMappings(false),1800);
+}
+function sameMappingFields(a,b){
+ if(!Array.isArray(a)||!Array.isArray(b)||a.length!==b.length)return false;
+ const keys=["page","key","x","y","w","h","fontSize","clearBackground","align"];
+ return a.every((item,i)=>keys.every(k=>item?.[k]===b[i]?.[k]));
 }
 async function persistFieldMappings(manual=true){
  if(profile?.role!=="admin"||!activeDepartment||!db)return;
@@ -228,7 +233,7 @@ async function persistFieldMappings(manual=true){
   });
   // Server fetch is required: a local SDK write alone is not proof of a persisted mapping.
   const actual=await firebaseFns.getDocFromServer(firebaseFns.doc(db,"procurement_pdf_mappings",dept));
-  if(!actual.exists()||JSON.stringify(actual.data().fields)!==JSON.stringify(snapshot))throw Error("เซิร์ฟเวอร์ยังไม่ยืนยันชุดตำแหน่งที่บันทึก");
+  if(!actual.exists()||!sameMappingFields(actual.data().fields,snapshot))throw Error("เซิร์ฟเวอร์ยังไม่ยืนยันชุดตำแหน่งที่บันทึก");
   if(dept===activeDepartment&&revision===mappingRevision){
    mappingDirty=false;
    $("mappingSaveStatus").textContent="✓ Firebase ยืนยันบันทึกแล้ว "+snapshot.length+" ช่อง • กลับมาทำต่อได้";
@@ -260,7 +265,7 @@ async function loadFieldMappings(){
    const cloudStamp=d.data().updatedAt?.toMillis?.()||0;
    if(!local||local.updatedAt<=cloudStamp){
     fieldMappings=d.data().fields;
-    saveLocalMapping();
+    saveLocalMapping(cloudStamp);
     mappingDirty=false;
     $("mappingSaveStatus").textContent="✓ โหลดตำแหน่งจาก Firebase "+fieldMappings.length+" ช่อง";
    }else{
