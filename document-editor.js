@@ -1,7 +1,7 @@
 import {renderGovernmentPage} from "./official-forms.js";
 
 import {firebaseConfig} from "./firebase-config.js";
-import {fillProcurementPdf,setProcurementPdfFontLoader} from "./pdf-form-overlay.js?v=preview-tall-fontfix-v1";
+import {fillProcurementPdf,setProcurementPdfFontLoader} from "./pdf-form-overlay.js?v=psk16-fields13-v1";
 
 
 
@@ -144,7 +144,7 @@ async function ensureTemplate(){
  }
 }
 
-const pdfFontPath="procurement/fonts/THSarabunIT9.ttf";
+const pdfFontPath="procurement/fonts/THSarabunPSK.ttf";
 let pdfFontInstalled=false;
 async function loadPrivatePdfFont(){
  const fontRef=firebaseFns.ref(templateStorage,pdfFontPath);
@@ -156,10 +156,10 @@ async function checkPdfFont(){
  try{
   await firebaseFns.getMetadata(firebaseFns.ref(templateStorage,pdfFontPath));
   pdfFontInstalled=true;
-  $("pdfFontStatus").textContent="✓ พบฟอนต์ THSarabunIT๙ ที่ติดตั้งใน Storage แล้ว";
+  $("pdfFontStatus").textContent="✓ พบฟอนต์ THSarabunPSK ที่ติดตั้งใน Storage แล้ว";
  }catch(e){
   pdfFontInstalled=false;
-  $("pdfFontStatus").textContent=e.code==="storage/object-not-found"?"ยังไม่ได้ติดตั้ง THSarabunIT๙ · PDF ใช้ฟอนต์สำรอง":"ตรวจฟอนต์ไม่ได้: "+(e.code||e.message);
+  $("pdfFontStatus").textContent=e.code==="storage/object-not-found"?"ยังไม่ได้ติดตั้ง THSarabunPSK · PDF ใช้ฟอนต์สำรอง":"ตรวจฟอนต์ไม่ได้: "+(e.code||e.message);
  }
  setProcurementPdfFontLoader(loadPrivatePdfFont);
 }
@@ -276,7 +276,7 @@ function updateMappingControls(){
  const f=fieldMappings[mappingSelection];
  for(const id of ["mappingX","mappingY","mappingW","mappingH"])$(id).disabled=!f;
  if(!f)return;
- $("mappingField").value=f.key;$("mappingFont").value=f.fontSize||12;$("mappingClear").checked=f.clearBackground===true;
+ $("mappingField").value=f.key;$("mappingFont").value=16;$("mappingClear").checked=f.clearBackground===true;
  for(const [name,val] of Object.entries({mappingX:f.x,mappingY:f.y,mappingW:f.w,mappingH:f.h}))$(name).value=(val*100).toFixed(2);
 }
 function redrawSelected(){
@@ -383,7 +383,7 @@ $("mappingLayer").addEventListener("pointerup",e=>{
  const left=Math.min(x,mappingDrawing.x),top=Math.min(y,mappingDrawing.y),w=Math.abs(x-mappingDrawing.x),h=Math.abs(y-mappingDrawing.y);
  mappingDrawing=null;
  if(w<.015||h<.008){drawMappingRects();return}
- const f={page,key:$("mappingField").value,x:left,y:top,w,h,fontSize:Number($("mappingFont").value)||12,clearBackground:$("mappingClear").checked,align:"left"};
+ const f={page,key:$("mappingField").value,x:left,y:top,w,h,fontSize:16,clearBackground:$("mappingClear").checked,align:"left"};
  fieldMappings.push(f);mappingSelection=fieldMappings.length-1;redrawSelected();mappingChanged();
 });
 $("mappingLayer").addEventListener("pointercancel",()=>{mappingMove=null;mappingDrawing=null;drawMappingRects()});
@@ -408,7 +408,7 @@ document.addEventListener("keydown",e=>{
  redrawSelected();mappingChanged();
 });
 $("mappingField").onchange=()=>{if(mappingSelection>=0){fieldMappings[mappingSelection].key=$("mappingField").value;drawMappingRects();mappingChanged()}};
-$("mappingFont").onchange=()=>{if(mappingSelection>=0)fieldMappings[mappingSelection].fontSize=Number($("mappingFont").value)||12;mappingChanged()};
+$("mappingFont").onchange=()=>{if(mappingSelection>=0)fieldMappings[mappingSelection].fontSize=16;mappingChanged()};
 $("mappingClear").onchange=()=>{if(mappingSelection>=0)fieldMappings[mappingSelection].clearBackground=$("mappingClear").checked;mappingChanged()};
 $("removeMapping").onclick=()=>{if(mappingSelection<0)return;fieldMappings.splice(mappingSelection,1);mappingSelection=-1;redrawSelected();mappingChanged()};
 $("saveMapping").onclick=()=>persistFieldMappings(true);
