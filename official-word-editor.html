@@ -29,13 +29,13 @@ details{border:1px solid #dce5f2;padding:12px;border-radius:9px;margin-top:15px}
 <div><button id="longTest">ทดสอบชื่อโครงการยาว</button> <button id="resetMappings">คืนค่าการจับคู่</button> <button id="export" class="primary" disabled>ดาวน์โหลด Word พร้อมพิมพ์ (.docx)</button></div></header>
 <main><section>
 <div class="panel"><h2>1. แม่แบบ Word ต้นฉบับ</h2><p>นำไฟล์ Word ที่ไฮไลต์เหลืองมาติดตั้งครั้งแรก ระบบจดจำแม่แบบในเบราว์เซอร์นี้ และเปิดกลับมาใช้ต่อได้โดยไม่ต้องเลือกไฟล์ใหม่</p><input id="file" type="file" accept=".docx"><div class="status" id="fileStatus">กำลังตรวจแม่แบบที่บันทึกไว้ในเครื่อง…</div><div class="buttonrow"><button id="clearTemplate">เปลี่ยนแม่แบบ</button><button id="saveTemplate">ดาวน์โหลดแม่แบบต้นฉบับ</button></div></div>
-<div class="panel"><h2>2. ข้อมูลสำหรับเอกสารทั้งชุด</h2><p>ข้อมูลที่ใช้ซ้ำหลายหน้าเชื่อมชื่อช่องเดียวกัน วันที่เลือกจากปฏิทิน</p><div id="common"></div><details><summary>ข้อมูลที่ตั้งไว้ล่วงหน้า (ไม่ต้องกรอกทุกครั้ง)</summary><div id="defaults"></div></details></div>
+<div class="panel"><h2>2. ข้อมูลสำหรับเอกสารทั้งชุด</h2><p>ข้อมูลที่ใช้ซ้ำหลายหน้าเชื่อมชื่อช่องเดียวกัน วันที่เลือกจากปฏิทิน</p><div id="common"></div><details><summary>ข้อมูลเฉพาะเอกสาร หน้า 1–17</summary><p>เลือกกรอกเมื่อจำเป็น แต่ช่องที่ไม่ผูกกับข้อความใน Word ยังไม่ถูกนำไปเติมอัตโนมัติ</p><div id="additional"></div></details><details><summary>ข้อมูลที่ตั้งไว้ล่วงหน้า (ไม่ต้องกรอกทุกครั้ง)</summary><div id="defaults"></div></details></div>
 <div class="panel"><h2>3. ดาวน์โหลด Word และพิมพ์</h2><div id="output" class="status">หลังจับคู่ไฮไลต์ กดดาวน์โหลด Word จริง ระบบจะแก้เฉพาะข้อความที่เลือก แล้วเปิดด้วย Microsoft Word เพื่อดูหน้ากระดาษเดิมและพิมพ์หรือบันทึก PDF</div><p>เอกสารยังใช้โครงสร้าง รูปภาพ ตาราง และการตั้งหน้าของ Word ต้นฉบับ แต่ข้อความยาวอาจทำให้ Word จัดหน้าใหม่ได้ ระบบนี้ไม่อ้างว่าล็อกหน้าสำเร็จจนกว่าจะตรวจผลใน Word</p></div>
 </section><section>
 <div class="panel"><h2>ตรวจและผูกข้อความไฮไลต์เหลือง</h2><p>แต่ละแถวเลือกว่าจะใช้ข้อมูลใดแทน ถ้าสงสัยว่าเป็นข้อความราชการที่ไม่ควรแก้ให้เลือก “คงเดิม” ได้</p>
 <div class="kpis"><span>ทั้งหมด <b id="count">0</b> จุด</span><span>เชื่อมแล้ว <b id="linked">0</b> จุด</span><span>เสี่ยงเลื่อนบรรทัด <b id="risky">0</b> จุด</span></div><div class="status" id="summary">รอเลือกไฟล์</div>
 <div class="scroll"><table><thead><tr><th>ลำดับ/ย่อหน้า</th><th>ข้อความไฮไลต์เหลือง</th><th>ข้อมูลร่วมที่ใช้แทน</th><th>ประเมินเบื้องต้น</th></tr></thead><tbody id="rows"></tbody></table></div></div>
-<div class="panel"><h2>ข้อจำกัดด้านความแม่นยำ</h2><p>ตัวจัดทำเอกสารนี้คงโครงสร้าง Word เดิม เช่น ข้อความราชการ ย่อหน้า รูปภาพ และตาราง แต่ Word จะคำนวณบรรทัดและแบ่งหน้าใหม่เมื่อเปิดไฟล์ที่ส่งออก จำนวนหน้าจึงอาจไม่เท่าเดิม การเตือนความยาวเป็นเพียงการคัดกรอง ไม่ใช่ผลตรวจหน้ากระดาษจริง</p><p>ฟอนต์ของข้อความที่แทนกำหนดเป็น THSarabunPSK 16 pt และไม่ย่อขนาดอัตโนมัติ</p></div>
+<div class="panel"><h2>ข้อควรระวัง: ช่องที่ยังไม่ได้ผูก</h2><p>ช่องข้อมูลเพิ่มเติมด้านซ้ายไม่ได้แปลว่า Word ถูกเติมทุกจุด ต้องกำหนดการจับคู่หรือเพิ่มตำแหน่งในต้นฉบับก่อนส่งออก ขณะนี้ยังไม่ใช่ระบบตรวจความตรงกันของ 17 หน้าอัตโนมัติ</p></div><div class="panel"><h2>ข้อจำกัดด้านความแม่นยำ</h2><p>ตัวจัดทำเอกสารนี้คงโครงสร้าง Word เดิม เช่น ข้อความราชการ ย่อหน้า รูปภาพ และตาราง แต่ Word จะคำนวณบรรทัดและแบ่งหน้าใหม่เมื่อเปิดไฟล์ที่ส่งออก จำนวนหน้าจึงอาจไม่เท่าเดิม การเตือนความยาวเป็นเพียงการคัดกรอง ไม่ใช่ผลตรวจหน้ากระดาษจริง</p><p>ฟอนต์ของข้อความที่แทนกำหนดเป็น THSarabunPSK 16 pt และไม่ย่อขนาดอัตโนมัติ</p></div>
 </section></main>
 <script>
 "use strict";
@@ -46,6 +46,8 @@ const FIELDS=[
  ["budget","วงเงินงบประมาณ","140.00 บาท","text"],["amountWords","จำนวนเงินตัวอักษร","หนึ่งร้อยสี่สิบบาทถ้วน","text"],["torPerson","ผู้จัดทำ TOR","นางสาวสุนิสา อิ่มรัง","text"],["officer","เจ้าหน้าที่พัสดุ","นางสาวณัฐมน กลิ่นผล","text"],["headOfficer","หัวหน้าเจ้าหน้าที่","นางสาวสุนิสา อิ่มรัง","text"],["inspector","ผู้ตรวจรับ","นางสาวปภาวิไล ชลอวงษ์","text"],["vendor","ชื่อผู้ขาย","บริษัท ศรีทอง วัสดุก่อสร้าง จำกัด","long"],
  ["noticeDate","วันที่ประกาศผู้ชนะ","2026-08-25","date"],["deliveryDate","วันที่ส่งมอบ / ตรวจรับ","2026-08-26","date"],["eventDate","วันที่จัดกิจกรรม","2026-08-27","date"],["invoiceNo","เลขที่ใบส่งของ","ORNC69P0100821","text"],["year","ปีงบประมาณ","2569","text"]
 ];
+const EXTRA_FIELDS=[["memoNo","เลขที่บันทึกข้อความ","","text","1,2,7,10,14"],["torApprovalDate","วันที่เห็นชอบ TOR","2026-08-24","date","2–3"],["torTitle","ชื่อรายละเอียดคุณลักษณะ","","long","2–6"],["itemCount","จำนวนรายการพัสดุ","1","text","3–9"],["purpose","เหตุผลจำเป็นต้องซื้อ","","long","4,7"],["unitPrice","ราคาต่อหน่วย","140.00","text","5,8–9"],["unitName","หน่วยนับ","กระป๋อง","text","5,8–9,16–17"],["itemDescription","ชื่อ/รายละเอียดพัสดุ","สีน้ำมันตราเป็ดหงส์","long","5,8–9,16–17"],["quantity","จำนวนพัสดุ","1","text","5,8–9,16–17"],["vat","ภาษีมูลค่าเพิ่ม","0.00","text","5,9,15"],["budgetSource","แหล่งงบประมาณ","ตามแผนปฏิบัติราชการ","text","4"],["deliveryPlace","สถานที่ส่งมอบ","โรงเรียนค่ายบางระจันวิทยาคม","long","4"],["priceValidityDays","กำหนดยืนราคา (วัน)","","text","5"],["deliveryDays","กำหนดส่งมอบ (วัน)","3","text","5,7"],["warranty","ระยะเวลารับประกัน","","long","6"],["repairDays","ระยะเวลาแก้ไขความชำรุด","","text","6"],["procurementMethod","วิธีจัดซื้อ","เฉพาะเจาะจง","text","7,12"],["otherProposal","ข้อเสนออื่น ๆ","","long","7–8"],["agreementDate","วันที่อนุมัติสั่งซื้อ","2026-08-24","date","10–11"],["agreedPrice","ราคาที่ตกลงซื้อ","140.00","text","10–12"],["paymentWords","จำนวนเงินที่ตกลง (ตัวอักษร)","หนึ่งร้อยสี่สิบบาทถ้วน","text","10–12"],["orderNo","เลขที่ใบสั่งซื้อ","","text","13–15"],["orderDate","วันที่ใบสั่งซื้อ","2026-08-24","date","13–15"],["invoiceBook","เล่มที่ใบส่งของ","","text","13–15"],["invoiceDate","วันที่ใบส่งของ","2026-08-26","date","13–15"],["receiptDate","วันที่ตรวจรับ","2026-08-26","date","13–15"],["lateDays","ส่งมอบเกินกำหนด (วัน)","0","text","13"],["fine","ค่าปรับ","0.00","text","13,15"],["changeNote","รายการแก้ไขเปลี่ยนแปลง","ไม่มี","long","13"],["withholding","ภาษีหัก ณ ที่จ่าย","0.00","text","15"],["netPayment","ยอดสุทธิคงเหลือ","140.00","text","15"],["requisitionDate","วันที่เบิกพัสดุ","2026-08-26","date","16–17"],["requester","ชื่อผู้เบิก","นางสาวสุนิสา อิ่มรัง","text","16–17"],["recipient","ชื่อผู้รับพัสดุ","","text","17"],["proxy","ชื่อผู้รับแทน","","text","17"],["authorizer","ผู้อนุญาตให้เบิก","","text","17"]];
+const ALL_FIELDS=[...FIELDS,...EXTRA_FIELDS];
 const $=id=>document.getElementById(id),forms={},months=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
 let inputBytes=null,hits=[],packageZip=null,currentTemplateName="";
 const TEMPLATE_DB="school-procurement-word-template-v1",BINDING_KEY="procurement-word-bindings-v1";
@@ -74,7 +76,7 @@ function rememberBindings(){
 }
 function restoreBindings(){
  try{const saved=JSON.parse(localStorage.getItem(bindingsKey())||"null");
- if(Array.isArray(saved)&&saved.length===hits.length)hits.forEach((h,i)=>{if(saved[i]===""||FIELDS.some(f=>f[0]===saved[i]))h.key=saved[i]});
+ if(Array.isArray(saved)&&saved.length===hits.length)hits.forEach((h,i)=>{if(saved[i]===""||ALL_FIELDS.some(f=>f[0]===saved[i]))h.key=saved[i]});
  }catch(e){}
 }
 async function loadTemplate(bytes,name,shouldStore){
@@ -93,13 +95,13 @@ async function loadTemplate(bytes,name,shouldStore){
 function htmlEscape(s){return String(s).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
 function normalize(s){return String(s||"").replace(/[\s\u00a0\u200b.()…_]/g,"").toLowerCase()}
 function thaiDate(v){if(!/^\d{4}-\d{2}-\d{2}$/.test(v))return v;const a=v.split("-").map(Number);return a[2]+" "+months[a[1]-1]+" "+(a[0]+543)}
-function fieldValue(k){const model=FIELDS.find(f=>f[0]===k);if(!model)return "";const v=forms[k].value;return model[3]==="date"?thaiDate(v):v}
+function fieldValue(k){const model=ALL_FIELDS.find(f=>f[0]===k);if(!model)return "";const v=forms[k].value;return model[3]==="date"?thaiDate(v):v}
 function setup(){
- for(const f of FIELDS){
-  const label=document.createElement("label");label.className="field";label.textContent=f[1];
+ for(const f of ALL_FIELDS){
+  const label=document.createElement("label");label.className="field";label.textContent=f[1]+(f[4]?" (หน้า "+f[4]+")":"");
   const el=document.createElement(f[3]==="long"?"textarea":"input");
   if(f[3]!=="long")el.type=f[3]==="date"?"date":"text";
-  el.value=f[2];forms[f[0]]=el;label.appendChild(el);$(f[3]==="fixed"?"defaults":"common").appendChild(label);
+  el.value=f[2];forms[f[0]]=el;label.appendChild(el);$(f[3]==="fixed"?"defaults":EXTRA_FIELDS.includes(f)?"additional":"common").appendChild(label);
   el.addEventListener("input",update);
  }
  try{const saved=JSON.parse(localStorage.getItem("procurement-prototype-word-v1")||"null");for(const k of Object.keys(saved||{}))if(forms[k])forms[k].value=saved[k]}catch(e){}
@@ -157,7 +159,7 @@ function update(){
  $("summary").textContent=!packageZip?"รอไฟล์ Word":hits.length+" จุดไฮไลต์ • ผูกข้อมูลแล้ว "+linked+" จุด • จุดเสี่ยงข้อความยาวขึ้น "+risky+" จุด";
 }
 function renderRows(){
- const options='<option value="">— คงข้อความเดิม —</option>'+FIELDS.map(f=>'<option value="'+f[0]+'">'+htmlEscape(f[1])+'</option>').join("");
+ const options='<option value="">— คงข้อความเดิม —</option>'+ALL_FIELDS.map(f=>'<option value="'+f[0]+'">'+htmlEscape(f[1])+'</option>').join("");
  $("rows").innerHTML="";
  hits.forEach((h,i)=>{
   const tr=document.createElement("tr");tr.innerHTML="<td>"+(i+1)+"<small> ย่อหน้า "+h.paragraph+"</small></td><td><span class='yellow'>"+htmlEscape(h.text)+"</span></td><td><select data-index='"+i+"'>"+options+"</select></td><td><span data-risk='"+i+"'></span></td>";
