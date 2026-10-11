@@ -1,4 +1,5 @@
 import {DEPARTMENTS,PROJECTS} from "./dashboard-data-2570.js";
+import {mergeOriginalWord} from "./word-source-merge-2570.js";
 const $=id=>document.getElementById(id), NS="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 let original=null,name="",hits=[],links=[],active=-1,pages=[],page=0;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -12,6 +13,7 @@ function values(){
  const thaiDate=s=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(s||""))return "";const [y,m,d]=s.split("-").map(Number);return d+" "+["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"][m-1]+" "+(y+543)};
  const budget=Number(f.get("requestedAmount")||0);
  const v={project:p?.name||"",activity:a?.name||"",subject:f.get("title")||"",division:DEPARTMENTS.find(x=>x.id===p?.department)?.name||"",budget:fmt(budget),amountWords:baht(budget),budgetPair:fmt(budget)+" บาท ("+baht(budget)+")",requestDate:thaiDate(f.get("requestedDate")),vendor:f.get("vendor")||"",purpose:f.get("purpose")||"",deliveryDate:thaiDate(f.get("deliveryDate")),deliveryDays:f.get("deliveryDays")||"",itemDescription:items[0]?.name||"",quantity:items[0]?.qty||"",unitName:items[0]?.unit||"",unitPrice:fmt(items[0]?.price||0),referencePrice:fmt(items[0]?.reference||0),...detail};
+ v.items=items.map(x=>({name:x.name,qty:Number(x.qty),unit:x.unit,unitPrice:Number(x.price),referencePrice:Number(x.reference)}));
  for(const key of ["torApprovalDate","activityDate","approvalDate","winnerDate","orderDate","invoiceDate","receivedDate","actualDeliveryDate","paymentDate","requisitionDate"])if(v[key])v[key]=thaiDate(v[key]);
  return v;
 }
@@ -108,29 +110,51 @@ function setRun(run,text){
  [...run.getElementsByTagNameNS(NS,"highlight")].forEach(n=>n.parentNode.removeChild(n));
 }
 async function build(){
- if(!original)throw Error("ยังไม่ได้เลือก Word ต้นฉบับ");
- const itemRows=[...$("items").querySelectorAll("tr")].filter(r=>r.querySelector('[data-item="description"]')?.value.trim());
- if(itemRows.length>1)throw Error("แม่แบบ Word ฉบับนี้ยังไม่ได้ผูกตารางหลายแถวครบทุกหน้า กรุณาใช้ไฟล์ต้นฉบับตรวจแก้ด้วย Word สำหรับงานหลายรายการก่อน เพื่อป้องกันพัสดุหายจากเอกสาร");
-
- const zip=await JSZip.loadAsync(original),doc=new DOMParser().parseFromString(await zip.file("word/document.xml").async("string"),"application/xml"),runs=runsIn(doc),val=values();
- let done=0;
- runs.forEach((hit,i)=>{
-  const binding=links[i];if(!binding || (!binding.key && binding.shared!==false))return;
-  const replacement=binding.shared!==false?val[binding.key]:binding.value;
-  if(replacement===undefined||replacement===null||replacement==="")return;
-  const actual=binding.key==="amountWords"&&/\d/.test(hit.text)?val.budgetPair:replacement;
-  setRun(hit.runs[0],String(actual));hit.runs.slice(1).forEach(r=>setRun(r,""));done++;
+ if(!original)throw Error("กรุณาเลือก Word ต้นฉบับก่อน");
+ const zip=await JSZip.loadAsync(original);
+ const xml=zip.file("word/document.xml");
+ if(!xml)throw Error("ไม่พบเนื้อหา word/document.xml");
+ const dom=new DOMParser().parseFromString(await xml.async("string"),"application/xml");
+ if(dom.querySelector("parsererror"))throw Error("Word XML อ่านไม่สำเร็จ");
+ // Capture run objects before inserting repeated item rows.
+ const originHits=runsIn(dom),val=values();
+ const items=val.items.filter(x=>x.name&&x.qty>0);
+ // Use source-specific all-page merge BEFORE per-position user overrides.
+ const report=mergeOriginalWord(dom,val,items);
+ let manuallyMapped=0;
+ originHits.forEach((hit,i)=>{
+  const binding=links[i];
+  if(!binding || (!binding.key&&binding.shared!==false))return;
+  const value=binding.shared!==false?val[binding.key]:binding.value;
+  if(value===undefined||value===null||String(value)==="")return;
+  const actual=binding.key==="amountWords"&&/\d/.test(hit.text)?val.budgetPair:value;
+  setRun(hit.runs[0],String(actual));hit.runs.slice(1).forEach(r=>setRun(r,""));
+  manuallyMapped++;
  });
- zip.file("word/document.xml",new XMLSerializer().serializeToString(doc));
+ const text=new XMLSerializer().serializeToString(dom);
+ const hasLegacy=/จัดซื้อสื่อและวัสดุอุปกรณ์การเรียนการสอน\s*เพื่อยกระดับผลสัมฤทธิ์ทางการเรียน|วัสดุ\s*อุปกรณ์\s*ทำสนามกีฬา|สีน้ำมันตราเป็ดหงส์/.test(
+ [...dom.getElementsByTagNameNS(NS,"t")].map(n=>n.textContent||"").join(""));
+ if(hasLegacy&&String(val.subject||"")!=="วัสดุอุปกรณ์ทำสนามกีฬา"){
+  report.unresolved.push("ตรวจพบข้อความตัวอย่างโครงการ/ชื่องาน/รายการพัสดุเก่าที่ยังไม่ถูกแทน");
+ }
+ zip.file("word/document.xml",text);
  const blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
- $("wordStatus").textContent="สร้างจาก Word จริง • แทนข้อมูล "+done+" จุด • ยังไม่ผูก "+links.filter(x=>!x.key).length+" จุด • ตรวจยอดและลายเซ็นก่อนใช้งาน";
+ const replacements=Object.values(report.replacements).reduce((a,b)=>a+b,0);
+ const warnings=[...report.errors,...report.unresolved];
+ const summary="อัปเดต Word ทุกส่วนที่ตรวจพบ • แทนเนื้อหา "+replacements+
+ " จุด • ผูกเฉพาะตำแหน่ง "+manuallyMapped+" จุด • ตารางพัสดุ "+report.itemTableRows+
+ " ตาราง / "+report.itemRowsWritten+" แถว • ยอดการเงิน "+(report.financialRows||0)+" แถว"+
+ (warnings.length?" • ต้องตรวจเพิ่มเติม: "+warnings.join("; "):"");
+ $("wordStatus").textContent=summary;
+ window.__lastWordMergeReport={...report,manuallyMapped,warnings};
+ if(warnings.length)throw Error("การตรวจเอกสารไม่ผ่าน: "+warnings.join("; "));
  return blob;
 }
-$("downloadDocx").onclick=async()=>{try{if(links.some(x=>!x.key&&!(x.shared===false&&x.value))&&!confirm("ยังมีจุดไฮไลต์ที่ไม่ได้ผูกข้อมูล ระบบจะคงข้อความต้นฉบับในจุดเหล่านั้น ต้องการส่งออกต่อหรือไม่?"))return;const blob=await build(),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="ชุดเบิก-"+($("title").value||"เอกสาร")+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}catch(e){$("wordStatus").textContent=e.message}};
+$("downloadDocx").onclick=async()=>{try{const blob=await build(),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="ชุดเบิก-"+($("title").value||"เอกสาร")+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}catch(e){$("wordStatus").textContent=e.message}};
 $("downloadPdf").onclick=async()=>{
  const win=window.open("","_blank");if(!win){$("wordStatus").textContent="โปรดอนุญาต Popup เพื่อพิมพ์ PDF";return}
  win.document.write("<p>กำลังจัดหน้าเอกสาร...</p>");
- try{if(links.some(x=>!x.key&&!(x.shared===false&&x.value))&&!confirm("มีจุดข้อมูลที่ไม่ได้ผูก ระบบจะคงข้อความเดิมไว้ ต้องการพิมพ์ต่อหรือไม่?")){win.close();return}const blob=await build(),tmp=document.createElement("div");tmp.style.cssText="position:absolute;left:-10000px";document.body.appendChild(tmp);
+ try{const blob=await build(),tmp=document.createElement("div");tmp.style.cssText="position:absolute;left:-10000px";document.body.appendChild(tmp);
   if(!window.docx?.renderAsync)throw Error("ส่วนแสดงผล Word ไม่พร้อม");
   await window.docx.renderAsync(blob,tmp,null,{inWrapper:true,breakPages:true,useBase64URL:true});
   const css=[...document.querySelectorAll("style")].filter(x=>(x.textContent||"").includes(".docx")).map(x=>x.outerHTML).join("");
