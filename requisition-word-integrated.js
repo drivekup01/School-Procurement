@@ -74,7 +74,7 @@ function choose(i){
 $("studioShared").onchange=()=>{$("studioOverrideLabel").hidden=$("studioShared").checked};
 $("studioApply").onclick=()=>{if(active<0)return;links[active]={key:$("studioKey").value,shared:$("studioShared").checked,value:$("studioOverride").value};storeLinks();renderList()};
 function markPreview(){
- const normalize=t=>String(t||"").replace(/\\s+/g,"");
+ const normalize=t=>String(t||"").replace(/\s+/g,"");
  const els=[...$("docPreview").querySelectorAll("span")].filter(e=>!e.children.length&&e.textContent.trim());
  const used=new Set();
  hits.forEach((h,i)=>{
@@ -83,7 +83,7 @@ function markPreview(){
   // partial matching handles Word runs rendered as several inline spans.
   let el=els.find(x=>!used.has(x)&&target.length>2&&normalize(x.textContent)===target);
   if(!el)el=els.find(x=>!used.has(x)&&target.length>2&&normalize(x.textContent).includes(target));
-  if(!el)el=els.find(x=>!used.has(x)&&normalize(x.textContent).length>3&&target.includes(normalize(x.textContent))&&(/rgb\\(255, 255, 0\\)|yellow/i.test(getComputedStyle(x).backgroundColor)||/yellow/i.test(x.getAttribute("style")||"")));
+  if(!el)el=els.find(x=>!used.has(x)&&normalize(x.textContent).length>3&&target.includes(normalize(x.textContent))&&(/rgb\(255, 255, 0\)|yellow/i.test(getComputedStyle(x).backgroundColor)||/yellow/i.test(x.getAttribute("style")||"")));
   if(!el)return;
   used.add(el);el.classList.add("studioHighlight");el.dataset.hit=i;
   el.onclick=event=>{event.stopPropagation();choose(i)};
