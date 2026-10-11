@@ -35,16 +35,21 @@ export async function fillProcurementPdf(pdfBlob,values,fields=[]){
  const font=await pdf.embedFont(await fontBytes(),{subset:false});
  let count=0,skipped=0;
  for(const field of mapped){
-  const value=String(values[field.key]??"").trim();
+  let value=String(values[field.key]??"").trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(value)){
+   const [yy,mm,dd]=value.split("-").map(Number);
+   const months=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+   if(yy>1900&&mm>=1&&mm<=12&&dd>=1&&dd<=31)value=dd+" "+months[mm-1]+" "+(yy+543);
+  }
   if(!value)continue;
   const x=Number(field.x),y=Number(field.y),w=Number(field.w),h=Number(field.h);
   if(![x,y,w,h].every(Number.isFinite)||w<=0||h<=0||x<0||y<0||x+w>1.001||y+h>1.001){skipped++;continue}
   const page=pdf.getPage(field.page-1),pw=page.getWidth(),ph=page.getHeight();
   const left=x*pw,bottom=(1-y-h)*ph,width=w*pw,height=h*ph;
-  let size=Math.min(Number(field.fontSize)||12,Math.max(7,height*.8));
+  // Official document rule: constant THSarabunPSK 16 pt, never auto-shrink.
+  const size=16;
   const textWidth=font.widthOfTextAtSize(value,size);
-  if(textWidth>width-4)size=size*(width-4)/textWidth;
-  if(size<7){skipped++;continue}
+  if(textWidth>width-4||height<size){skipped++;continue}
   if(field.clearBackground===true)page.drawRectangle({x:left,y:bottom,width,height,color:PDFLib.rgb(1,1,1)});
   const textX=field.align==="center"?left+(width-font.widthOfTextAtSize(value,size))/2:field.align==="right"?left+width-font.widthOfTextAtSize(value,size)-2:left+2;
   page.drawText(value,{x:textX,y:bottom+Math.max(0,(height-size)/2),font,size,color:PDFLib.rgb(0,0,0)});
