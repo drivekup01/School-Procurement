@@ -92,3 +92,19 @@
 @media print {
  #printArea .docx-wrapper { zoom:1!important; }
 }
+
+.mappingToolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#eef5ff;border:1px solid #cadcf9;padding:11px;border-radius:10px;margin-bottom:10px}
+.mappingToolbar span{font-size:12px;color:#526d94}
+.mappingWorkspace{background:#f8faff;border:1px solid #d6e3f6;border-radius:10px;padding:12px;margin-bottom:15px}
+.mappingControls{display:flex;gap:9px;align-items:end;flex-wrap:wrap}
+.mappingControls label{font-size:12px;color:#456080}
+.mappingControls select,.mappingControls input[type=number]{display:block;padding:9px;border:1px solid #c7d6ed;border-radius:8px;min-width:85px}
+.mappingControls input[type=checkbox]{vertical-align:middle}
+.mappingHelp{font-size:12px;color:#566d8c;margin:10px 0}
+.mappingPage{position:relative;width:fit-content;max-width:100%;margin:0 auto;overflow:hidden;box-shadow:0 4px 18px #1b33532e;background:white}
+.mappingPage canvas{display:block;max-width:100%;height:auto}
+.mappingLayer{position:absolute;left:0;top:0;touch-action:none;cursor:crosshair}
+.mappedField,.mappingDraft{position:absolute;border:2px dashed #3277db;background:#438cf028;color:#1a4e96;font:11px Prompt,sans-serif;overflow:hidden;white-space:nowrap;padding:1px;user-select:none;cursor:pointer}
+.mappedField.selected{border:2px solid #ef7c24;background:#efaa3650}
+.mappingDraft{pointer-events:none;border-style:solid}
+@media print{.mappingWorkspace,.mappingToolbar{display:none!important}}
