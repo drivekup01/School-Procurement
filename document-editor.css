@@ -146,29 +146,20 @@
 .mappingBackupActions label{font-size:12px;color:#56718f}
 .mappingBackupActions input{max-width:235px;font-size:12px}
 
-/* Larger document preview without changing form fields or saved PDF coordinates. */
+
+/* Taller A4 preview on the RIGHT, without fullscreen overlay. */
 @media(min-width:1350px){
-  main{max-width:1900px;padding-inline:16px}
-  .banner{max-width:1870px}
-  .workspace{grid-template-columns:180px minmax(310px,390px) minmax(0,1fr);gap:12px}
+ main{max-width:1900px;padding-inline:16px}
+ .banner{max-width:1870px}
+ .workspace{grid-template-columns:180px minmax(310px,390px) minmax(0,1fr);gap:12px}
 }
 .paperSection{min-width:0}
-#actualPdfFrame{height:calc(100vh - 185px);min-height:790px;border:0}
-.paperToolbar>div{flex-wrap:wrap;justify-content:flex-end}
-#togglePreviewSize{white-space:nowrap}
-body.pdfPreviewExpanded{overflow:hidden}
-body.pdfPreviewExpanded #pdfPreviewPanel{
-  position:fixed;inset:10px;z-index:2000;background:#f3f6fa;
-  padding:12px;border-radius:14px;box-shadow:0 10px 50px #14243e55;
-  display:flex;flex-direction:column;overflow:auto
-}
-body.pdfPreviewExpanded #pdfPreviewPanel .paperToolbar{position:sticky;top:0;z-index:10;flex-shrink:0}
-body.pdfPreviewExpanded #pdfPreviewPanel .referenceMode{flex-shrink:0;margin-bottom:7px}
-body.pdfPreviewExpanded #pdfPreviewPanel #actualWord{flex:1;min-height:0;display:flex;overflow:hidden}
-body.pdfPreviewExpanded #pdfPreviewPanel #actualPdfFrame{height:100%;min-height:0;flex:1}
-body.pdfPreviewExpanded #pdfPreviewPanel #mappingWorkspace{flex:1;overflow:auto;min-height:0}
-body.pdfPreviewExpanded #pdfPreviewPanel #mappingPage{max-width:100%}
+.paperToolbar{align-items:center}
+.paperToolbar .pdfHeading{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0;flex:1}
+.paperToolbar .pdfStatus{display:block;font-size:11px;font-weight:400;color:#647a99;line-height:1.5;overflow-wrap:anywhere}
+.paperToolbar>div:last-child{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
+#actualPdfFrame{width:100%;height:max(1150px,125vh);min-height:1150px;border:0}
 @media(max-width:700px){
- #actualPdfFrame{height:82vh;min-height:600px}
- body.pdfPreviewExpanded #pdfPreviewPanel{inset:4px;padding:6px}
+ #actualPdfFrame{height:1100px;min-height:1000px}
+ .paperToolbar{flex-wrap:wrap}
 }
