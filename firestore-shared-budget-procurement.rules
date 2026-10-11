@@ -44,6 +44,18 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     // Immutable user-owned copies, separate from uploaded PDF documents.
+    // Field layout can be changed by Admin only; all members may read it.
+    match /procurement_pdf_mappings/{departmentId} {
+      allow read: if member();
+      allow create, update: if isAdmin() &&
+        request.resource.data.departmentId == departmentId &&
+        request.resource.data.fields is list &&
+        request.resource.data.fields.size() <= 300 &&
+        request.resource.data.templatePath is string &&
+        request.resource.data.updatedBy == request.auth.uid &&
+        request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
     match /procurement_document_copies/{copyId} {
       allow read: if member();
       allow create: if member() &&
