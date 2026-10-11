@@ -74,14 +74,13 @@ function fillForm(obj){
  $("state").textContent=obj.status==="prepared"?"ข้อมูลพร้อมตรวจ":"ร่าง";
  $("saveMessage").textContent=draftNew?"กรอกข้อมูลและกดบันทึก":"โหลดรายการนี้แล้ว";
  $("printBtn").disabled=false;$("wordBtn").disabled=false;$("saveBtn").disabled=!ownAccount();
- const locked=!ownAccount()||(!draftNew&&obj.status!=="draft");
+ const locked=!draftNew&&obj.status!=="draft";
  for(const el of $("form").querySelectorAll("input,select,textarea,button"))el.disabled=locked;
  $("saveBtn").disabled=locked;
  // An existing prepared record is deliberately read-only until workflow amendment is implemented.
  if(locked&&ownAccount())$("saveMessage").textContent="แฟ้มสถานะเตรียมข้อมูลครบ — เปิดอ่านและพิมพ์ได้ แต่ไม่อนุญาตแก้ย้อนหลัง";
 }
 function newFile(pid){
- if(!ownAccount()){notify("กรุณาเข้าสู่ระบบก่อนสร้างชุดเบิก",true);$("loginDialog").showModal();return}
  if(dirty&&!confirm("มีการแก้ไขที่ยังไม่บันทึก ต้องการเริ่มแฟ้มใหม่หรือไม่?"))return;
  selected=null;draftNew=true;
  const p=findProject(pid)||projects.find(p=>p.department===$("deptFilter").value)||projects[0];
@@ -118,7 +117,7 @@ function readForm(){
  return {fiscalYear:"2570",department:p.department,projectId:Number(p.id),activityId:obj.activityId||null,title:obj.title.trim(),requestedAmount:amount,requestedDate:obj.requestedDate,status:obj.status==="prepared"?"prepared":"draft",procurementType:obj.procurementType,procurementMethod:obj.procurementMethod,purpose:obj.purpose.trim(),vendor:obj.vendor.trim(),deliveryDate:obj.deliveryDate,deliveryDays:obj.deliveryDays?Number(obj.deliveryDays):null,notes:obj.notes.trim(),preparedBy:obj.preparedBy.trim(),items:withValue,details:gatherExtras()}
 }
 async function save(){
- if(!user){notify("กรุณาเข้าสู่ระบบ",true);return}
+ if(!user){notify("กรุณาเข้าสู่ระบบ Firebase ก่อนบันทึกแฟ้ม • ข้อมูลที่กรอกไว้ยังอยู่ในหน้านี้",true);$("loginDialog").showModal();return}
  if(!$("form").reportValidity())return;
  let data;try{data=readForm()}catch(e){notify(e.message,true);return}
  const saveBtn=$("saveBtn");saveBtn.disabled=true;$("saveMessage").textContent="กำลังบันทึก Firebase...";
@@ -136,18 +135,39 @@ async function save(){
  finally{if($("form").hidden===false)$("saveBtn").disabled=!user||Boolean(rows.find(r=>r.docId===selected)?.status!=="draft"&&!draftNew)}
 }
 async function reload(showMessage=true){
- if(!user){rows=[];loaded=false;renderList();return}
- try{
-  const [q,ps]=await Promise.all([getDocs(collection(db,COL)),getDocs(collection(db,PCOL))]);
-  rows=q.docs.map(r=>({...r.data(),docId:r.id})).filter(x=>x.fiscalYear==="2570");
-  const cloud=ps.docs.map(r=>r.data()).filter(x=>x.fiscalYear==="2570");
-  const p=new Map(PROJECTS.map(x=>[String(x.id),x]));cloud.forEach(x=>p.set(String(x.id),x));projects=[...p.values()].sort((a,b)=>Number(a.id)-Number(b.id));
+ if(!user){loaded=false;rows=[];renderList();return}
+ // Read collections independently: a denied or slow request must not clear the
+ // 40 source-listed projects and 94 activities bundled with this application.
+ const bounded=(promise,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+" ใช้เวลานานเกิน 12 วินาที")),12000))]);
+ const [reqResult,projectResult]=await Promise.allSettled([
+  bounded(getDocs(collection(db,COL)),"แฟ้มชุดเบิก"),
+  bounded(getDocs(collection(db,PCOL)),"โครงการ Firebase")
+ ]);
+ if(projectResult.status==="fulfilled"){
+  const cloud=projectResult.value.docs.map(r=>r.data()).filter(x=>x.fiscalYear==="2570");
+  const merged=new Map(PROJECTS.map(x=>[String(x.id),x]));
+  cloud.forEach(x=>merged.set(String(x.id),x));
+  projects=[...merged.values()].sort((a,b)=>Number(a.id)-Number(b.id));
+ }
+ if(reqResult.status==="fulfilled"){
+  rows=reqResult.value.docs.map(r=>({...r.data(),docId:r.id})).filter(x=>x.fiscalYear==="2570");
   loaded=true;
-  if(showMessage)notify("โหลดแฟ้มชุดเบิกจาก Firebase แล้ว "+rows.length+" รายการ · การบันทึกวงเงินขอซื้อยังไม่ใช่รายจ่ายจริง");
-  renderList();
-  const qid=new URLSearchParams(location.search).get("id"),found=rows.find(x=>x.docId===(selected||qid));
-  if(found&&!dirty&&!draftNew){selected=found.docId;fillForm(found)}
- }catch(err){loaded=false;rows=[];renderList();notify("อ่านฐานข้อมูลไม่ได้: "+(err.message||err)+" · กรุณาตรวจสิทธิ์ Firestore",true)}
+ }else{loaded=false;rows=[]}
+ renderList();
+ if(reqResult.status==="rejected"){
+  notify("รายชื่อ 40 โครงการและกิจกรรมพร้อมเลือก แต่ยังอ่านแฟ้มชุดเบิกจาก Firebase ไม่สำเร็จ: "+reqResult.reason.message,true);
+ }else if(showMessage){
+  notify("โครงการ "+projects.length+" โครงการ พร้อมใช้งาน • โหลดแฟ้มชุดเบิกจาก Firebase "+rows.length+" รายการ"+
+   (projectResult.status==="rejected"?" • ใช้รายชื่อโครงการจากแผนต้นฉบับเพราะ Firebase ส่วนโครงการอ่านไม่ได้":""));
+ }
+ const qid=new URLSearchParams(location.search).get("id"),found=rows.find(x=>x.docId===(selected||qid));
+ if(found&&!dirty&&!draftNew){selected=found.docId;fillForm(found)}
+ else if(draftNew&&!dirty){
+  // Refresh project choices without changing unsaved input.
+  const current=$("projectId").value,activity=$("activityId").value;
+  $("projectId").innerHTML=projects.map(x=>'<option value="'+esc(x.id)+'">'+esc((DEPARTMENTS.find(d=>d.id===x.department)?.short||"")+" · "+x.name)+'</option>').join("");
+  $("projectId").value=current;syncProjectActivity(activity)
+ }
 }
 async function wordTemplateStore(file){
  const bytes=await file.arrayBuffer();
@@ -205,9 +225,25 @@ $("wordBtn").onclick=()=>{
 $("loginBtn").onclick=()=>{if(user)signOut(auth);else $("loginDialog").showModal()};
 $("loginCancel").onclick=()=>$("loginDialog").close();
 $("loginForm").onsubmit=async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(e.target));try{await signInWithEmailAndPassword(auth,v.email,v.password);$("loginDialog").close()}catch(err){notify("เข้าสู่ระบบไม่สำเร็จ: "+err.message,true)}};
+// Render the complete FY2570 project/activity list immediately, without waiting for Auth.
+renderList();
+newFile(new URLSearchParams(location.search).get("projectId"));
+dirty=false;
+$("saveMessage").textContent="เลือกโครงการและกิจกรรมได้ทันที • เข้าสู่ระบบเมื่อจะบันทึก Firebase";
+notify("โหลดโครงการปี 2570 พร้อมแล้ว 40 โครงการ • เลือกกิจกรรมได้ทันที ไม่ต้องรอโหลดแฟ้มจากฐานข้อมูล");
 onAuthStateChanged(auth,async u=>{
- user=u;$("account").textContent=u?u.email:"ยังไม่ได้เข้าสู่ระบบ";$("loginBtn").textContent=u?"ออกจากระบบ":"เข้าสู่ระบบ";
- if(u){await reload();const params=new URLSearchParams(location.search),pid=params.get("projectId");if(pid&&!params.has("id")&&!selected&&!dirty)newFile(pid)}
- else{rows=[];selected=null;draftNew=false;dirty=false;loaded=false;$("form").hidden=true;$("empty").hidden=false;$("saveBtn").disabled=true;$("printBtn").disabled=true;$("wordBtn").disabled=true;renderList();notify("กรุณาเข้าสู่ระบบเพื่อเปิดและบันทึกแฟ้มชุดเบิกใน Firebase")}
+ user=u;
+ $("account").textContent=u?u.email:"ยังไม่ได้เข้าสู่ระบบ";
+ $("loginBtn").textContent=u?"ออกจากระบบ":"เข้าสู่ระบบ";
+ if(u){
+  $("saveBtn").disabled=false;
+  await reload();
+  const qid=new URLSearchParams(location.search).get("id");
+  if(qid&&!rows.some(r=>r.docId===qid))notify("กำลังเลือกแฟ้มที่ระบุ แต่ยังไม่พบในรายการที่อ่านได้",true);
+ }else{
+  rows=[];loaded=false;renderList();
+  $("saveBtn").disabled=true;
+  notify("รายชื่อโครงการและกิจกรรมปี 2570 พร้อมใช้ • เข้าสู่ระบบก่อนบันทึกแฟ้มลง Firebase");
+ }
 });
 window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
