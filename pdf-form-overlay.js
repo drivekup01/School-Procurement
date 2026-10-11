@@ -1,12 +1,24 @@
 // PDF positions are read ONLY from Admin-saved normalized field rectangles.
 // No automatic guessing from dotted lines or surrounding Thai text.
-const fontUrl="https://raw.githubusercontent.com/google/fonts/main/ofl/sarabun/Sarabun-Regular.ttf";
-let fontPromise;
-function fontBytes(){
- if(!fontPromise)fontPromise=fetch(fontUrl).then(r=>{
-  if(!r.ok)throw Error("โหลดฟอนต์ภาษาไทยไม่ได้: HTTP "+r.status);
-  return r.arrayBuffer();
- }).catch(e=>{fontPromise=null;throw e});
+// Prefer the private Admin-installed THSarabunIT๙ font in Firebase Storage.
+let fontProvider=null;
+let fontPromise=null;
+export function setProcurementPdfFontLoader(loader){
+ fontProvider=loader;
+ fontPromise=null;
+}
+async function fontBytes(){
+ if(!fontPromise)fontPromise=(async()=>{
+  if(fontProvider){
+   try{const bytes=await fontProvider();if(bytes?.byteLength)return bytes}
+   catch(e){if(e?.code!=="storage/object-not-found")throw e}
+  }
+  // Temporary compatible fallback, never labelled as THSarabunIT๙.
+  const url="https://raw.githubusercontent.com/google/fonts/main/ofl/sarabun/Sarabun-Regular.ttf";
+  const response=await fetch(url);
+  if(!response.ok)throw Error("ไม่สามารถโหลดฟอนต์สำรอง HTTP "+response.status);
+  return response.arrayBuffer();
+ })().catch(e=>{fontPromise=null;throw e});
  return fontPromise;
 }
 export async function fillProcurementPdf(pdfBlob,values,fields=[]){
