@@ -6,8 +6,8 @@ import {getFirestore,collection,doc,getDocs,addDoc,updateDoc,serverTimestamp} fr
 const $=x=>document.getElementById(x);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=n=>"฿"+Number(n||0).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2});
-const db=getFirestore(initializeApp(firebaseConfig,"school-procurement-req-2570"));
-const auth=getAuth(db.app),COL="procurement_v2_requests",PCOL="procurement_v2_projects";
+const app=initializeApp(firebaseConfig,"school-procurement-req-2570");
+const db=getFirestore(app),auth=getAuth(app),COL="procurement_v2_requests",PCOL="procurement_v2_projects";
 let user=null,rows=[],projects=PROJECTS.slice(),selected=null,draftNew=false,dirty=false,loaded=false;
 const fields=["projectId","activityId","title","requestedDate","requestedAmount","procurementType","procurementMethod","purpose","vendor","deliveryDate","deliveryDays","notes","status","preparedBy"];
 const EMPTY={projectId:"",activityId:"",title:"",requestedDate:"",requestedAmount:"",procurementType:"purchase",procurementMethod:"เฉพาะเจาะจง",purpose:"",vendor:"",deliveryDate:"",deliveryDays:"",notes:"",status:"draft",preparedBy:"",items:[]};
@@ -71,7 +71,7 @@ function newFile(pid){
  if(dirty&&!confirm("มีการแก้ไขที่ยังไม่บันทึก ต้องการเริ่มแฟ้มใหม่หรือไม่?"))return;
  selected=null;draftNew=true;
  const p=findProject(pid)||projects.find(p=>p.department===$("deptFilter").value)||projects[0];
- fillForm({...EMPTY,projectId:p?.id||"",requestedDate:new Date().toLocaleDateString("en-CA")});
+ fillForm({...EMPTY,projectId:p?.id||"",requestedDate:new Date().toISOString().slice(0,10)});
  setDirty();
 }
 function choose(r){
@@ -95,12 +95,13 @@ function readForm(){
  if(items.some(x=>(x.description||x.qty>0||x.unitPrice>0)&&(!x.description||!(x.qty>0)||!Number.isFinite(x.unitPrice)||x.unitPrice<0)))throw Error("กรุณากรอกรายการพัสดุ จำนวน และราคาให้ครบ");
  const amount=Number(obj.requestedAmount);
  if(!(amount>0))throw Error("วงเงินขอซื้อต้องมากกว่า 0");
+ if(withValue.length>80)throw Error("รายการพัสดุต้องไม่เกิน 80 รายการ");
  if(withValue.length&&Math.abs(withValue.reduce((n,x)=>n+x.qty*x.unitPrice,0)-amount)>.01)throw Error("ยอดรวมรายการพัสดุไม่ตรงกับวงเงินที่ขอซื้อ");
  if(obj.status==="prepared"&&!withValue.length)throw Error("ต้องมีรายการพัสดุอย่างน้อยหนึ่งรายการก่อนระบุพร้อมตรวจ");
  if(obj.status==="prepared"&&!obj.vendor.trim())throw Error("สถานะพร้อมตรวจต้องมีชื่อผู้ขาย/ผู้รับจ้าง");
  if(!obj.title.trim())throw Error("กรุณาระบุชื่องานจัดซื้อ");
  if(obj.activityId&&!(p.activities||[]).some(a=>String(a.id)===obj.activityId))throw Error("กิจกรรมไม่ตรงกับโครงการที่เลือก");
- return {fiscalYear:"2570",department:p.department,projectId:p.id,activityId:obj.activityId||null,title:obj.title.trim(),requestedAmount:amount,requestedDate:obj.requestedDate,status:obj.status==="prepared"?"prepared":"draft",procurementType:obj.procurementType,procurementMethod:obj.procurementMethod,purpose:obj.purpose.trim(),vendor:obj.vendor.trim(),deliveryDate:obj.deliveryDate,deliveryDays:obj.deliveryDays?Number(obj.deliveryDays):null,notes:obj.notes.trim(),preparedBy:obj.preparedBy.trim(),items:withValue}
+ return {fiscalYear:"2570",department:p.department,projectId:Number(p.id),activityId:obj.activityId||null,title:obj.title.trim(),requestedAmount:amount,requestedDate:obj.requestedDate,status:obj.status==="prepared"?"prepared":"draft",procurementType:obj.procurementType,procurementMethod:obj.procurementMethod,purpose:obj.purpose.trim(),vendor:obj.vendor.trim(),deliveryDate:obj.deliveryDate,deliveryDays:obj.deliveryDays?Number(obj.deliveryDays):null,notes:obj.notes.trim(),preparedBy:obj.preparedBy.trim(),items:withValue}
 }
 async function save(){
  if(!user){notify("กรุณาเข้าสู่ระบบ",true);return}
