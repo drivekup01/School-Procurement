@@ -64,7 +64,8 @@ function requestForm(pid){
  modal("เริ่มทำชุดเบิก",fields,async data=>{
   const p=ps.find(p=>String(p.id)===String(data.projectId));
   if(!p||!data.title.trim())throw Error("กรุณาเลือกโครงการและระบุชื่องาน");
-  await addDoc(collection(db,REQCOL),{fiscalYear:FY,department:p.department,projectId:p.id,activityId:data.activityId||null,title:data.title.trim(),requestedAmount:Number(data.amount),requestedDate:data.date,status:"draft",createdBy:user.uid,createdAt:serverTimestamp()});
+  const newRef=await addDoc(collection(db,REQCOL),{fiscalYear:FY,department:p.department,projectId:p.id,activityId:data.activityId||null,title:data.title.trim(),requestedAmount:Number(data.amount),requestedDate:data.date,status:"draft",createdBy:user.uid,createdAt:serverTimestamp()});
+  location.href="./requisitions-2570.html?id="+encodeURIComponent(newRef.id);
  });
  // update dependent activities when project changes
  const projectSelect=$("formFields").querySelector('[name="projectId"]');
@@ -132,7 +133,7 @@ async function importPlan(){
 $("navHome").onclick=()=>window.scrollTo({top:0,behavior:"smooth"});
 $("navDept").onclick=()=>section("deptSection");
 $("navLedger").onclick=()=>section("ledgerSection");
-$("navRequest").onclick=()=>requestForm();
+$("navRequest").onclick=()=>location.href="./requisitions-2570.html";
 $("addRequest").onclick=()=>requestForm();
 $("requestFromDept").onclick=()=>requestForm();
 $("addTransaction").onclick=ledgerForm;
