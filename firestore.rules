@@ -136,19 +136,53 @@ service cloud.firestore {
         request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
+    // New request editor. Keep legacy request docs readable/editable in draft stage.
+    function ownsV2(dept) {
+      return member() && (
+        admin() ||
+        (profile().role == 'staff' && (
+          profile().departmentId == dept ||
+          (profile().departmentId == 'budget' && dept == 'finance')
+        ))
+      );
+    }
+    function requestV2Valid(d) {
+      return d.keys().hasOnly([
+        'fiscalYear','department','projectId','activityId','title','requestedAmount',
+        'requestedDate','status','createdBy','createdAt','updatedAt','procurementType',
+        'procurementMethod','purpose','vendor','deliveryDate','deliveryDays',
+        'notes','preparedBy','items'
+      ]) &&
+      d.fiscalYear == '2570' &&
+      d.department is string &&
+      d.projectId is int &&
+      d.title is string && d.title.size() > 0 && d.title.size() <= 250 &&
+      d.requestedAmount is number && d.requestedAmount > 0 &&
+      d.requestedAmount <= 100000000 &&
+      d.requestedDate is string && d.requestedDate.size() == 10 &&
+      d.status in ['draft','prepared'] &&
+      d.get('items',[]) is list && d.get('items',[]).size() <= 80 &&
+      d.get('purpose','') is string && d.get('purpose','').size() <= 3000 &&
+      d.get('notes','') is string && d.get('notes','').size() <= 3000 &&
+      d.get('vendor','') is string && d.get('vendor','').size() <= 250;
+    }
     match /procurement_v2_requests/{requestId} {
       allow read: if member();
-      allow create: if member() && owns(request.resource.data.department) &&
-        request.resource.data.keys().hasOnly(['fiscalYear','department','projectId','activityId','title','requestedAmount','requestedDate','status','createdBy','createdAt']) &&
-        request.resource.data.fiscalYear == '2570' &&
-        request.resource.data.requestedAmount is number &&
-        request.resource.data.requestedAmount > 0 &&
-        request.resource.data.title is string &&
-        request.resource.data.title.size() > 0 &&
-        request.resource.data.status == 'draft' &&
+      allow create: if member() && ownsV2(request.resource.data.department) &&
+        requestV2Valid(request.resource.data) &&
         request.resource.data.createdBy == request.auth.uid &&
-        request.resource.data.createdAt == request.time;
-      allow update, delete: if false;
+        request.resource.data.createdAt == request.time &&
+        (!request.resource.data.keys().hasAny(['updatedAt']) ||
+          request.resource.data.updatedAt == request.time);
+      allow update: if member() && ownsV2(resource.data.department) &&
+        (admin() || resource.data.createdBy == request.auth.uid) &&
+        resource.data.status == 'draft' &&
+        request.resource.data.department == resource.data.department &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        requestV2Valid(request.resource.data) &&
+        request.resource.data.updatedAt == request.time;
+      allow delete: if false;
     }
     match /{other=**} { allow read, write: if false; }
   }
