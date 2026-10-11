@@ -82,34 +82,31 @@ function locate(rows,config){
  }
  return config.first?matches[0]:matches[0]; // uncertain matches still limited to first anchored blank
 }
-export async function fillProcurementPdf(pdfBlob,values){
+
+export async function fillProcurementPdf(pdfBlob,values,fields=[]){
  if(!globalThis.PDFLib?.PDFDocument)throw Error("เครื่องมือ PDF ไม่พร้อม");
+ const pdf=await PDFLib.PDFDocument.load(await pdfBlob.arrayBuffer());
+ const mapped=Array.isArray(fields)?fields.filter(f=>f&&Number.isInteger(f.page)&&f.page>=1&&f.page<=pdf.getPageCount()):[];
+ if(!mapped.length)return {blob:pdfBlob,count:0,skipped:0,pageCount:pdf.getPageCount()};
  if(!globalThis.fontkit)throw Error("เครื่องมือฟอนต์ไทยไม่พร้อม");
- const data=await pdfBlob.arrayBuffer();
- const [locations,pdf]=await Promise.all([geometry(data),PDFLib.PDFDocument.load(data.slice(0))]);
  pdf.registerFontkit(globalThis.fontkit);
  const font=await pdf.embedFont(await fontBytes(),{subset:false});
- let placed=0,skipped=0;
- for(const rule of anchors){
-  let value=String(values[rule.key]??"").trim();
+ let count=0,skipped=0;
+ for(const field of mapped){
+  const value=String(values[field.key]??"").trim();
   if(!value)continue;
-  if(rule.strip)value=value.replace(rule.strip,"").trim();
-  if(!value)continue;
-  const slot=locate(locations[rule.page-1],rule);
-  if(!slot){skipped++;continue}
-  const page=pdf.getPage(rule.page-1);
-  // Use only the dotted span reported by the PDF itself.
-  const x=slot.x+1,y=slot.y;
-  const w=Math.min(slot.width-3,page.getWidth()-x-6);
-  let size=Math.min(11,Math.max(8,slot.height*.85));
-  let width=font.widthOfTextAtSize(value,size);
-  if(width>w){size=Math.min(size,size*w/width);width=font.widthOfTextAtSize(value,size)}
-  if(size<7.5){skipped++;continue}
-  const eraseHeight=Math.min(14,Math.max(9,slot.height+2));
-  page.drawRectangle({x:slot.x,y:y-2,width:slot.width,height:eraseHeight,color:PDFLib.rgb(1,1,1)});
-  page.drawText(value,{x,y,size,font,color:PDFLib.rgb(0,0,0)});
-  placed++;
+  const x=Number(field.x),y=Number(field.y),w=Number(field.w),h=Number(field.h);
+  if(![x,y,w,h].every(Number.isFinite)||w<=0||h<=0||x<0||y<0||x+w>1.001||y+h>1.001){skipped++;continue}
+  const page=pdf.getPage(field.page-1),pw=page.getWidth(),ph=page.getHeight();
+  const left=x*pw,bottom=(1-y-h)*ph,width=w*pw,height=h*ph;
+  let size=Math.min(Number(field.fontSize)||12,Math.max(7,height*.8));
+  const textWidth=font.widthOfTextAtSize(value,size);
+  if(textWidth>width-4)size=size*(width-4)/textWidth;
+  if(size<7){skipped++;continue}
+  if(field.clearBackground===true)page.drawRectangle({x:left,y:bottom,width,height,color:PDFLib.rgb(1,1,1)});
+  const textX=field.align==="center"?left+(width-font.widthOfTextAtSize(value,size))/2:field.align==="right"?left+width-font.widthOfTextAtSize(value,size)-2:left+2;
+  page.drawText(value,{x:textX,y:bottom+Math.max(0,(height-size)/2),font,size,color:PDFLib.rgb(0,0,0)});
+  count++;
  }
- const result=await pdf.save();
- return {blob:new Blob([result],{type:"application/pdf"}),count:placed,skipped,pageCount:pdf.getPageCount()};
+ return {blob:new Blob([await pdf.save()],{type:"application/pdf"}),count,skipped,pageCount:pdf.getPageCount()};
 }
