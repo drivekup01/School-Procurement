@@ -108,3 +108,5 @@
 .mappedField.selected{border:2px solid #ef7c24;background:#efaa3650}
 .mappingDraft{pointer-events:none;border-style:solid}
 @media print{.mappingWorkspace,.mappingToolbar{display:none!important}}
+
+.mappingToolbar[hidden],.mappingWorkspace[hidden],#actualWord[hidden]{display:none!important}
