@@ -1,7 +1,7 @@
 import {renderGovernmentPage} from "./official-forms.js";
 
 import {firebaseConfig} from "./firebase-config.js";
-import {fillProcurementPdf} from "./pdf-form-overlay.js?v=2";
+import {fillProcurementPdf} from "./pdf-form-overlay.js?v=admin-mapping-v1";
 
 
 
@@ -69,6 +69,7 @@ let user=null,profile=null,db=null,step="common",page=1;
 let savedCopies=[];
 let activeDepartment=null;
 let templateStorage=null,templateBlob=null,previewBlob=null,pdfObjectUrl=null,activeTemplateUpload=null,pdfRenderToken=0,pdfRenderTimer=null;
+let fieldMappings=[],mappingMode=false,mappingSelection=-1,mappingDoc=null,mappingDrawing=null;
 const templatePath=(dept=activeDepartment)=>"procurement/templates/departments/"+dept+"/source.pdf";
 const referenceMessage=msg=>{$("sourceMessage").textContent=msg};
 const fileFrame=()=>$("actualPdfFrame");
@@ -77,7 +78,7 @@ async function refreshPdfPreview(){
  const token=++pdfRenderToken;
  referenceMessage("กำลังเติมข้อมูลจากฟอร์มลง PDF ต้นฉบับ…");
  try{
-  const filled=await fillProcurementPdf(templateBlob,state.values);
+  const filled=await fillProcurementPdf(templateBlob,state.values,fieldMappings);
   if(token!==pdfRenderToken)return;
   previewBlob=filled.blob;
   if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
@@ -124,6 +125,7 @@ async function ensureTemplate(){
  if(pdfObjectUrl){URL.revokeObjectURL(pdfObjectUrl);pdfObjectUrl=null}
  fileFrame().src="about:blank";fileFrame().style.display="none";
  if(!requested||!templateStorage)return;
+ await loadFieldMappings();
  referenceMessage("กำลังอ่าน PDF ต้นฉบับของ"+departmentName(requested)+" จาก Firebase Storage…");
  let loadedDept=requested;
  try{
@@ -144,6 +146,108 @@ async function ensureTemplate(){
   $("templateInstallStatus").textContent=msg;
  }
 }
+
+const mappingDocId=()=>activeDepartment;
+const mappingFieldOptions=()=>[...commonFields,...specificFields.filter(f=>!sections.has(f[0]))].filter(f=>typeof f[0]==="string"&&!["purchaseType","budgetSource"].includes(f[0]));
+$("mappingField").innerHTML=mappingFieldOptions().map(f=>'<option value="'+esc(f[0])+'">'+esc(f[1])+'</option>').join("");
+async function loadFieldMappings(){
+ fieldMappings=[];mappingSelection=-1;
+ if(!activeDepartment||!db)return;
+ try{
+  const d=await firebaseFns.getDoc(firebaseFns.doc(db,"procurement_pdf_mappings",mappingDocId()));
+  if(d.exists()&&Array.isArray(d.data().fields))fieldMappings=d.data().fields;
+  $("mappingStatus").textContent="ตำแหน่งที่บันทึกไว้: "+fieldMappings.length+" ช่อง";
+ }catch(e){$("mappingStatus").textContent="ยังโหลดตำแหน่งช่องไม่ได้: "+(e.code||e.message)}
+}
+function updateMappingControls(){
+ const f=fieldMappings[mappingSelection];
+ if(f){$("mappingField").value=f.key;$("mappingFont").value=f.fontSize||12;$("mappingClear").checked=f.clearBackground===true}
+}
+function drawMappingRects(){
+ const layer=$("mappingLayer");layer.innerHTML="";
+ fieldMappings.forEach((f,i)=>{
+  if(f.page!==page)return;
+  const box=document.createElement("div");box.className="mappedField"+(i===mappingSelection?" selected":"");
+  box.style.left=(f.x*100)+"%";box.style.top=(f.y*100)+"%";box.style.width=(f.w*100)+"%";box.style.height=(f.h*100)+"%";
+  box.textContent=mappingFieldOptions().find(o=>o[0]===f.key)?.[1]||f.key;
+  box.addEventListener("pointerdown",e=>{e.stopPropagation();mappingSelection=i;updateMappingControls();drawMappingRects()});
+  layer.appendChild(box);
+ });
+}
+async function renderMappingPage(){
+ if(!mappingMode||!templateBlob)return;
+ const canvas=$("mappingCanvas"),layer=$("mappingLayer"),host=$("mappingPage");
+ try{
+  if(!window.pdfjsLib)throw Error("PDF.js ไม่พร้อม");
+  pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  if(!mappingDoc)mappingDoc=await pdfjsLib.getDocument({data:new Uint8Array(await templateBlob.arrayBuffer())}).promise;
+  if(!mappingMode)return;
+  const pg=await mappingDoc.getPage(page),base=pg.getViewport({scale:1});
+  const scale=Math.min(1.5,Math.max(.55,(host.parentElement.clientWidth-32)/base.width));
+  const viewport=pg.getViewport({scale}),ctx=canvas.getContext("2d");
+  canvas.width=Math.round(viewport.width);canvas.height=Math.round(viewport.height);
+  layer.style.width=canvas.width+"px";layer.style.height=canvas.height+"px";
+  await pg.render({canvasContext:ctx,viewport}).promise;
+  drawMappingRects();
+  $("mappingStatus").textContent="หน้า "+page+" • มีช่อง "+fieldMappings.filter(f=>f.page===page).length+" ช่อง · ลากบน PDF เพื่อเพิ่ม";
+ }catch(e){$("mappingStatus").textContent="แสดงหน้าสำหรับกำหนดช่องไม่ได้: "+(e.message||e)}
+}
+function toggleMapping(active){
+ if(profile?.role!=="admin")return;
+ mappingMode=active;
+ $("mappingWorkspace").hidden=!active;
+ $("actualWord").hidden=active;
+ $("toggleMapping").textContent=active?"กำลังกำหนดช่องข้อมูล":"กำหนดช่องข้อมูล (Admin)";
+ if(active)renderMappingPage();
+ else{mappingDoc?.destroy();mappingDoc=null;queueTemplateRefresh()}
+}
+$("toggleMapping").onclick=()=>toggleMapping(!mappingMode);
+$("exitMapping").onclick=()=>toggleMapping(false);
+$("mappingLayer").addEventListener("pointerdown",e=>{
+ if(!mappingMode||e.target!==$("mappingLayer"))return;
+ const rect=$("mappingLayer").getBoundingClientRect();
+ const x=(e.clientX-rect.left)/rect.width,y=(e.clientY-rect.top)/rect.height;
+ mappingDrawing={x,y};const outline=document.createElement("div");outline.className="mappingDraft";outline.id="mappingDraft";
+ outline.style.left=(x*100)+"%";outline.style.top=(y*100)+"%";$("mappingLayer").appendChild(outline);
+ $("mappingLayer").setPointerCapture(e.pointerId);
+});
+$("mappingLayer").addEventListener("pointermove",e=>{
+ if(!mappingDrawing)return;
+ const rect=$("mappingLayer").getBoundingClientRect();
+ const x=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+ const y=Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height));
+ const d=$("mappingDraft");if(!d)return;
+ Object.assign(d.style,{left:Math.min(x,mappingDrawing.x)*100+"%",top:Math.min(y,mappingDrawing.y)*100+"%",width:Math.abs(x-mappingDrawing.x)*100+"%",height:Math.abs(y-mappingDrawing.y)*100+"%"});
+});
+$("mappingLayer").addEventListener("pointerup",e=>{
+ if(!mappingDrawing)return;
+ const rect=$("mappingLayer").getBoundingClientRect();
+ const x=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+ const y=Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height));
+ const left=Math.min(x,mappingDrawing.x),top=Math.min(y,mappingDrawing.y),w=Math.abs(x-mappingDrawing.x),h=Math.abs(y-mappingDrawing.y);
+ mappingDrawing=null;
+ if(w<.015||h<.008){drawMappingRects();return}
+ const f={page,key:$("mappingField").value,x:left,y:top,w,h,fontSize:Number($("mappingFont").value)||12,clearBackground:$("mappingClear").checked,align:"left"};
+ fieldMappings.push(f);mappingSelection=fieldMappings.length-1;drawMappingRects();
+});
+$("mappingField").onchange=()=>{if(mappingSelection>=0){fieldMappings[mappingSelection].key=$("mappingField").value;drawMappingRects()}};
+$("mappingFont").onchange=()=>{if(mappingSelection>=0)fieldMappings[mappingSelection].fontSize=Number($("mappingFont").value)||12};
+$("mappingClear").onchange=()=>{if(mappingSelection>=0)fieldMappings[mappingSelection].clearBackground=$("mappingClear").checked};
+$("removeMapping").onclick=()=>{if(mappingSelection<0)return;fieldMappings.splice(mappingSelection,1);mappingSelection=-1;drawMappingRects()};
+$("saveMapping").onclick=async()=>{
+ if(profile?.role!=="admin"||!activeDepartment)return;
+ const btn=$("saveMapping");btn.disabled=true;
+ $("mappingStatus").textContent="กำลังบันทึกตำแหน่งลง Firestore…";
+ try{
+  await firebaseFns.setDoc(firebaseFns.doc(db,"procurement_pdf_mappings",activeDepartment),{
+   departmentId:activeDepartment,templatePath:templatePath(),fields:fieldMappings,updatedBy:user.uid,updatedAt:firebaseFns.serverTimestamp()
+  });
+  $("mappingStatus").textContent="บันทึกตำแหน่ง "+fieldMappings.length+" ช่องสำเร็จ";
+  queueTemplateRefresh();
+ }catch(e){$("mappingStatus").textContent="บันทึกไม่ได้: "+(e.code||e.message)}
+ finally{btn.disabled=false}
+};
+
 $("cancelTemplateUpload").onclick=()=>{activeTemplateUpload?.cancel()};
 $("installTemplate").onclick=async()=>{
  if(profile?.role!=="admin"||!activeDepartment)return;
@@ -191,7 +295,7 @@ function renderInputs(){ $("commonFields").innerHTML=commonFields.map(fieldMarku
 document.querySelectorAll("[data-key]").forEach(el=>el.oninput=()=>{state.values[el.dataset.key]=el.value;renderPaper();renderTotals();queueTemplateRefresh();queueTemplateRefresh();});}
 function renderItems(){ $("itemsRows").innerHTML=state.items.map((r,i)=>'<div class="itemRow"><strong>รายการที่ '+(i+1)+'</strong><div class="rowgrid">'+[["description","ชื่อรายการพัสดุ"],["quantity","จำนวน"],["unit","หน่วยนับ"],["unitPrice","ราคาต่อหน่วย"]].map(([k,name])=>'<label>'+name+'<input data-item="'+i+'" data-col="'+k+'" value="'+esc(r[k])+'" '+(["quantity","unitPrice"].includes(k)?'type="number" min="0" step="any"':'')+'></label>').join("")+'</div><button data-remove="'+i+'" class="secondary">ลบรายการ</button></div>').join("");document.querySelectorAll("[data-item]").forEach(el=>el.oninput=()=>{state.items[Number(el.dataset.item)][el.dataset.col]=el.value;renderPaper();renderTotals()});document.querySelectorAll("[data-remove]").forEach(el=>el.onclick=()=>{if(state.items.length===1)return;state.items.splice(Number(el.dataset.remove),1);renderItems();renderPaper();queueTemplateRefresh()});renderTotals()}
 function renderTotals(){$("itemTotals").innerHTML='รวมมูลค่ารายการพัสดุที่กรอก: <b>'+fmt(total())+' บาท</b>　(โปรดตรวจเทียบวงเงินงาน '+fmt(v("budget"))+' บาท)'}
-function renderPaper(){setPdfPage();document.querySelectorAll("[data-page-button]").forEach(b=>b.classList.toggle("selected",Number(b.dataset.pageButton)===page))}
+function renderPaper(){setPdfPage();if(mappingMode)renderMappingPage();document.querySelectorAll("[data-page-button]").forEach(b=>b.classList.toggle("selected",Number(b.dataset.pageButton)===page))}
 function goStage(target){step=target;document.querySelectorAll(".stage").forEach(el=>el.hidden=el.id!==target);document.querySelectorAll("[data-stage]").forEach(el=>el.classList.toggle("selected",el.dataset.stage===target));if(target==="review")renderReview()}
 function goPage(n){page=Math.min(11,Math.max(1,n));renderPaper()}
 function renderReview(){$("reviewPages").innerHTML=pages.map((title,i)=>'<label class="reviewRow"><input type="checkbox" data-print-page="'+(i+1)+'" '+(state.selected.includes(i+1)?"checked":"")+'><span>หน้า '+(i+1)+' — '+esc(title)+'</span><button type="button" class="secondary" data-jump="'+(i+1)+'">ดูหน้า</button></label>').join("");document.querySelectorAll("[data-print-page]").forEach(el=>el.onchange=()=>{const n=Number(el.dataset.printPage);state.selected=el.checked?[...new Set([...state.selected,n])]:state.selected.filter(x=>x!==n)});document.querySelectorAll("[data-jump]").forEach(el=>el.onclick=e=>{e.preventDefault();goPage(Number(el.dataset.jump))});const mandatory=[["project","ชื่อโครงการ"],["subject","ชื่องานจัดซื้อ"],["budget","วงเงิน"],["requestDate","วันที่เริ่มเรื่อง"],["procOfficer","เจ้าหน้าที่"],["headOfficer","หัวหน้าเจ้าหน้าที่"],["director","ผู้อำนวยการ"],["specPreparer","ผู้จัดทำ TOR"],["vendor","ชื่อผู้ขาย"],["inspector","ผู้ตรวจรับ"]].filter(([k])=>!v(k));$("missing").textContent=mandatory.length?"ข้อมูลที่ควรตรวจให้ครบก่อนพิมพ์: "+mandatory.map(x=>x[1]).join(" • "):"ข้อมูลหลักครบตามรายการตรวจเบื้องต้นแล้ว (ต้องอ่านตรวจถ้อยคำทุกหน้าก่อนนำไปใช้จริง)";}
@@ -222,6 +326,7 @@ function startDepartmentDraft(){
  if(!activeDepartment)return;
  state=blank();state.values.department=activeDepartment;
  $("departmentGate").hidden=true;$("workArea").hidden=false;
+ $("mappingToolbar").hidden=profile?.role!=="admin";
  renderInputs();renderItems();renderPaper();goStage("common");queueTemplateRefresh();
  $("banner").textContent="กำลังจัดทำเอกสารของ"+departmentName(activeDepartment)+" · กรอกข้อมูลครั้งเดียวสำหรับทั้งชุด";
 }
