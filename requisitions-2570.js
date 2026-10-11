@@ -12,14 +12,17 @@ let user=null,rows=[],projects=PROJECTS.slice(),selected=null,draftNew=false,dir
 const fields=["projectId","activityId","title","requestedDate","requestedAmount","procurementType","procurementMethod","purpose","vendor","deliveryDate","deliveryDays","notes","status","preparedBy"];
 const SCHOOL_DEFAULTS={schoolName:"โรงเรียนค่ายบางระจันวิทยาคม",agency:"สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาสิงห์บุรี อ่างทอง",directorName:"นายเรวัฒน์ พรหมสะโร",directorPosition:"ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม",budgetYear:"2570"};
 const SAVED_DEFAULTS_KEY="school-procurement-school-settings-2570";
+const OWNER_CACHE_KEY="school-procurement-owner-by-project-2570";
+function ownerCache(){try{return JSON.parse(localStorage.getItem(OWNER_CACHE_KEY)||"{}")}catch(e){return {}}}
 function defaults(){try{return {...SCHOOL_DEFAULTS,...JSON.parse(localStorage.getItem(SAVED_DEFAULTS_KEY)||"{}")}}catch(e){return {...SCHOOL_DEFAULTS}}}
 const EXTRA_IDS=()=>[...document.querySelectorAll("[data-extra]")].map(x=>x.dataset.extra);
 function populateExtras(details={}){
- const values={...defaults(),...details};
+ const values={...defaults(),projectOwner:ownerCache()[String($("projectId").value)]||"",...details};
  for(const input of document.querySelectorAll("[data-extra]"))input.value=values[input.dataset.extra]??"";
 }
 function gatherExtras(){return Object.fromEntries([...document.querySelectorAll("[data-extra]")].map(x=>[x.dataset.extra,x.value.trim()]))}
-function persistDefaults(details){const keys=["schoolName","agency","directorName","directorPosition"];const values=Object.fromEntries(keys.map(x=>[x,details[x]||""]));try{localStorage.setItem(SAVED_DEFAULTS_KEY,JSON.stringify(values))}catch(e){}}
+function persistDefaults(details){
+ if(details.projectOwner){const cache=ownerCache();cache[String($("projectId").value)]=details.projectOwner;try{localStorage.setItem(OWNER_CACHE_KEY,JSON.stringify(cache))}catch(e){}}const keys=["schoolName","agency","directorName","directorPosition"];const values=Object.fromEntries(keys.map(x=>[x,details[x]||""]));try{localStorage.setItem(SAVED_DEFAULTS_KEY,JSON.stringify(values))}catch(e){}}
 const EMPTY={projectId:"",activityId:"",title:"",requestedDate:"",requestedAmount:"",procurementType:"purchase",procurementMethod:"เฉพาะเจาะจง",purpose:"",vendor:"",deliveryDate:"",deliveryDays:"",notes:"",status:"draft",preparedBy:"",items:[]};
 const notify=(message,warn=false)=>{$("notice").textContent=message;$("notice").classList.toggle("warn",warn)};
 const findProject=id=>projects.find(p=>String(p.id)===String(id));
@@ -148,7 +151,7 @@ async function reload(showMessage=true){
 }
 $("deptFilter").innerHTML='<option value="">ทุกฝ่าย</option>'+DEPARTMENTS.map(d=>'<option value="'+esc(d.id)+'">'+esc(d.name)+'</option>').join("");
 $("deptFilter").onchange=renderList;$("filter").oninput=renderList;
-$("projectId").onchange=()=>{syncProjectActivity();setDirty()};
+$("projectId").onchange=()=>{syncProjectActivity();const owner=document.querySelector('[data-extra="projectOwner"]');if(owner)owner.value=ownerCache()[String($("projectId").value)]||"";setDirty()};
 $("activityId").onchange=setDirty;
 $("form").oninput=()=>{setDirty();if(document.activeElement?.name==="requestedAmount")calculate()};
 $("addItem").onclick=()=>{const tb=$("items");tb.appendChild(itemRow(freshItem(),tb.children.length));calculate();setDirty()};
