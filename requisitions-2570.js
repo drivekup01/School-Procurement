@@ -149,6 +149,40 @@ async function reload(showMessage=true){
   if(found&&!dirty&&!draftNew){selected=found.docId;fillForm(found)}
  }catch(err){loaded=false;rows=[];renderList();notify("อ่านฐานข้อมูลไม่ได้: "+(err.message||err)+" · กรุณาตรวจสิทธิ์ Firestore",true)}
 }
+async function wordTemplateStore(file){
+ const bytes=await file.arrayBuffer();
+ const db=await new Promise((resolve,reject)=>{
+  const open=indexedDB.open("school-procurement-word-template-v1",1);
+  open.onupgradeneeded=()=>{if(!open.result.objectStoreNames.contains("files"))open.result.createObjectStore("files")};
+  open.onsuccess=()=>resolve(open.result);
+  open.onerror=()=>reject(open.error);
+ });
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction("files","readwrite"),put=tx.objectStore("files").put({name:file.name,buffer:bytes},"master");
+  put.onerror=()=>reject(put.error);tx.oncomplete=()=>{db.close();resolve(true)};tx.onerror=()=>reject(tx.error)
+ });
+}
+async function inspectSavedTemplate(){
+ try{
+  const db=await new Promise((resolve,reject)=>{
+   const open=indexedDB.open("school-procurement-word-template-v1",1);
+   open.onupgradeneeded=()=>{if(!open.result.objectStoreNames.contains("files"))open.result.createObjectStore("files")};
+   open.onsuccess=()=>resolve(open.result);open.onerror=()=>reject(open.error);
+  });
+  const r=await new Promise((resolve,reject)=>{const tx=db.transaction("files","readonly"),q=tx.objectStore("files").get("master");q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);tx.oncomplete=()=>db.close()});
+  $("templateStatus").textContent=r?.name?"แม่แบบที่บันทึกไว้: "+r.name:"ยังไม่ได้ติดตั้งแม่แบบในเบราว์เซอร์นี้";
+ }catch(e){$("templateStatus").textContent="อ่านข้อมูลแม่แบบไม่ได้: "+e.message}
+}
+$("sourceWord").onchange=async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ if(!file.name.toLowerCase().endsWith(".docx")){notify("กรุณาใช้ไฟล์ Word .docx เท่านั้น",true);return}
+ try{$("templateStatus").textContent="กำลังบันทึกแม่แบบ...";
+ await wordTemplateStore(file);
+ $("templateStatus").textContent="ตั้งค่าแม่แบบ Word: "+file.name+" สำเร็จ";
+ notify("บันทึกไฟล์ต้นฉบับในเบราว์เซอร์นี้แล้ว • ยังต้องตรวจการจับคู่ข้อมูลทุกตำแหน่งใน Word Editor");
+ }catch(err){notify("บันทึกแม่แบบไม่ได้: "+err.message,true)}
+};
+inspectSavedTemplate();
 $("deptFilter").innerHTML='<option value="">ทุกฝ่าย</option>'+DEPARTMENTS.map(d=>'<option value="'+esc(d.id)+'">'+esc(d.name)+'</option>').join("");
 $("deptFilter").onchange=renderList;$("filter").oninput=renderList;
 $("projectId").onchange=()=>{syncProjectActivity();const owner=document.querySelector('[data-extra="projectOwner"]');if(owner)owner.value=ownerCache()[String($("projectId").value)]||"";setDirty()};
