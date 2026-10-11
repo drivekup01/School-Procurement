@@ -47,7 +47,7 @@ service cloud.firestore {
     // Field layout can be changed by Admin only; all members may read it.
     match /procurement_pdf_mappings/{departmentId} {
       allow read: if member();
-      allow create, update: if isAdmin() &&
+      allow create, update: if admin() &&
         request.resource.data.departmentId == departmentId &&
         request.resource.data.fields is list &&
         request.resource.data.fields.size() <= 300 &&
