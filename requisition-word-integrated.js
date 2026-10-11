@@ -99,6 +99,9 @@ function setRun(run,text){
 }
 async function build(){
  if(!original)throw Error("ยังไม่ได้เลือก Word ต้นฉบับ");
+ const itemRows=[...$("items").querySelectorAll("tr")].filter(r=>r.querySelector('[data-item="description"]')?.value.trim());
+ if(itemRows.length>1)throw Error("แม่แบบ Word ฉบับนี้ยังไม่ได้ผูกตารางหลายแถวครบทุกหน้า กรุณาใช้ไฟล์ต้นฉบับตรวจแก้ด้วย Word สำหรับงานหลายรายการก่อน เพื่อป้องกันพัสดุหายจากเอกสาร");
+
  const zip=await JSZip.loadAsync(original),doc=new DOMParser().parseFromString(await zip.file("word/document.xml").async("string"),"application/xml"),runs=runsIn(doc),val=values();
  let done=0;
  runs.forEach((hit,i)=>{
@@ -113,11 +116,11 @@ async function build(){
  $("wordStatus").textContent="สร้างจาก Word จริง • แทนข้อมูล "+done+" จุด • ยังไม่ผูก "+links.filter(x=>!x.key).length+" จุด • ตรวจยอดและลายเซ็นก่อนใช้งาน";
  return blob;
 }
-$("downloadDocx").onclick=async()=>{try{const blob=await build(),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="ชุดเบิก-"+($("title").value||"เอกสาร")+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}catch(e){$("wordStatus").textContent=e.message}};
+$("downloadDocx").onclick=async()=>{try{if(links.some(x=>!x.key&&!(x.shared===false&&x.value))&&!confirm("ยังมีจุดไฮไลต์ที่ไม่ได้ผูกข้อมูล ระบบจะคงข้อความต้นฉบับในจุดเหล่านั้น ต้องการส่งออกต่อหรือไม่?"))return;const blob=await build(),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="ชุดเบิก-"+($("title").value||"เอกสาร")+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}catch(e){$("wordStatus").textContent=e.message}};
 $("downloadPdf").onclick=async()=>{
  const win=window.open("","_blank");if(!win){$("wordStatus").textContent="โปรดอนุญาต Popup เพื่อพิมพ์ PDF";return}
  win.document.write("<p>กำลังจัดหน้าเอกสาร...</p>");
- try{const blob=await build(),tmp=document.createElement("div");tmp.style.cssText="position:absolute;left:-10000px";document.body.appendChild(tmp);
+ try{if(links.some(x=>!x.key&&!(x.shared===false&&x.value))&&!confirm("มีจุดข้อมูลที่ไม่ได้ผูก ระบบจะคงข้อความเดิมไว้ ต้องการพิมพ์ต่อหรือไม่?")){win.close();return}const blob=await build(),tmp=document.createElement("div");tmp.style.cssText="position:absolute;left:-10000px";document.body.appendChild(tmp);
   if(!window.docx?.renderAsync)throw Error("ส่วนแสดงผล Word ไม่พร้อม");
   await window.docx.renderAsync(blob,tmp,null,{inWrapper:true,breakPages:true,useBase64URL:true});
   const css=[...document.querySelectorAll("style")].filter(x=>(x.textContent||"").includes(".docx")).map(x=>x.outerHTML).join("");
