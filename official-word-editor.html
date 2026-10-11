@@ -202,50 +202,38 @@ $("resetMappings").onclick=()=>{
  }catch(e){$("fileStatus").textContent="ยังไม่สามารถอ่านแม่แบบจากเบราว์เซอร์ได้ กรุณาเลือก Word อีกครั้ง"}
 })();
 function ensureBudgetNumberInParagraphs(doc){
- // Repair a missing numeric amount even when Word splits the label and
- // highlighted amount into separate runs. Do not depend on one exact label.
- const digits=(String(forms.budget.value||"").match(/[0-9][0-9,]*(?:\.[0-9]+)?/)||[])[0];
- if(!digits)return {checked:0,repaired:0,unresolved:0};
- const words=(forms.amountWords.value||"").trim();
+ const amount=(String(forms.budget.value||"").match(/[0-9][0-9,]*(?:\.[0-9]+)?/)||[])[0];
+ if(!amount)return {checked:0,repaired:0,unresolved:0};
  let checked=0,repaired=0,unresolved=0;
  for(const p of doc.getElementsByTagNameNS(NS,"p")){
-  const runs=[...p.getElementsByTagNameNS(NS,"r")],full=runs.map(getText).join("");
-  // The source may say "วงเงินประมาณ", "วงเงินงบประมาณ",
-  // "จำนวนเงิน" or "เป็นเงิน"; only fix those containing amount words.
-  const match=/(วงเงิน(?:งบ)?ประมาณ|วงเงิน|จำนวนเงิน|เป็นเงิน)/g;
-  let found;
-  while((found=match.exec(full))){
-   const start=found.index+found[0].length;
-   const next=full.slice(start);
-   const wordAt=words?next.indexOf(words):-1;
-   const near=next.slice(0,Math.min(150,wordAt>=0?wordAt+words.length:150));
-   if(wordAt<0 || wordAt>150)continue;
-   // This clause already has a numeric amount before the spelled-out amount.
+  const texts=[...p.getElementsByTagNameNS(NS,"t")];
+  const full=texts.map(x=>x.textContent||"").join("");
+  // Numeric may be removed by a highlighted-run replacement. Detect the
+  // entire paragraph after replacement, including split XML text nodes.
+  const labels=/(วงเงิน(?:งบ)?ประมาณ|วงเงิน|จำนวนเงิน|เป็นเงิน)/g;
+  let match;
+  while((match=labels.exec(full))){
+   const start=match.index+match[0].length;
+   const following=full.slice(start, start+150);
+   const moneyWords=following.indexOf("บาทถ้วน");
+   if(moneyWords<0)continue;
    checked++;
-   if(/[0-9][0-9,]*(?:\.[0-9]+)?/.test(next.slice(0,wordAt)))continue;
-   // Insert directly before the Thai amount in its own XML text run.
-   const absolute=start+wordAt;
-   let cursor=0,updated=false;
-   for(const r of runs){
-    const ts=[...r.getElementsByTagNameNS(NS,"t")];
-    for(const node of ts){
-     const text=node.textContent||"",last=cursor+text.length;
-     if(absolute>=cursor&&absolute<last){
-      const offset=absolute-cursor;
-      node.textContent=text.slice(0,offset)+digits+" บาท ("+text.slice(offset);
-      // Close parenthesis only if absent after the spelled amount in this paragraph.
-      if(!full.slice(absolute+words.length).trimStart().startsWith(")")){
-       const closing=(node.ownerDocument.createElementNS(NS,"w:r"));
-       const textNode=node.ownerDocument.createElementNS(NS,"w:t");
-       textNode.textContent=")";closing.appendChild(textNode);r.parentNode.insertBefore(closing,r.nextSibling);
-      }
-      node.setAttribute("xml:space","preserve");updated=true;repaired++;break;
-     }
-     cursor=last;
+   const beforeWords=following.slice(0,moneyWords);
+   if(/[0-9][0-9,]*(?:\.[0-9]+)?/.test(beforeWords))continue;
+   // Insert only the missing numeric part, preserving the original written
+   // amount and punctuation, including whether it already has parentheses.
+   let offset=0,inserted=false;
+   for(const node of texts){
+    const value=node.textContent||"",end=offset+value.length;
+    if(start>=offset&&start<=end&&value){
+     const at=start-offset;
+     node.textContent=value.slice(0,at)+" "+amount+" บาท "+value.slice(at);
+     node.setAttribute("xml:space","preserve");
+     inserted=true;repaired++;break;
     }
-    if(updated)break;
+    offset=end;
    }
-   if(!updated)unresolved++;
+   if(!inserted)unresolved++;
    break;
   }
  }
@@ -279,7 +267,7 @@ $("export").onclick=async()=>{
    // A single yellow-highlight group may contain BOTH amount and Thai words.
    // Never discard the digits when mapped to the "amountWords" field.
    const originalText=found[i].runs.map(getText).join("");
-   const digitsInOriginal=/[0-9][0-9,]*(?:\\.[0-9]+)?/.test(originalText);
+   const digitsInOriginal=/[0-9][0-9,]*(?:\.[0-9]+)?/.test(originalText);
    const replacement=(hits[i].key==="amountWords" && digitsInOriginal)
      ?fieldValue("budgetPair"):val;
    replaceRun(found[i].runs[0],replacement);
