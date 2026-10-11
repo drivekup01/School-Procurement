@@ -202,29 +202,54 @@ $("resetMappings").onclick=()=>{
  }catch(e){$("fileStatus").textContent="ยังไม่สามารถอ่านแม่แบบจากเบราว์เซอร์ได้ กรุณาเลือก Word อีกครั้ง"}
 })();
 function ensureBudgetNumberInParagraphs(doc){
- const amount=(String(forms.budget.value||"").match(/[0-9][0-9,]*(?:\.[0-9]+)?/)||[])[0];
- if(!amount)return {checked:0,repaired:0};
- let checked=0,repaired=0;
+ // Repair a missing numeric amount even when Word splits the label and
+ // highlighted amount into separate runs. Do not depend on one exact label.
+ const digits=(String(forms.budget.value||"").match(/[0-9][0-9,]*(?:\.[0-9]+)?/)||[])[0];
+ if(!digits)return {checked:0,repaired:0,unresolved:0};
+ const words=(forms.amountWords.value||"").trim();
+ let checked=0,repaired=0,unresolved=0;
  for(const p of doc.getElementsByTagNameNS(NS,"p")){
   const runs=[...p.getElementsByTagNameNS(NS,"r")],full=runs.map(getText).join("");
-  const label="วงเงินงบประมาณ",idx=full.indexOf(label);
-  if(idx<0)continue;
-  checked++;
-  const tail=full.slice(idx+label.length).split("(")[0];
-  if(/[0-9]/.test(tail))continue;
-  const pos=idx+label.length;
-  let start=0;
-  for(const r of runs){
-   const t=getText(r),end=start+t.length;
-   if(t&&pos>=start&&pos<=end){
-    const node=r.getElementsByTagNameNS(NS,"t")[0];
-    if(node){const offset=pos-start;node.textContent=t.slice(0,offset)+" "+amount+" บาท"+t.slice(offset);node.setAttribute("xml:space","preserve");repaired++}
-    break;
+  // The source may say "วงเงินประมาณ", "วงเงินงบประมาณ",
+  // "จำนวนเงิน" or "เป็นเงิน"; only fix those containing amount words.
+  const match=/(วงเงิน(?:งบ)?ประมาณ|วงเงิน|จำนวนเงิน|เป็นเงิน)/g;
+  let found;
+  while((found=match.exec(full))){
+   const start=found.index+found[0].length;
+   const next=full.slice(start);
+   const wordAt=words?next.indexOf(words):-1;
+   const near=next.slice(0,Math.min(150,wordAt>=0?wordAt+words.length:150));
+   if(wordAt<0 || wordAt>150)continue;
+   // This clause already has a numeric amount before the spelled-out amount.
+   checked++;
+   if(/[0-9][0-9,]*(?:\.[0-9]+)?/.test(next.slice(0,wordAt)))continue;
+   // Insert directly before the Thai amount in its own XML text run.
+   const absolute=start+wordAt;
+   let cursor=0,updated=false;
+   for(const r of runs){
+    const ts=[...r.getElementsByTagNameNS(NS,"t")];
+    for(const node of ts){
+     const text=node.textContent||"",last=cursor+text.length;
+     if(absolute>=cursor&&absolute<last){
+      const offset=absolute-cursor;
+      node.textContent=text.slice(0,offset)+digits+" บาท ("+text.slice(offset);
+      // Close parenthesis only if absent after the spelled amount in this paragraph.
+      if(!full.slice(absolute+words.length).trimStart().startsWith(")")){
+       const closing=(node.ownerDocument.createElementNS(NS,"w:r"));
+       const textNode=node.ownerDocument.createElementNS(NS,"w:t");
+       textNode.textContent=")";closing.appendChild(textNode);r.parentNode.insertBefore(closing,r.nextSibling);
+      }
+      node.setAttribute("xml:space","preserve");updated=true;repaired++;break;
+     }
+     cursor=last;
+    }
+    if(updated)break;
    }
-   start=end;
+   if(!updated)unresolved++;
+   break;
   }
  }
- return {checked,repaired};
+ return {checked,repaired,unresolved};
 }
 function replaceRun(run,text){
  let t=run.getElementsByTagNameNS(NS,"t")[0];if(!t){t=run.ownerDocument.createElementNS(NS,"w:t");run.appendChild(t)}
@@ -251,7 +276,13 @@ $("export").onclick=async()=>{
   for(let i=0;i<found.length;i++){
    if(!hits[i].key)continue;const val=fieldValue(hits[i].key);
    if(!val)continue;
-   replaceRun(found[i].runs[0],val);
+   // A single yellow-highlight group may contain BOTH amount and Thai words.
+   // Never discard the digits when mapped to the "amountWords" field.
+   const originalText=found[i].runs.map(getText).join("");
+   const digitsInOriginal=/[0-9][0-9,]*(?:\\.[0-9]+)?/.test(originalText);
+   const replacement=(hits[i].key==="amountWords" && digitsInOriginal)
+     ?fieldValue("budgetPair"):val;
+   replaceRun(found[i].runs[0],replacement);
    for(let j=1;j<found[i].runs.length;j++)replaceRun(found[i].runs[j],"");
    done++;
   }
@@ -260,7 +291,7 @@ $("export").onclick=async()=>{
   const blob=await z.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
   const url=URL.createObjectURL(blob),a=document.createElement("a");
   a.href=url;a.download="เอกสารจัดซื้อ_กรอกข้อมูลแล้ว.docx";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-  $("output").textContent="สร้าง Word แล้ว • แทนข้อมูล "+done+" จุด • ตรวจวงเงิน "+amountCheck.checked+" จุด เติมตัวเลขที่ขาด "+amountCheck.repaired+" จุด • ตรวจหน้ากระดาษใน Word ก่อนใช้จริง";
+  $("output").textContent="สร้าง Word แล้ว • แทนข้อมูล "+done+" จุด • ตรวจข้อความวงเงิน "+amountCheck.checked+" จุด เติมตัวเลขที่ขาด "+amountCheck.repaired+" จุด"+(amountCheck.unresolved?" • ยังตรวจไม่สำเร็จ "+amountCheck.unresolved+" จุด":"")+" • โปรดตรวจตัวเลขและตารางใน Word";
  }catch(error){$("output").textContent="ส่งออกไม่สำเร็จ: "+(error.message||error)}
  finally{$("export").disabled=false}
 };
