@@ -23,6 +23,33 @@ function populateExtras(details={}){
 function gatherExtras(){return Object.fromEntries([...document.querySelectorAll("[data-extra]")].map(x=>[x.dataset.extra,x.value.trim()]))}
 function persistDefaults(details){
  if(details.projectOwner){const cache=ownerCache();cache[String($("projectId").value)]=details.projectOwner;try{localStorage.setItem(OWNER_CACHE_KEY,JSON.stringify(cache))}catch(e){}}const keys=["schoolName","agency","directorName","directorPosition"];const values=Object.fromEntries(keys.map(x=>[x,details[x]||""]));try{localStorage.setItem(SAVED_DEFAULTS_KEY,JSON.stringify(values))}catch(e){}}
+const LOCAL_KEY="school-procurement-local-drafts-2570-v1";
+let cloudRows=[];
+function readLocal(){
+ try{const arr=JSON.parse(localStorage.getItem(LOCAL_KEY)||"[]");return Array.isArray(arr)?arr.filter(x=>x&&typeof x==="object"&&String(x.docId||"").startsWith("local-")):[]}catch(e){return []}
+}
+let localRows=readLocal();
+function combineRows(){
+ const map=new Map();
+ for(const r of cloudRows)map.set(r.docId,r);
+ for(const r of localRows)map.set(r.docId,r);
+ rows=[...map.values()];
+}
+function storeLocal(){
+ localStorage.setItem(LOCAL_KEY,JSON.stringify(localRows));
+ combineRows();renderList();
+}
+function saveLocalDraft(data){
+ const old=selected&&String(selected).startsWith("local-")?localRows.find(x=>x.docId===selected):null;
+ if(old&&old.status!=="draft")throw Error("แฟ้มที่ปิดสถานะร่างแล้วไม่อนุญาตแก้ไข");
+ const id=old?.docId||"local-"+Date.now()+"-"+Math.random().toString(36).slice(2,8);
+ const next={...(old||{}),...data,docId:id,localOnly:true,localUpdatedAt:new Date().toISOString()};
+ const at=localRows.findIndex(x=>x.docId===id);
+ if(at<0)localRows.unshift(next);else localRows[at]=next;
+ storeLocal();selected=id;draftNew=false;dirty=false;persistDefaults(data.details);fillForm(next);renderList();
+ notify("บันทึกแฟ้มร่างไว้บนเบราว์เซอร์เครื่องนี้แล้ว • ยังไม่ได้ขึ้น Firebase");
+ $("saveMessage").textContent="บันทึกในเครื่องแล้ว";
+}
 const EMPTY={projectId:"",activityId:"",title:"",requestedDate:"",requestedAmount:"",procurementType:"purchase",procurementMethod:"เฉพาะเจาะจง",purpose:"",vendor:"",deliveryDate:"",deliveryDays:"",notes:"",status:"draft",preparedBy:"",items:[]};
 const notify=(message,warn=false)=>{$("notice").textContent=message;$("notice").classList.toggle("warn",warn)};
 const findProject=id=>projects.find(p=>String(p.id)===String(id));
@@ -70,10 +97,10 @@ function fillForm(obj){
  for(const [i,item] of (obj.items||[]).entries())$("items").appendChild(itemRow(item,i));
  renumber();calculate();populateExtras(obj.details||{});dirty=false;
  $("formTitle").textContent=draftNew?"สร้างแฟ้มชุดเบิกใหม่":obj.title||"แฟ้มชุดเบิก";
- $("formMeta").textContent=draftNew?"ยังไม่ถูกบันทึกในฐานข้อมูล":"เลขอ้างอิง: "+(obj.docId||"—")+" · "+(obj.requestedDate||"—");
- $("state").textContent=obj.status==="prepared"?"ข้อมูลพร้อมตรวจ":"ร่าง";
+ $("formMeta").textContent=draftNew?"ยังไม่ถูกบันทึก":(obj.localOnly?"บันทึกในเครื่อง · ยังไม่ขึ้น Firebase": "Firebase")+" · เลขอ้างอิง: "+(obj.docId||"—")+" · "+(obj.requestedDate||"—");
+ $("state").textContent=obj.localOnly?"ร่างในเครื่อง":obj.status==="prepared"?"ข้อมูลพร้อมตรวจ":"ร่าง";
  $("saveMessage").textContent=draftNew?"กรอกข้อมูลและกดบันทึก":"โหลดรายการนี้แล้ว";
- $("printBtn").disabled=false;$("wordBtn").disabled=false;$("saveBtn").disabled=!ownAccount();
+ $("printBtn").disabled=false;$("wordBtn").disabled=false;$("saveBtn").disabled=false;
  const locked=!draftNew&&obj.status!=="draft";
  for(const el of $("form").querySelectorAll("input,select,textarea,button"))el.disabled=locked;
  $("saveBtn").disabled=locked;
@@ -94,7 +121,7 @@ function choose(r){
 function renderList(){
  const dept=$("deptFilter").value,term=$("filter").value.trim().toLocaleLowerCase();
  const list=rows.filter(r=>(!dept||r.department===dept)&&(!term||(r.title+" "+(r.vendor||"")).toLocaleLowerCase().includes(term)));
- $("count").textContent=list.length+" แฟ้ม"+(loaded?" (Firebase)":"");
+ $("count").textContent=list.length+" แฟ้ม (ในเครื่อง "+localRows.length+" / Firebase "+cloudRows.length+")";
  $("reqList").innerHTML=list.length?list.sort((a,b)=>String(b.requestedDate||"").localeCompare(String(a.requestedDate||""))).map(r=>{
  const p=findProject(r.projectId);
  return '<button class="req '+(selected===r.docId?"active":"")+'" data-id="'+esc(r.docId)+'"><strong>'+esc(r.title||"ไม่มีชื่อ")+'</strong><small>'+esc(p?.name||"โครงการไม่พบในแผน")+'</small><span><b>'+money(r.requestedAmount)+'</b><small>'+(r.status==="prepared"?"พร้อมตรวจ":"ร่าง")+' · '+esc(r.requestedDate||"")+'</small></span></button>'
@@ -117,25 +144,60 @@ function readForm(){
  return {fiscalYear:"2570",department:p.department,projectId:Number(p.id),activityId:obj.activityId||null,title:obj.title.trim(),requestedAmount:amount,requestedDate:obj.requestedDate,status:obj.status==="prepared"?"prepared":"draft",procurementType:obj.procurementType,procurementMethod:obj.procurementMethod,purpose:obj.purpose.trim(),vendor:obj.vendor.trim(),deliveryDate:obj.deliveryDate,deliveryDays:obj.deliveryDays?Number(obj.deliveryDays):null,notes:obj.notes.trim(),preparedBy:obj.preparedBy.trim(),items:withValue,details:gatherExtras()}
 }
 async function save(){
- if(!user){notify("กรุณาเข้าสู่ระบบ Firebase ก่อนบันทึกแฟ้ม • ข้อมูลที่กรอกไว้ยังอยู่ในหน้านี้",true);$("loginDialog").showModal();return}
  if(!$("form").reportValidity())return;
  let data;try{data=readForm()}catch(e){notify(e.message,true);return}
- const saveBtn=$("saveBtn");saveBtn.disabled=true;$("saveMessage").textContent="กำลังบันทึก Firebase...";
+ const localSelected=String(selected||"").startsWith("local-");
+ // Explicit local save works without sign-in; never claim cloud persistence.
+ if(!user||localSelected){
+  try{saveLocalDraft(data)}catch(e){notify("บันทึกในเครื่องไม่สำเร็จ: "+e.message,true)}
+  return;
+ }
+ const btn=$("saveBtn");btn.disabled=true;$("saveMessage").textContent="กำลังบันทึก Firebase...";
  try{
-  if(draftNew){const ref=await addDoc(collection(db,COL),{...data,createdBy:user.uid,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});selected=ref.id;draftNew=false}
-  else{const original=rows.find(r=>r.docId===selected);
-   if(!original)throw Error("หาแฟ้มเดิมไม่พบ");if(original.status!=="draft")throw Error("แฟ้มที่ปิดสถานะร่างแล้วแก้ไขไม่ได้");
-   if(original.department!==data.department)throw Error("ยังไม่รองรับการย้ายแฟ้มข้ามฝ่าย โปรดสร้างแฟ้มใหม่แทน");
-   await updateDoc(doc(db,COL,selected),{...data,updatedAt:serverTimestamp()})
+  if(draftNew){
+   const ref=await addDoc(collection(db,COL),{...data,createdBy:user.uid,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+   selected=ref.id;draftNew=false;
+  }else{
+   const original=cloudRows.find(r=>r.docId===selected);
+   if(!original)throw Error("หาแฟ้ม Firebase เดิมไม่พบ");
+   if(original.status!=="draft")throw Error("แฟ้มที่ปิดสถานะร่างแล้วแก้ไขไม่ได้");
+   if(original.department!==data.department)throw Error("ย้ายแฟ้มข้ามฝ่ายไม่ได้ กรุณาสร้างแฟ้มใหม่");
+   await updateDoc(doc(db,COL,selected),{...data,updatedAt:serverTimestamp()});
   }
   persistDefaults(data.details);dirty=false;await reload(false);
-  const current=rows.find(r=>r.docId===selected);if(current){fillForm(current);renderList()}
-  notify("บันทึกแฟ้มลง Firebase สำเร็จ");$("saveMessage").textContent="บันทึกล่าสุดเรียบร้อย";
- }catch(err){notify("ไม่สามารถบันทึกแฟ้ม: "+(err.message||err)+" กรุณาตรวจ Firebase Rules/สิทธิ์",true);$("saveMessage").textContent="บันทึกไม่สำเร็จ"}
- finally{if($("form").hidden===false)$("saveBtn").disabled=!user||Boolean(rows.find(r=>r.docId===selected)?.status!=="draft"&&!draftNew)}
+  const current=rows.find(r=>r.docId===selected);if(current)fillForm(current);
+  notify("บันทึกแฟ้มลง Firebase สำเร็จ");
+  $("saveMessage").textContent="บันทึก Firebase เรียบร้อย";
+ }catch(err){
+  // Do not discard entered values when cloud write is denied.
+  try{
+   draftNew=true;selected=null;saveLocalDraft(data);
+   notify("Firebase ยังบันทึกไม่ได้ ("+(err.code||err.message)+") • เก็บสำเนาแฟ้มร่างไว้ในเครื่องแล้ว",true);
+  }catch(localError){notify("Firebase และการบันทึกในเครื่องไม่สำเร็จ: "+localError.message,true)}
+ }finally{btn.disabled=false}
+}
+async function syncLocal(){
+ if(!user){notify("เข้าสู่ระบบก่อนนำแฟ้มในเครื่องขึ้น Firebase",true);$("loginDialog").showModal();return}
+ if(dirty){notify("กรุณากดบันทึกแฟ้มปัจจุบันในเครื่องก่อนซิงก์",true);return}
+ if(!localRows.length){notify("ไม่มีแฟ้มในเครื่องที่ต้องนำขึ้น Firebase");return}
+ if(!confirm("นำแฟ้มในเครื่อง "+localRows.length+" รายการขึ้น Firebase? จะลบเฉพาะสำเนาที่อัปโหลดสำเร็จ"))return;
+ $("syncLocalBtn").disabled=true;let success=0;const failures=[];
+ for(const local of [...localRows]){
+  try{
+   const {docId,localOnly,localUpdatedAt,createdAt,updatedAt,createdBy,...data}=local;
+   if(data.status==="prepared")data.status="draft"; // state review must be performed in cloud
+   const ref=await addDoc(collection(db,COL),{...data,createdBy:user.uid,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+   localRows=localRows.filter(r=>r.docId!==local.docId);storeLocal();
+   if(selected===local.docId){selected=ref.id;draftNew=false}
+   success++;
+  }catch(e){failures.push(e.code||e.message)}
+ }
+ await reload(false);
+ $("syncLocalBtn").disabled=false;
+ notify(success+" แฟ้มขึ้น Firebase สำเร็จ"+(failures.length?" • อีก "+failures.length+" แฟ้มยังอยู่ในเครื่อง: "+failures[0]:""),Boolean(failures.length));
 }
 async function reload(showMessage=true){
- if(!user){loaded=false;rows=[];renderList();return}
+ if(!user){loaded=false;cloudRows=[];combineRows();renderList();return}
  // Read collections independently: a denied or slow request must not clear the
  // 40 source-listed projects and 94 activities bundled with this application.
  const bounded=(promise,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+" ใช้เวลานานเกิน 12 วินาที")),12000))]);
@@ -150,10 +212,10 @@ async function reload(showMessage=true){
   projects=[...merged.values()].sort((a,b)=>Number(a.id)-Number(b.id));
  }
  if(reqResult.status==="fulfilled"){
-  rows=reqResult.value.docs.map(r=>({...r.data(),docId:r.id})).filter(x=>x.fiscalYear==="2570");
+  cloudRows=reqResult.value.docs.map(r=>({...r.data(),docId:r.id})).filter(x=>x.fiscalYear==="2570");
   loaded=true;
- }else{loaded=false;rows=[]}
- renderList();
+ }else{loaded=false;cloudRows=[]}
+ combineRows();renderList();
  if(reqResult.status==="rejected"){
   notify("รายชื่อ 40 โครงการและกิจกรรมพร้อมเลือก แต่ยังอ่านแฟ้มชุดเบิกจาก Firebase ไม่สำเร็จ: "+reqResult.reason.message,true);
  }else if(showMessage){
@@ -211,6 +273,7 @@ $("form").oninput=()=>{setDirty();if(document.activeElement?.name==="requestedAm
 $("addItem").onclick=()=>{const tb=$("items");tb.appendChild(itemRow(freshItem(),tb.children.length));calculate();setDirty()};
 $("newBtn").onclick=()=>newFile(new URLSearchParams(location.search).get("projectId"));
 $("saveBtn").onclick=save;
+$("syncLocalBtn").onclick=syncLocal;
 $("printBtn").onclick=()=>{if(dirty&&!confirm("มีข้อมูลยังไม่บันทึก ต้องการพิมพ์ฉบับปัจจุบันหรือไม่?"))return;window.print()};
 $("wordBtn").onclick=()=>{
  if(dirty&&!confirm("ข้อมูลยังไม่บันทึกในฐานข้อมูล ต้องการส่งค่าที่แสดงไปทดลองในแม่แบบ Word หรือไม่?"))return;
@@ -226,11 +289,11 @@ $("loginBtn").onclick=()=>{if(user)signOut(auth);else $("loginDialog").showModal
 $("loginCancel").onclick=()=>$("loginDialog").close();
 $("loginForm").onsubmit=async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(e.target));try{await signInWithEmailAndPassword(auth,v.email,v.password);$("loginDialog").close()}catch(err){notify("เข้าสู่ระบบไม่สำเร็จ: "+err.message,true)}};
 // Render the complete FY2570 project/activity list immediately, without waiting for Auth.
-renderList();
+combineRows();renderList();
 newFile(new URLSearchParams(location.search).get("projectId"));
 dirty=false;
-$("saveMessage").textContent="เลือกโครงการและกิจกรรมได้ทันที • เข้าสู่ระบบเมื่อจะบันทึก Firebase";
-notify("โหลดโครงการปี 2570 พร้อมแล้ว 40 โครงการ • เลือกกิจกรรมได้ทันที ไม่ต้องรอโหลดแฟ้มจากฐานข้อมูล");
+$("saveMessage").textContent="บันทึกในเครื่องได้ทันที • เข้าสู่ระบบเพื่อบันทึก Firebase";
+notify("พร้อมใช้งาน 40 โครงการ • บันทึกแฟ้มร่างในเครื่องได้แม้ไม่ได้เข้าสู่ระบบ");
 onAuthStateChanged(auth,async u=>{
  user=u;
  $("account").textContent=u?u.email:"ยังไม่ได้เข้าสู่ระบบ";
@@ -241,9 +304,9 @@ onAuthStateChanged(auth,async u=>{
   const qid=new URLSearchParams(location.search).get("id");
   if(qid&&!rows.some(r=>r.docId===qid))notify("กำลังเลือกแฟ้มที่ระบุ แต่ยังไม่พบในรายการที่อ่านได้",true);
  }else{
-  rows=[];loaded=false;renderList();
-  $("saveBtn").disabled=true;
-  notify("รายชื่อโครงการและกิจกรรมปี 2570 พร้อมใช้ • เข้าสู่ระบบก่อนบันทึกแฟ้มลง Firebase");
+  cloudRows=[];loaded=false;combineRows();renderList();
+  $("saveBtn").disabled=false;
+  notify("ข้อมูลโครงการพร้อมใช้งาน • บันทึกในเครื่องได้ทันที • ลงชื่อเข้าใช้เพื่อนำแฟ้มขึ้น Firebase");
  }
 });
 window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
