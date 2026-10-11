@@ -45,6 +45,7 @@ function substitute(p,rx,value,log,label){
 }
 function dateThai(input){if(!/^\d{4}-\d\d-\d\d$/.test(input||""))return null;let [y,m,d]=input.split("-").map(Number);
  return d+" "+["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"][m-1]+" "+(y+543)}
+function toThai(value){return dateThai(value)||value||null}
 function contextDate(text,matched,d){
  const before=text.slice(Math.max(0,matched.index-85),matched.index);
  if(/ประกาศ\s*ณ\s*วันที่/.test(before)||/ประกาศผู้ชนะ/.test(before))return d.winnerDate||d.requestDate;
@@ -66,7 +67,7 @@ function setCell(cell,value){
 }
 function directCells(tr){return [...tr.childNodes].filter(x=>x.nodeType===1&&x.localName==="tc")}
 function fillItemTables(doc,items,log){
- const matches=n(doc,"tr").filter(r=>oldItem.test(joined(r).replace(/\s/g,"")));oldItem.lastIndex=0;
+ const matches=n(doc,"tr").filter(r=>joined(r).replace(/\s/g,"").includes("สีน้ำมันตราเป็ดหงส์"));
  log.itemTableRows=matches.length;
  if(!items.length){log.errors.push("ไม่มีรายการพัสดุในแฟ้มชุดเบิก");return}
  if(!matches.length){log.errors.push("ไม่พบแถวพัสดุต้นฉบับในตาราง Word");return}
@@ -74,6 +75,7 @@ function fillItemTables(doc,items,log){
   const cells=directCells(row),length=cells.length;
   if(length<3){log.errors.push("แถวพัสดุตารางไม่ครบช่อง ("+length+")");return}
   const parent=row.parentNode;
+  let lastRow=row;
   items.forEach((item,i)=>{
    const r=i===0?row:row.cloneNode(true),c=directCells(r),qty=Number(item.qty||0),unit=String(item.unit||"");
    const ref=moneyParts(item.referencePrice??item.unitPrice),price=moneyParts(item.unitPrice);
@@ -93,7 +95,7 @@ function fillItemTables(doc,items,log){
     setCell(c[c.length-1],decimal(qty*Number(item.unitPrice)));
    }else if(c.length===4){setCell(c[0],i+1);setCell(c[1],item.name);setCell(c[2],qty+" "+unit)}
    else {setCell(c[0],i+1);setCell(c[1],item.name);setCell(c[2],qty+" "+unit)}
-   if(i>0)parent.insertBefore(r,row.nextSibling);
+   if(i>0){parent.insertBefore(r,lastRow.nextSibling);lastRow=r}
   });
  });
  log.itemRowsWritten=matches.length*items.length;
@@ -105,6 +107,8 @@ export function mergeOriginalWord(doc,values,items){
  const budget=sum>0?sum:Number(String(d.budget||"0").replace(/,/g,""));
  const budgetStr=decimal(budget),priceStr=decimal(d.agreedAmount||budget);
  const docParagraphs=n(doc,"p");
+ // Capture the original table rows before replacing example names globally.
+ fillItemTables(doc,items,log);
  // Copy the same fields across every occurrence, whether highlighted or not.
  for(const p of docParagraphs){
   const text=joined(p);
@@ -132,10 +136,10 @@ export function mergeOriginalWord(doc,values,items){
   },log,"ผู้จัดทำ/หัวหน้าเจ้าหน้าที่");
   substitute(p,oldItem,use("itemDescription"),log,"ชื่อรายการพัสดุ");
   substitute(p,oldAmountWords,use("amountWords"),log,"จำนวนเงินตัวอักษร");
-  substitute(p,/24\s*สิงหาคม\s*2569|24\/ส\.ค\.\/2569/g,(m,full)=>dateThai(contextDate(full,m,d)),log,"วันที่เอกสาร");
-  substitute(p,/25\s*สิงหาคม\s*2569/g,dateThai(use("winnerDate")||use("requestDate")),log,"วันที่ประกาศ");
+  substitute(p,/24\s*สิงหาคม\s*2569|24\/ส\.ค\.\/2569/g,(m,full)=>toThai(contextDate(full,m,d)),log,"วันที่เอกสาร");
+  substitute(p,/25\s*สิงหาคม\s*2569/g,toThai(use("winnerDate")||use("requestDate")),log,"วันที่ประกาศ");
   substitute(p,/26\s*สิงหาคม\s*2569/g,(m,full)=>dateThai(contextDate(full,m,d)),log,"วันที่ส่ง/ตรวจรับ");
-  substitute(p,/27\s*สิงหาคม\s*2569/g,dateThai(use("activityDate")||use("requestDate")),log,"วันที่กิจกรรม");
+  substitute(p,/27\s*สิงหาคม\s*2569/g,toThai(use("activityDate")||use("requestDate")),log,"วันที่กิจกรรม");
   if(d.budget&&budget>0){
    // Original test file uses 140.00 (incl. split 140 00 in several tables).
    substitute(p,/140\s*[.,]\s*0{1,2}(?!\d)/g,(m,whole)=>{
@@ -144,13 +148,24 @@ export function mergeOriginalWord(doc,values,items){
     return priceStr;
    },log,"วงเงิน/ราคา");
   }
+  if(use("invoiceNo")){
+   substitute(p,/ORNC69P0100821/g,use("invoiceNo"),log,"เลขที่ใบส่งของ");
+  }
+  if(/กำหนด.*ส่งมอบ|ส่งมอบพัสดุ/.test(joined(p))&&use("deliveryDays")){
+   substitute(p,/([.]{2,})\s*3\s*([.]{2,})/g,use("deliveryDays"),log,"กำหนดส่งมอบ");
+  }
+  if(/จำนวน.*รายการ|จัดซื้อ.*รายการ/.test(joined(p))){
+   substitute(p,/([12])\s*รายการ/g,String(items.length)+" รายการ",log,"จำนวนรายการ");
+  }
+  if(/ภาษีมูลค่าเพิ่ม/.test(joined(p))&&use("vatAmount")){
+   substitute(p,/0{1,2}\s*[.,]\s*0{2}/g,decimal(d.vatAmount),log,"ภาษีมูลค่าเพิ่ม");
+  }
   if(items.length===1){
    substitute(p,/1\s*กระป๋อง/g,Number(items[0].qty)+" "+items[0].unit,log,"จำนวนพัสดุ");
   }
  }
  // Rewrite the original row(s) in every matching source item table, including
  // the TOR specification, attached schedules, and material requisition.
- fillItemTables(doc,items,log);
  const after=joined(doc);
  for(const [key,rx] of [["โครงการเดิม",oldProject],["ชื่องานเดิม",oldSubject],["ผู้ขายเดิม",oldVendor],["รายการเดิม",oldItem]]){
   rx.lastIndex=0;
