@@ -10,6 +10,16 @@ const app=initializeApp(firebaseConfig,"school-procurement-req-2570");
 const db=getFirestore(app),auth=getAuth(app),COL="procurement_v2_requests",PCOL="procurement_v2_projects";
 let user=null,rows=[],projects=PROJECTS.slice(),selected=null,draftNew=false,dirty=false,loaded=false;
 const fields=["projectId","activityId","title","requestedDate","requestedAmount","procurementType","procurementMethod","purpose","vendor","deliveryDate","deliveryDays","notes","status","preparedBy"];
+const SCHOOL_DEFAULTS={schoolName:"โรงเรียนค่ายบางระจันวิทยาคม",agency:"สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาสิงห์บุรี อ่างทอง",directorName:"นายเรวัฒน์ พรหมสะโร",directorPosition:"ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม",budgetYear:"2570"};
+const SAVED_DEFAULTS_KEY="school-procurement-school-settings-2570";
+function defaults(){try{return {...SCHOOL_DEFAULTS,...JSON.parse(localStorage.getItem(SAVED_DEFAULTS_KEY)||"{}")}}catch(e){return {...SCHOOL_DEFAULTS}}}
+const EXTRA_IDS=()=>[...document.querySelectorAll("[data-extra]")].map(x=>x.dataset.extra);
+function populateExtras(details={}){
+ const values={...defaults(),...details};
+ for(const input of document.querySelectorAll("[data-extra]"))input.value=values[input.dataset.extra]??"";
+}
+function gatherExtras(){return Object.fromEntries([...document.querySelectorAll("[data-extra]")].map(x=>[x.dataset.extra,x.value.trim()]))}
+function persistDefaults(details){const keys=["schoolName","agency","directorName","directorPosition"];const values=Object.fromEntries(keys.map(x=>[x,details[x]||""]));try{localStorage.setItem(SAVED_DEFAULTS_KEY,JSON.stringify(values))}catch(e){}}
 const EMPTY={projectId:"",activityId:"",title:"",requestedDate:"",requestedAmount:"",procurementType:"purchase",procurementMethod:"เฉพาะเจาะจง",purpose:"",vendor:"",deliveryDate:"",deliveryDays:"",notes:"",status:"draft",preparedBy:"",items:[]};
 const notify=(message,warn=false)=>{$("notice").textContent=message;$("notice").classList.toggle("warn",warn)};
 const findProject=id=>projects.find(p=>String(p.id)===String(id));
@@ -54,7 +64,7 @@ function fillForm(obj){
  for(const key of fields){if(key==="projectId"||key==="activityId")continue;const control=$("form").elements.namedItem(key);if(control)control.value=obj[key]??""}
  $("items").innerHTML="";
  for(const [i,item] of (obj.items||[]).entries())$("items").appendChild(itemRow(item,i));
- renumber();calculate();dirty=false;
+ renumber();calculate();populateExtras(obj.details||{});dirty=false;
  $("formTitle").textContent=draftNew?"สร้างแฟ้มชุดเบิกใหม่":obj.title||"แฟ้มชุดเบิก";
  $("formMeta").textContent=draftNew?"ยังไม่ถูกบันทึกในฐานข้อมูล":"เลขอ้างอิง: "+(obj.docId||"—")+" · "+(obj.requestedDate||"—");
  $("state").textContent=obj.status==="prepared"?"ข้อมูลพร้อมตรวจ":"ร่าง";
@@ -101,7 +111,7 @@ function readForm(){
  if(obj.status==="prepared"&&!obj.vendor.trim())throw Error("สถานะพร้อมตรวจต้องมีชื่อผู้ขาย/ผู้รับจ้าง");
  if(!obj.title.trim())throw Error("กรุณาระบุชื่องานจัดซื้อ");
  if(obj.activityId&&!(p.activities||[]).some(a=>String(a.id)===obj.activityId))throw Error("กิจกรรมไม่ตรงกับโครงการที่เลือก");
- return {fiscalYear:"2570",department:p.department,projectId:Number(p.id),activityId:obj.activityId||null,title:obj.title.trim(),requestedAmount:amount,requestedDate:obj.requestedDate,status:obj.status==="prepared"?"prepared":"draft",procurementType:obj.procurementType,procurementMethod:obj.procurementMethod,purpose:obj.purpose.trim(),vendor:obj.vendor.trim(),deliveryDate:obj.deliveryDate,deliveryDays:obj.deliveryDays?Number(obj.deliveryDays):null,notes:obj.notes.trim(),preparedBy:obj.preparedBy.trim(),items:withValue}
+ return {fiscalYear:"2570",department:p.department,projectId:Number(p.id),activityId:obj.activityId||null,title:obj.title.trim(),requestedAmount:amount,requestedDate:obj.requestedDate,status:obj.status==="prepared"?"prepared":"draft",procurementType:obj.procurementType,procurementMethod:obj.procurementMethod,purpose:obj.purpose.trim(),vendor:obj.vendor.trim(),deliveryDate:obj.deliveryDate,deliveryDays:obj.deliveryDays?Number(obj.deliveryDays):null,notes:obj.notes.trim(),preparedBy:obj.preparedBy.trim(),items:withValue,details:gatherExtras()}
 }
 async function save(){
  if(!user){notify("กรุณาเข้าสู่ระบบ",true);return}
@@ -115,7 +125,7 @@ async function save(){
    if(original.department!==data.department)throw Error("ยังไม่รองรับการย้ายแฟ้มข้ามฝ่าย โปรดสร้างแฟ้มใหม่แทน");
    await updateDoc(doc(db,COL,selected),{...data,updatedAt:serverTimestamp()})
   }
-  dirty=false;await reload(false);
+  persistDefaults(data.details);dirty=false;await reload(false);
   const current=rows.find(r=>r.docId===selected);if(current){fillForm(current);renderList()}
   notify("บันทึกแฟ้มลง Firebase สำเร็จ");$("saveMessage").textContent="บันทึกล่าสุดเรียบร้อย";
  }catch(err){notify("ไม่สามารถบันทึกแฟ้ม: "+(err.message||err)+" กรุณาตรวจ Firebase Rules/สิทธิ์",true);$("saveMessage").textContent="บันทึกไม่สำเร็จ"}
@@ -147,10 +157,10 @@ $("printBtn").onclick=()=>{if(dirty&&!confirm("มีข้อมูลยัง
 $("wordBtn").onclick=()=>{
  if(dirty&&!confirm("ข้อมูลยังไม่บันทึกในฐานข้อมูล ต้องการส่งค่าที่แสดงไปทดลองในแม่แบบ Word หรือไม่?"))return;
  const v=Object.fromEntries(new FormData($("form")).entries());
- const p=findProject(v.projectId),a=(p?.activities||[]).find(x=>String(x.id)===String(v.activityId));
+ const p=findProject(v.projectId),a=(p?.activities||[]).find(x=>String(x.id)===String(v.activityId));const dt=gatherExtras();
  try{
   const key="procurement-prototype-word-v1",old=JSON.parse(localStorage.getItem(key)||"{}");
-  localStorage.setItem(key,JSON.stringify({...old,division:DEPARTMENTS.find(d=>d.id===p?.department)?.name||"",project:p?.name||"",activity:a?.name||"",subject:v.title||"",requestDate:v.requestedDate||"",budget:(Number(v.requestedAmount)||0).toFixed(2)+" บาท",vendor:v.vendor||""}));
+  localStorage.setItem(key,JSON.stringify({...old,division:DEPARTMENTS.find(d=>d.id===p?.department)?.name||"",project:p?.name||"",activity:a?.name||"",subject:v.title||"",requestDate:v.requestedDate||"",budget:(Number(v.requestedAmount)||0).toFixed(2)+" บาท",vendor:v.vendor||"",school:dt.schoolName,agency:dt.agency,director:dt.directorName,directorPosition:dt.directorPosition,torPerson:dt.torAuthor,officer:dt.officerName,headOfficer:dt.headOfficerName,inspector:dt.inspectorName,invoiceNo:dt.invoiceNo}));
  }catch(e){notify("ส่งข้อมูลไป Word ไม่สำเร็จ: "+e.message,true);return}
  window.location.href="./official-word-editor.html";
 };
