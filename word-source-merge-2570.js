@@ -154,7 +154,10 @@ export function mergeOriginalWord(doc,values,items){
    },log,"โครงการ/กิจกรรม");
   }
   substitute(p,oldSubject,use("subject"),log,"ชื่องานจัดซื้อ");
-  substitute(p,oldVendor,use("vendor"),log,"ชื่อผู้ขาย");
+  substitute(p,oldVendor,(m,full)=>{
+   const before=full.slice(Math.max(0,m.index-90),m.index);
+   return /สถานที่ส่งมอบ|สถานที่ดำเนินการ/.test(before)?use("deliveryLocation")||use("vendor"):use("vendor");
+  },log,"ชื่อผู้ขาย/สถานที่ส่งมอบ");
   substitute(p,oldSchool,use("schoolName"),log,"ชื่อโรงเรียน");
   substitute(p,oldAgency,use("agency"),log,"ต้นสังกัด");
   substitute(p,oldDivision,use("division"),log,"ฝ่าย");
@@ -179,6 +182,37 @@ export function mergeOriginalWord(doc,values,items){
     if(/มาตรฐาน|ตลาด|หน่วยละ/.test(before))return decimal(items[0]?.referencePrice||items[0]?.unitPrice||budget);
     return priceStr;
    },log,"วงเงิน/ราคา");
+  }
+  if(use("memoNo")&&/ส่วนราชการ|บันทึกข้อความ|วันที่/.test(joined(p))){
+   substitute(p,/(\.{6,}\s*\/\s*\.{6,})/g,use("memoNo"),log,"เลขที่บันทึก");
+  }
+  if(use("orderNo")&&/ใบสั่งซื้อ|ใบสั่งจ้าง/.test(joined(p))){
+   substitute(p,/(?:\.{4,}\s*\/\s*\.{3,})/g,use("orderNo"),log,"เลขใบสั่งซื้อ");
+  }
+  if(use("invoiceVolume")&&/เล่มที่/.test(joined(p))){
+   substitute(p,/เล่มที่\s*[.…]{3,}/g,"เล่มที่ "+use("invoiceVolume"),log,"เล่มที่ใบส่งของ");
+  }
+  if(use("quoteDays")&&/กำหนดยืนราคา/.test(joined(p))){
+   substitute(p,/\.{5,}(?=\s*วัน)/g,use("quoteDays"),log,"วันยืนราคา");
+  }
+  if((use("warrantyYears")||use("warrantyMonths")||use("warrantyDays"))&&/ระยะเวลารับประกัน/.test(joined(p))){
+   substitute(p,/\.{4,}\s*ปี\s*\.{3,}\s*เดือน\s*\.{3,}\s*วัน/g,
+    (use("warrantyYears")||"0")+" ปี "+(use("warrantyMonths")||"0")+" เดือน "+(use("warrantyDays")||"0")+" วัน",log,"ระยะเวลารับประกัน");
+  }
+  if(use("repairTime")&&/ซ่อมแซมแก้ไข/.test(joined(p))){
+   substitute(p,/\.{5,}(?=\s*นับถัดจาก)/g,use("repairTime")+" วัน",log,"กำหนดซ่อม");
+  }
+  if(use("changeDetails")&&/แก้ไขเปลี่ยนแปลง/.test(joined(p))){
+   substitute(p,/(\.{9,})/g,use("changeDetails"),log,"รายการเปลี่ยนแปลง");
+  }
+  if(use("lateDays")&&/ส่งมอบเกินกำหนด/.test(joined(p))){
+   substitute(p,/(\.{2,}-\.{2,})/g,use("lateDays"),log,"วันส่งมอบล่าช้า");
+  }
+  if(use("requisitionPurpose")&&/เพื่อใช้ในฝ่ายงานวิชาการ/.test(joined(p))){
+   substitute(p,/เพื่อใช้ในฝ่ายงานวิชาการ/g,"เพื่อใช้ใน"+use("requisitionPurpose"),log,"จุดประสงค์เบิกพัสดุ");
+  }
+  if(use("proxyName")&&/ผู้รับแทน/.test(joined(p))){
+   substitute(p,/(?<=ได้มอบให้)\.{10,}/g,use("proxyName"),log,"ผู้รับแทน");
   }
   if(use("invoiceNo")){
    substitute(p,/ORNC69P0100821/g,use("invoiceNo"),log,"เลขที่ใบส่งของ");
