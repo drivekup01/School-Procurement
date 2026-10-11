@@ -1,7 +1,7 @@
 import {renderGovernmentPage} from "./official-forms.js";
 
 import {firebaseConfig} from "./firebase-config.js";
-import {fillProcurementPdf,setProcurementPdfFontLoader} from "./pdf-form-overlay.js?v=psk16-fields13-v1";
+import {fillProcurementPdf,setProcurementPdfFontLoader} from "./pdf-form-overlay.js?v=fit-diagnostics-v1";
 
 
 
@@ -81,7 +81,11 @@ async function refreshPdfPreview(){
   pdfObjectUrl=URL.createObjectURL(previewBlob);
   fileFrame().style.display="block";
   setPdfPage();
-  referenceMessage("Preview จาก PDF จริง "+filled.pageCount+" หน้า • เติมข้อมูล "+filled.count+" จุด • ข้ามช่องที่ข้อความไม่พอดีกับขนาด 16 pt / พิกัดไม่ถูกต้อง "+filled.skipped+" จุด (ต้องปรับพื้นที่ ไม่ย่อฟอนต์)");
+  const issueText=(filled.issues||[]).map(issue=>{
+   const names=[...commonFields,...specificFields].find(f=>f[0]===issue.key);
+   return "หน้า "+issue.page+" "+(names?.[1]||issue.key)+" ("+(issue.reason==="width"?"กรอบแคบเกินไป":"กรอบเตี้ยเกินไป")+")";
+  }).join(" • ");
+  referenceMessage("PDF "+filled.pageCount+" หน้า • เติมข้อมูล "+filled.count+" จุด"+(filled.skipped?" • ยังเติมไม่ได้ "+filled.skipped+" จุด: "+issueText+" — ปรับขนาดกรอบ Field โดยคงฟอนต์ 16 pt":" • ช่องที่กรอกพอดีแล้ว"));
  }catch(error){
   if(token!==pdfRenderToken)return;
   previewBlob=templateBlob;
