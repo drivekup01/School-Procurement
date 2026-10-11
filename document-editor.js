@@ -121,26 +121,36 @@ async function ensureTemplate(){
  if(pdfObjectUrl){URL.revokeObjectURL(pdfObjectUrl);pdfObjectUrl=null}
  fileFrame().src="about:blank";fileFrame().style.display="none";
  if(!requested||!templateStorage)return;
- await loadFieldMappings();
- await checkPdfFont();
- referenceMessage("กำลังอ่าน PDF ต้นฉบับของ"+departmentName(requested)+" จาก Firebase Storage…");
- let loadedDept=requested;
+ // Do not block the original PDF on Firestore field layouts or optional font metadata.
+ referenceMessage("กำลังโหลด PDF แม่แบบกลางจาก Storage…");
+ const mappingTask=loadFieldMappings().catch(e=>{console.warn("PDF field mapping not available",e)});
+ const fontTask=checkPdfFont().catch(e=>{console.warn("PDF font status unavailable",e)});
  try{
-  try{templateBlob=await loadPdfBlob(requested)}
-  catch(e){
-   if(e.code==="storage/object-not-found"&&requested!=="general"){templateBlob=await loadPdfBlob("general");loadedDept="general"}
-   else throw e;
+  let blob;
+  try{blob=await loadPdfBlob("general")}
+  catch(error){
+   // Show a clear error; never replace the source with a guessed document.
+   const msg=error.code==="storage/object-not-found"?"ยังไม่พบ PDF แม่แบบกลางใน Storage":error.code==="storage/unauthorized"?"ไม่มีสิทธิ์อ่าน PDF แม่แบบกลางใน Firebase Storage":(error.code||error.message);
+   throw Error(msg);
   }
   if(activeDepartment!==requested)return;
-  if(templateBlob.type!=="application/pdf"&&templateBlob.type!=="application/octet-stream")throw Error("ไฟล์ใน Storage ไม่ใช่ PDF");
-  $("templateInstallStatus").textContent="PDF ต้นฉบับพร้อมแล้ว · "+(templateBlob.size/1024).toFixed(1)+" KB";
+  if(blob.type!=="application/pdf"&&blob.type!=="application/octet-stream")throw Error("ไฟล์ใน Storage ไม่ใช่ PDF");
+  templateBlob=blob;previewBlob=blob;
+  if(pdfObjectUrl)URL.revokeObjectURL(pdfObjectUrl);
+  pdfObjectUrl=URL.createObjectURL(blob);
+  fileFrame().style.display="block";
+  setPdfPage();
+  referenceMessage("แสดง PDF แม่แบบกลางแล้ว • กำลังเตรียมตำแหน่ง Field สำหรับเติมข้อมูล…");
+  $("templateInstallStatus").textContent="PDF ต้นฉบับพร้อมแล้ว · "+(blob.size/1024).toFixed(1)+" KB";
+  // Field layouts need not prevent the original PDF being displayed.
+  await Promise.allSettled([mappingTask,fontTask]);
+  if(activeDepartment!==requested||templateBlob!==blob)return;
   await refreshPdfPreview();
   $("templateInstallStatus").textContent="พบแม่แบบ PDF ใน Storage แล้ว ไม่ต้องอัปโหลดซ้ำ";
- }catch(e){
+ }catch(error){
   if(activeDepartment!==requested)return;
-  const msg=e.code==="storage/object-not-found"?"ยังไม่มีแม่แบบ PDF ของฝ่ายนี้ใน Storage กรุณาติดตั้งจากไฟล์ที่แนบเพียงครั้งเดียว":e.code==="storage/unauthorized"?"Storage Rules ปฏิเสธการอ่าน PDF":(e.code||e.message);
-  referenceMessage("ยังเปิดต้นฉบับไม่ได้: "+msg);
-  $("templateInstallStatus").textContent=msg;
+  referenceMessage("ยังเปิด PDF ไม่ได้: "+(error.message||error));
+  $("templateInstallStatus").textContent=error.message||String(error);
  }
 }
 
