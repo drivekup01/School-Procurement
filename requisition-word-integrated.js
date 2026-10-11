@@ -67,7 +67,11 @@ function renderList(){
 }
 function choose(i){
  active=i;const hit=hits[i],binding=links[i];$("studioSelected").hidden=false;$("studioSource").textContent=hit.text;
- $("studioKey").innerHTML='<option value="">คงต้นฉบับเดิม</option>'+Object.keys(values()).filter(x=>x!=="items").map(x=>'<option value="'+esc(x)+'">'+esc(x)+' — '+esc(String(values()[x]||"").slice(0,45))+'</option>').join("");
+ const labels={project:"ชื่อโครงการ",activity:"ชื่อกิจกรรม",subject:"ชื่องานจัดซื้อ",division:"ฝ่าย",budget:"วงเงินตัวเลข",amountWords:"คำอ่านจำนวนเงิน",budgetPair:"วงเงินตัวเลขพร้อมคำอ่าน",requestDate:"วันที่บันทึก",vendor:"ชื่อผู้ขาย",purpose:"เหตุผลการจัดซื้อ",deliveryDate:"วันที่ส่งมอบ",itemDescription:"รายการพัสดุแรก",quantity:"จำนวนพัสดุแรก",unitName:"หน่วยนับรายการแรก",unitPrice:"ราคาซื้อหน่วยละ",referencePrice:"ราคาอ้างอิง"};
+ $("studioKey").innerHTML='<option value="">คงต้นฉบับเดิม</option>'+Object.keys(values()).filter(x=>x!=="items").map(x=>{
+ const label=labels[x]||document.querySelector('[data-extra="'+x+'"]')?.closest("label")?.querySelector("span")?.textContent?.trim()||x;
+ return '<option value="'+esc(x)+'">'+esc(label)+' — '+esc(String(values()[x]||"").slice(0,36))+'</option>';
+ }).join("");
  $("studioKey").value=binding.key||"";$("studioShared").checked=binding.shared!==false;$("studioOverride").value=binding.value||"";$("studioOverrideLabel").hidden=binding.shared!==false;
  const el=$("docPreview").querySelector('[data-hit="'+i+'"]');if(el){el.scrollIntoView({block:"center",behavior:"smooth"});document.querySelectorAll(".studioHighlight.selected").forEach(e=>e.classList.remove("selected"));el.classList.add("selected")}
  renderList();
@@ -124,7 +128,7 @@ $("downloadPdf").onclick=async()=>{
   const css=[...document.querySelectorAll("style")].filter(x=>(x.textContent||"").includes(".docx")).map(x=>x.outerHTML).join("");
   const html='<!doctype html><html><head><meta charset="utf-8"><title>พิมพ์ชุดเบิก</title>'+css+'<style>@page{size:A4;margin:0}body{margin:0}.docx-wrapper{padding:0!important;background:#fff!important}.docx{margin:0 auto!important;box-shadow:none!important;break-after:page}</style></head><body>'+tmp.innerHTML+'</body></html>';
   win.document.open();win.document.write(html);win.document.close();tmp.remove();
-  win.addEventListener("load",()=>setTimeout(()=>win.print(),500));
+  win.setTimeout(()=>win.print(),800);
  }catch(e){win.document.body.textContent="สร้าง PDF ไม่ได้: "+e.message}
 };
 restore();
