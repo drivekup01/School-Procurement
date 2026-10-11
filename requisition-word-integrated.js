@@ -1,7 +1,7 @@
 import {DEPARTMENTS,PROJECTS} from "./dashboard-data-2570.js";
 const $=id=>document.getElementById(id), NS="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 let original=null,name="",hits=[],links=[],active=-1,pages=[],page=0;
-const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;":"&#39;"}[c]));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const dbName="school-procurement-word-template-v1";
 const fmt=n=>Number(n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 function values(){
