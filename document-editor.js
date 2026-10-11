@@ -1,7 +1,7 @@
 import {renderGovernmentPage} from "./official-forms.js";
 
 import {firebaseConfig} from "./firebase-config.js";
-import {fillProcurementPdf} from "./pdf-form-overlay.js?v=admin-mapping-v2";
+import {fillProcurementPdf,setProcurementPdfFontLoader} from "./pdf-form-overlay.js?v=font-save-v1";
 
 
 
@@ -138,6 +138,7 @@ async function ensureTemplate(){
  fileFrame().src="about:blank";fileFrame().style.display="none";
  if(!requested||!templateStorage)return;
  await loadFieldMappings();
+ await checkPdfFont();
  referenceMessage("กำลังอ่าน PDF ต้นฉบับของ"+departmentName(requested)+" จาก Firebase Storage…");
  let loadedDept=requested;
  try{
@@ -159,17 +160,122 @@ async function ensureTemplate(){
  }
 }
 
+const pdfFontPath="procurement/fonts/THSarabunIT9.ttf";
+let pdfFontInstalled=false;
+async function loadPrivatePdfFont(){
+ const fontRef=firebaseFns.ref(templateStorage,pdfFontPath);
+ const blob=await firebaseFns.getBlob(fontRef);
+ return blob.arrayBuffer();
+}
+async function checkPdfFont(){
+ if(!templateStorage)return;
+ try{
+  await firebaseFns.getMetadata(firebaseFns.ref(templateStorage,pdfFontPath));
+  pdfFontInstalled=true;
+  $("pdfFontStatus").textContent="✓ พบฟอนต์ THSarabunIT๙ ที่ติดตั้งใน Storage แล้ว";
+ }catch(e){
+  pdfFontInstalled=false;
+  $("pdfFontStatus").textContent=e.code==="storage/object-not-found"?"ยังไม่ได้ติดตั้ง THSarabunIT๙ · PDF ใช้ฟอนต์สำรอง":"ตรวจฟอนต์ไม่ได้: "+(e.code||e.message);
+ }
+ setProcurementPdfFontLoader(loadPrivatePdfFont);
+}
+$("installPdfFont").onclick=async()=>{
+ if(profile?.role!=="admin")return;
+ const file=$("pdfFontInput").files?.[0],button=$("installPdfFont");
+ if(!file||!/\.(ttf|otf)$/i.test(file.name))return alert("กรุณาเลือกไฟล์ .ttf หรือ .otf หลังแตกไฟล์ RAR");
+ if(file.size>8*1024*1024)return alert("ฟอนต์ต้องมีขนาดไม่เกิน 8 MB");
+ button.disabled=true;$("pdfFontStatus").textContent="กำลังติดตั้งฟอนต์ลง Firebase Storage…";
+ try{
+  await firebaseFns.uploadBytes(firebaseFns.ref(templateStorage,pdfFontPath),file,{contentType:"application/octet-stream"});
+  setProcurementPdfFontLoader(loadPrivatePdfFont);
+  await checkPdfFont();
+  queueTemplateRefresh();
+ }catch(e){$("pdfFontStatus").textContent="ติดตั้งฟอนต์ไม่สำเร็จ: "+(e.code||e.message)}
+ finally{button.disabled=false}
+};
+
 const mappingDocId=()=>activeDepartment;
 const mappingFieldOptions=()=>[...commonFields,...specificFields.filter(f=>!sections.has(f[0]))].filter(f=>typeof f[0]==="string"&&!["purchaseType","budgetSource"].includes(f[0]));
 $("mappingField").innerHTML=mappingFieldOptions().map(f=>'<option value="'+esc(f[0])+'">'+esc(f[1])+'</option>').join("");
+const mappingBackupKey=()=>["procurement-map-v2",firebaseConfig.projectId,user?.uid||"guest",activeDepartment].join(":");
+let mappingDirty=false,mappingAutoSaveTimer=null,mappingSaving=false,mappingRevision=0;
+function saveLocalMapping(){
+ if(!activeDepartment)return;
+ try{
+  const data={version:2,department:activeDepartment,updatedAt:Date.now(),fields:fieldMappings};
+  localStorage.setItem(mappingBackupKey(),JSON.stringify(data));
+  $("mappingSaveStatus").textContent="สำรองในเบราว์เซอร์แล้ว • รอซิงก์ Firebase";
+ }catch(e){$("mappingSaveStatus").textContent="ไม่สามารถสำรองในเบราว์เซอร์: "+(e.message||e)}
+}
+function mappingChanged(){
+ mappingDirty=true;mappingRevision++;
+ saveLocalMapping();
+ clearTimeout(mappingAutoSaveTimer);
+ mappingAutoSaveTimer=setTimeout(()=>persistFieldMappings(false),1800);
+}
+async function persistFieldMappings(manual=true){
+ if(profile?.role!=="admin"||!activeDepartment||!db)return;
+ if(mappingSaving){if(manual)$("mappingSaveStatus").textContent="กำลังบันทึกก่อนหน้า กรุณากดอีกครั้งหลังเสร็จ";return}
+ const dept=activeDepartment,revision=mappingRevision;
+ const snapshot=JSON.parse(JSON.stringify(fieldMappings));
+ mappingSaving=true;
+ const btn=$("saveMapping");btn.disabled=true;
+ $("mappingSaveStatus").textContent="กำลังส่ง "+snapshot.length+" ช่องไป Firebase…";
+ try{
+  await firebaseFns.setDoc(firebaseFns.doc(db,"procurement_pdf_mappings",dept),{
+   departmentId:dept,templatePath:templatePath(dept),fields:snapshot,updatedBy:user.uid,
+   updatedAt:firebaseFns.serverTimestamp()
+  });
+  // Server fetch is required: a local SDK write alone is not proof of a persisted mapping.
+  const actual=await firebaseFns.getDocFromServer(firebaseFns.doc(db,"procurement_pdf_mappings",dept));
+  if(!actual.exists()||JSON.stringify(actual.data().fields)!==JSON.stringify(snapshot))throw Error("เซิร์ฟเวอร์ยังไม่ยืนยันชุดตำแหน่งที่บันทึก");
+  if(dept===activeDepartment&&revision===mappingRevision){
+   mappingDirty=false;
+   $("mappingSaveStatus").textContent="✓ Firebase ยืนยันบันทึกแล้ว "+snapshot.length+" ช่อง • กลับมาทำต่อได้";
+  }
+  if(dept===activeDepartment)$("mappingStatus").textContent="ตำแหน่งบน Firebase: "+snapshot.length+" ช่อง";
+  queueTemplateRefresh();
+ }catch(e){
+  $("mappingSaveStatus").textContent="⚠ Firebase ไม่สำเร็จ ("+(e.code||e.message)+") • ยังมีสำรองในเบราว์เซอร์";
+ }finally{
+  mappingSaving=false;btn.disabled=false;
+  if(dept===activeDepartment&&revision!==mappingRevision&&mappingDirty){
+   clearTimeout(mappingAutoSaveTimer);
+   mappingAutoSaveTimer=setTimeout(()=>persistFieldMappings(false),1200);
+  }
+ }
+}
 async function loadFieldMappings(){
+ clearTimeout(mappingAutoSaveTimer);mappingDirty=false;mappingRevision=0;
  fieldMappings=[];mappingSelection=-1;
  if(!activeDepartment||!db)return;
+ let local=null;
  try{
-  const d=await firebaseFns.getDoc(firebaseFns.doc(db,"procurement_pdf_mappings",mappingDocId()));
-  if(d.exists()&&Array.isArray(d.data().fields))fieldMappings=d.data().fields;
-  $("mappingStatus").textContent="ตำแหน่งที่บันทึกไว้: "+fieldMappings.length+" ช่อง";
- }catch(e){$("mappingStatus").textContent="ยังโหลดตำแหน่งช่องไม่ได้: "+(e.code||e.message)}
+  local=JSON.parse(localStorage.getItem(mappingBackupKey())||"null");
+  if(local?.department===activeDepartment&&Array.isArray(local.fields))fieldMappings=local.fields;
+ }catch(e){local=null}
+ try{
+  const d=await firebaseFns.getDocFromServer(firebaseFns.doc(db,"procurement_pdf_mappings",mappingDocId()));
+  if(d.exists()&&Array.isArray(d.data().fields)){
+   const cloudStamp=d.data().updatedAt?.toMillis?.()||0;
+   if(!local||local.updatedAt<=cloudStamp){
+    fieldMappings=d.data().fields;
+    saveLocalMapping();
+    mappingDirty=false;
+    $("mappingSaveStatus").textContent="✓ โหลดตำแหน่งจาก Firebase "+fieldMappings.length+" ช่อง";
+   }else{
+    mappingDirty=true;
+    $("mappingSaveStatus").textContent="กู้คืนสำรองในเบราว์เซอร์ "+fieldMappings.length+" ช่อง • กดบันทึกลง Firebase";
+   }
+  }else{
+   mappingDirty=Boolean(local?.fields?.length);
+   $("mappingSaveStatus").textContent=mappingDirty?"พบสำรองในเบราว์เซอร์ "+fieldMappings.length+" ช่อง • โปรดบันทึกลง Firebase":"ยังไม่เคยบันทึกตำแหน่งสำหรับฝ่ายนี้";
+  }
+ }catch(e){
+  mappingDirty=Boolean(local?.fields?.length);
+  $("mappingSaveStatus").textContent="อ่าน Firebase ไม่ได้ ("+(e.code||e.message)+")"+(mappingDirty?" • กู้สำรองในเครื่อง "+fieldMappings.length+" ช่อง":"");
+ }
+ $("mappingStatus").textContent="มีตำแหน่ง "+fieldMappings.length+" ช่อง";
 }
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 let mappingMove=null;
@@ -257,6 +363,7 @@ async function renderMappingPage(){
 function toggleMapping(active){
  if(profile?.role!=="admin")return;
  mappingMode=active;
+ if(!active&&mappingDirty){clearTimeout(mappingAutoSaveTimer);persistFieldMappings(false)}
  $("mappingWorkspace").hidden=!active;
  $("actualWord").hidden=active;
  $("toggleMapping").textContent=active?"กำลังกำหนดช่องข้อมูล":"กำหนดช่องข้อมูล (Admin)";
@@ -281,21 +388,21 @@ $("mappingLayer").addEventListener("pointermove",e=>{
  Object.assign(d.style,{left:Math.min(x,mappingDrawing.x)*100+"%",top:Math.min(y,mappingDrawing.y)*100+"%",width:Math.abs(x-mappingDrawing.x)*100+"%",height:Math.abs(y-mappingDrawing.y)*100+"%"});
 });
 $("mappingLayer").addEventListener("pointerup",e=>{
- if(mappingMove){mappingMove=null;return}
+ if(mappingMove){mappingMove=null;mappingChanged();return}
  if(!mappingDrawing)return;
  const {x,y}=pointerOnMapping(e);
  const left=Math.min(x,mappingDrawing.x),top=Math.min(y,mappingDrawing.y),w=Math.abs(x-mappingDrawing.x),h=Math.abs(y-mappingDrawing.y);
  mappingDrawing=null;
  if(w<.015||h<.008){drawMappingRects();return}
  const f={page,key:$("mappingField").value,x:left,y:top,w,h,fontSize:Number($("mappingFont").value)||12,clearBackground:$("mappingClear").checked,align:"left"};
- fieldMappings.push(f);mappingSelection=fieldMappings.length-1;redrawSelected();
+ fieldMappings.push(f);mappingSelection=fieldMappings.length-1;redrawSelected();mappingChanged();
 });
 $("mappingLayer").addEventListener("pointercancel",()=>{mappingMove=null;mappingDrawing=null;drawMappingRects()});
 for(const [id,key] of [["mappingX","x"],["mappingY","y"],["mappingW","w"],["mappingH","h"]]){
  $(id).onchange=()=>{
   const f=fieldMappings[mappingSelection];if(!f)return;
   const parsed=Number($(id).value);if(!Number.isFinite(parsed))return;
-  f[key]=parsed/100;normalizeMapping(f);redrawSelected();
+  f[key]=parsed/100;normalizeMapping(f);redrawSelected();mappingChanged();
  };
 }
 document.addEventListener("keydown",e=>{
@@ -309,24 +416,28 @@ document.addEventListener("keydown",e=>{
  const dx=(e.key==="ArrowLeft"?-pixels:e.key==="ArrowRight"?pixels:0)/layer.clientWidth;
  const dy=(e.key==="ArrowUp"?-pixels:e.key==="ArrowDown"?pixels:0)/layer.clientHeight;
  f.x=clamp(f.x+dx,0,1-f.w);f.y=clamp(f.y+dy,0,1-f.h);
- redrawSelected();
+ redrawSelected();mappingChanged();
 });
-$("mappingField").onchange=()=>{if(mappingSelection>=0){fieldMappings[mappingSelection].key=$("mappingField").value;drawMappingRects()}};
-$("mappingFont").onchange=()=>{if(mappingSelection>=0)fieldMappings[mappingSelection].fontSize=Number($("mappingFont").value)||12};
-$("mappingClear").onchange=()=>{if(mappingSelection>=0)fieldMappings[mappingSelection].clearBackground=$("mappingClear").checked};
-$("removeMapping").onclick=()=>{if(mappingSelection<0)return;fieldMappings.splice(mappingSelection,1);mappingSelection=-1;redrawSelected()};
-$("saveMapping").onclick=async()=>{
- if(profile?.role!=="admin"||!activeDepartment)return;
- const btn=$("saveMapping");btn.disabled=true;
- $("mappingStatus").textContent="กำลังบันทึกตำแหน่งลง Firestore…";
+$("mappingField").onchange=()=>{if(mappingSelection>=0){fieldMappings[mappingSelection].key=$("mappingField").value;drawMappingRects();mappingChanged()}};
+$("mappingFont").onchange=()=>{if(mappingSelection>=0)fieldMappings[mappingSelection].fontSize=Number($("mappingFont").value)||12;mappingChanged()};
+$("mappingClear").onchange=()=>{if(mappingSelection>=0)fieldMappings[mappingSelection].clearBackground=$("mappingClear").checked;mappingChanged()};
+$("removeMapping").onclick=()=>{if(mappingSelection<0)return;fieldMappings.splice(mappingSelection,1);mappingSelection=-1;redrawSelected();mappingChanged()};
+$("saveMapping").onclick=()=>persistFieldMappings(true);
+$("downloadMappingBackup").onclick=()=>{
+ const json=JSON.stringify({version:2,department:activeDepartment,fields:fieldMappings,exportedAt:new Date().toISOString()},null,2);
+ const url=URL.createObjectURL(new Blob([json],{type:"application/json"}));
+ const anchor=document.createElement("a");anchor.href=url;anchor.download="pdf-fields-"+activeDepartment+".json";anchor.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$("importMappingBackup").onchange=async e=>{
+ const file=e.target.files?.[0];if(!file)return;
  try{
-  await firebaseFns.setDoc(firebaseFns.doc(db,"procurement_pdf_mappings",activeDepartment),{
-   departmentId:activeDepartment,templatePath:templatePath(),fields:fieldMappings,updatedBy:user.uid,updatedAt:firebaseFns.serverTimestamp()
-  });
-  $("mappingStatus").textContent="บันทึกตำแหน่ง "+fieldMappings.length+" ช่องสำเร็จ";
-  queueTemplateRefresh();
- }catch(e){$("mappingStatus").textContent="บันทึกไม่ได้: "+(e.code||e.message)}
- finally{btn.disabled=false}
+  const parsed=JSON.parse(await file.text());
+  if(parsed.department!==activeDepartment||!Array.isArray(parsed.fields)||parsed.fields.length>300)throw Error("ไฟล์สำรองไม่ตรงฝ่ายหรือจำนวนช่องเกินกำหนด");
+  if(!confirm("นำเข้าตำแหน่ง "+parsed.fields.length+" ช่องแทนชุดที่เปิดอยู่หรือไม่?"))return;
+  fieldMappings=parsed.fields;mappingSelection=-1;redrawSelected();mappingChanged();
+ }catch(error){alert("นำเข้าข้อมูลไม่ได้: "+error.message)}
+ finally{e.target.value=""}
 };
 
 $("cancelTemplateUpload").onclick=()=>{activeTemplateUpload?.cancel()};
