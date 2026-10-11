@@ -1,7 +1,7 @@
 import {renderGovernmentPage} from "./official-forms.js";
 
 import {firebaseConfig} from "./firebase-config.js";
-import {fillProcurementPdf} from "./pdf-form-overlay.js?v=admin-mapping-v1";
+import {fillProcurementPdf} from "./pdf-form-overlay.js?v=admin-mapping-v2";
 
 
 
