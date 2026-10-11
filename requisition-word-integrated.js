@@ -16,19 +16,14 @@ function values(){
  return v;
 }
 function guess(t){
- if(/หนึ่งร้อยสี่สิบบาทถ้วน/.test(t)&&/\d/.test(t))return "budgetPair";
- if(/บาทถ้วน/.test(t))return "amountWords";
+ // Do not auto-map ambiguous duplicates: project/activity and several different
+ // monetary fields have identical sample text in the source DOCX.
  if(/สีน้ำมันตราเป็ดหงส์/.test(t))return "itemDescription";
  if(/วัสดุอุปกรณ์ทำสนามกีฬา/.test(t))return "subject";
- if(/จัดซื้อสื่อและวัสดุอุปกรณ์การเรียนการสอน/.test(t))return "project";
- if(/บริหารวิชาการ/.test(t))return "division";
  if(/ศรีทอง วัสดุก่อสร้าง/.test(t))return "vendor";
- if(/สุนิสา อิ่มรัง/.test(t))return "torAuthor";
- if(/ณัฐมน กลิ่นผล/.test(t))return "officerName";
- if(/ปภาวิไล ชลอวงษ์/.test(t))return "inspectorName";
- if(/เรวัฒน์ พรหมสะโร/.test(t))return "directorName";
- if(/24 สิงหาคม 2569/.test(t))return "requestDate";
- if(/^(?:140|140.00|140 00)$/.test(t.trim()))return "budget";
+ if(/บริหารวิชาการ/.test(t))return "division";
+ // Names can represent different signatory roles, and identical numbers occur in
+ // budget, reference price, tax, price per unit and totals. Require selection.
  return "";
 }
 function runsIn(doc){
@@ -61,7 +56,7 @@ function openDb(){return new Promise((ok,bad)=>{const r=indexedDB.open(dbName,1)
 async function persistWord(buffer,filename){const db=await openDb();await new Promise((ok,bad)=>{const tx=db.transaction("files","readwrite");tx.objectStore("files").put({name:filename,buffer},"master");tx.oncomplete=ok;tx.onerror=()=>bad(tx.error)});db.close()}
 async function restore(){try{const db=await openDb();const result=await new Promise((ok,bad)=>{const tx=db.transaction("files","readonly"),r=tx.objectStore("files").get("master");r.onsuccess=()=>ok(r.result);r.onerror=()=>bad(r.error)});db.close();if(result?.buffer)await loadWord(result.buffer,result.name,false)}catch(e){$("templateStatus").textContent="กรุณาเลือกไฟล์ Word ต้นฉบับ"}}
 function renderList(){
- $("studioCount").textContent=hits.length+" จุด • ผูกแล้ว "+links.filter(x=>x.key).length+" • ยังไม่ผูก "+links.filter(x=>!x.key).length;
+ $("studioCount").textContent=hits.length+" จุด • ผูกแล้ว "+links.filter(x=>x.key||(x.shared===false&&x.value)).length+" • ยังไม่ผูก "+links.filter(x=>!x.key&&!(x.shared===false&&x.value)).length;
  $("studioPlaces").innerHTML=hits.map((h,i)=>'<button type="button" class="studioPlace '+(i===active?"active":"")+'" data-point="'+i+'"><small>จุดที่ '+(i+1)+' · '+(links[i]?.key||"ยังไม่เลือกข้อมูล")+'</small>'+esc(h.text.slice(0,95))+'</button>').join("");
  document.querySelectorAll("[data-point]").forEach(e=>e.onclick=()=>choose(Number(e.dataset.point)));
 }
@@ -107,7 +102,7 @@ async function build(){
  const zip=await JSZip.loadAsync(original),doc=new DOMParser().parseFromString(await zip.file("word/document.xml").async("string"),"application/xml"),runs=runsIn(doc),val=values();
  let done=0;
  runs.forEach((hit,i)=>{
-  const binding=links[i];if(!binding?.key)return;
+  const binding=links[i];if(!binding || (!binding.key && binding.shared!==false))return;
   const replacement=binding.shared!==false?val[binding.key]:binding.value;
   if(replacement===undefined||replacement===null||replacement==="")return;
   const actual=binding.key==="amountWords"&&/\d/.test(hit.text)?val.budgetPair:replacement;
