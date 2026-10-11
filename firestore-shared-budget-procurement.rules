@@ -59,7 +59,7 @@ service cloud.firestore {
     match /procurement_document_copies/{copyId} {
       allow read: if member();
       allow create: if member() &&
-        owns(request.resource.data.departmentId) &&
+        (request.resource.data.departmentId == "general" || owns(request.resource.data.departmentId)) &&
         request.resource.data.keys().hasOnly(['schemaVersion','templateId','title','departmentId','createdBy','createdAt','values','items','selectedPages','documentCount']) &&
         request.resource.data.schemaVersion == 1 &&
         request.resource.data.templateId in ['first-set-v1', 'first-set-word16-v1', 'first-set-pdf11-v1'] &&
