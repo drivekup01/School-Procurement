@@ -1,7 +1,7 @@
 import {renderGovernmentPage} from "./official-forms.js";
 
 import {firebaseConfig} from "./firebase-config.js";
-import {fillProcurementPdf,setProcurementPdfFontLoader} from "./pdf-form-overlay.js?v=font-save-v1";
+import {fillProcurementPdf,setProcurementPdfFontLoader} from "./pdf-form-overlay.js?v=font-save-v2";
 
 
 
