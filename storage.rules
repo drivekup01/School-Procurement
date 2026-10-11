@@ -17,6 +17,14 @@ service firebase.storage {
     // One-time official DOCX master installation, accessible to authenticated school staff.
     // Admin may replace a department's current template after confirming in the UI.
     // Verified PDF master: signed-in members may view, only Admin may install/replace.
+    // Private school font for PDF overlays; members may read, Admin alone may install.
+    match /procurement/fonts/THSarabunIT9.ttf {
+      allow read: if signedIn();
+      allow create, update: if isAdmin() &&
+        request.resource.size <= 8 * 1024 * 1024 &&
+        request.resource.contentType == 'application/octet-stream';
+      allow delete: if false;
+    }
     match /procurement/templates/departments/{department}/source.pdf {
       allow read: if signedIn();
       allow create, update: if isAdmin() &&
