@@ -66,6 +66,34 @@ function setCell(cell,value){
  return true;
 }
 function directCells(tr){return [...tr.childNodes].filter(x=>x.nodeType===1&&x.localName==="tc")}
+function fillFinancialTotals(doc,data,items,log){
+ const sum=items.reduce((a,item)=>a+Number(item.qty||0)*Number(item.unitPrice||0),0);
+ const vat=Number(data.vatAmount||0);
+ const fine=Number(data.fineAmount||0);
+ const withholding=Number(data.withholdingAmount||0);
+ let rows=0;
+ for(const tr of n(doc,"tr")){
+  if(n(tr,"tr").some(child=>child!==tr))continue;
+  const cells=directCells(tr);
+  if(!cells.length)continue;
+  const text=joined(tr).replace(/\s+/g,"");
+  let value=null;
+  if(/(?:ภาษีมูลค่าเพิ่ม)/.test(text))value=vat;
+  else if(/(?:คงเหลือ|ยอดสุทธิ)/.test(text))value=sum+vat-withholding-fine;
+  else if(/รวมเงิน|รวมทั้งสิ้น|รวมเป็นเงิน|จำนวนเงิน/.test(text))value=sum+vat;
+  else if(/ภาษีณที่จ่าย/.test(text))value=withholding;
+  else if(/ค่าปรับ/.test(text))value=fine;
+  if(value===null)continue;
+  const last=cells[cells.length-1],before=cells[cells.length-2];
+  if(cells.length>=4&&/^\s*[0-9.,\s]+\s*$/.test(joined(last))&&/^\s*[0-9.,\s]+\s*$/.test(joined(before))){
+   const [baht,satang]=moneyParts(value);setCell(before,baht);setCell(last,satang);
+  }else{
+   setCell(last,decimal(value));
+  }
+  rows++;
+ }
+ log.financialRows=rows;
+}
 function fillItemTables(doc,items,log){
  const matches=n(doc,"tr").filter(r=>joined(r).replace(/\s/g,"").includes("สีน้ำมันตราเป็ดหงส์"));
  log.itemTableRows=matches.length;
@@ -80,14 +108,17 @@ function fillItemTables(doc,items,log){
    const r=i===0?row:row.cloneNode(true),c=directCells(r),qty=Number(item.qty||0),unit=String(item.unit||"");
    const ref=moneyParts(item.referencePrice??item.unitPrice),price=moneyParts(item.unitPrice);
    const total=moneyParts(qty*Number(item.unitPrice));
-   if(c.length>=8){
-    // Source TOR/annex tables split baht and satang into separate cells.
+   if(c.length>=9){
     setCell(c[0],i+1);setCell(c[1],item.name);setCell(c[2],qty+" "+unit);
-    const end=c.length-1;
-    setCell(c[end-5],ref[0]);setCell(c[end-4],ref[1]);
-    setCell(c[end-3],price[0]);setCell(c[end-2],price[1]);
-    setCell(c[end-1],total[0]);
-    if(c.length>=9){setCell(c[end],total[1])}
+    const tail=c.length-6;
+    setCell(c[tail],ref[0]);setCell(c[tail+1],ref[1]);
+    setCell(c[tail+2],price[0]);setCell(c[tail+3],price[1]);
+    setCell(c[tail+4],total[0]);setCell(c[tail+5],total[1]);
+   }else if(c.length===8){
+    setCell(c[0],i+1);setCell(c[1],item.name);setCell(c[2],qty+" "+unit);
+    setCell(c[3],ref[0]);setCell(c[4],ref[1]);
+    setCell(c[5],price[0]);setCell(c[6],price[1]);
+    setCell(c[7],decimal(qty*Number(item.unitPrice)));
    }else if(c.length>=6){
     setCell(c[0],i+1);setCell(c[1],item.name);setCell(c[2],qty+" "+unit);
     setCell(c[c.length-3],decimal(item.referencePrice??item.unitPrice));
@@ -109,6 +140,7 @@ export function mergeOriginalWord(doc,values,items){
  const docParagraphs=n(doc,"p");
  // Capture the original table rows before replacing example names globally.
  fillItemTables(doc,items,log);
+ fillFinancialTotals(doc,d,items,log);
  // Copy the same fields across every occurrence, whether highlighted or not.
  for(const p of docParagraphs){
   const text=joined(p);
