@@ -19,7 +19,9 @@ details{border-top:1px solid #e4ebf5;padding:9px 0}summary{font-weight:700;color
 #pages{background:#dee6f0;border-radius:12px;padding:20px 12px 35px;overflow:auto}
 .page{width:210mm;height:297mm;position:relative;background:white;color:#111;margin:0 auto 24px;overflow:hidden;box-shadow:0 7px 24px #24426328;font:normal 16pt/1.13 THSarabunPSK,"TH Sarabun New","Sarabun",serif}
 .pageBody{position:absolute;top:18mm;left:17mm;right:17mm;bottom:17mm;overflow:hidden}
-.page.memo .pageBody{top:62mm}.page.memo .memoHead{position:absolute;top:13mm;left:17mm;right:17mm;height:46mm;overflow:hidden}
+.page.memo .pageBody{top:62mm}
+.page.firstPage .pageBody{bottom:67mm}
+.page.firstPage>.fixedSign{position:absolute;top:243mm;left:17mm;right:17mm;margin:0;z-index:2}.page.memo .memoHead{position:absolute;top:13mm;left:17mm;right:17mm;height:46mm;overflow:hidden}
 .memoHead .heading{font-size:21pt;text-align:center;font-weight:700;line-height:1.1;margin:0 0 3mm}
 .memoHead .crest{position:absolute;top:0;left:0;font-size:17pt;text-align:center;color:#111}
 .memoHead .crest small{display:block;font-size:8pt}.memoHead .lines{line-height:1.12;padding-top:2mm}.memoHead .rule{border-bottom:1px solid #000;margin-top:2mm}
@@ -50,7 +52,7 @@ details{border-top:1px solid #e4ebf5;padding:9px 0}summary{font-weight:700;color
 <details><summary>4. ตรวจรับ / เบิกจ่าย / ใบเบิก</summary><div id="settlement"></div></details>
 <details><summary>ข้อมูลประจำโรงเรียน (ไม่ต้องกรอกทุกครั้ง)</summary><div id="defaults"></div></details>
 <div id="fontLoader"><b>THSarabunPSK — 16 pt</b><p>หากยังไม่ได้ติดตั้งฟอนต์ในเครื่อง สามารถเลือกไฟล์ TTF/OTF เพื่อให้ Preview และการพิมพ์ใช้ฟอนต์เดียวกัน</p><input id="fontFile" type="file" accept=".ttf,.otf"><small id="fontStatus" class="hint">ตรวจฟอนต์เมื่อเปิดหน้า</small></div>
-<div class="caution">รูปแบบนี้อ้างอิงเนื้อหา Word ที่แนบมา แต่ยังต้องตรวจเทียบต้นฉบับก่อนลงนาม โดยเฉพาะครุฑ ข้อความกฎหมาย และตำแหน่งลายเซ็น</div>
+<div class="caution">เวอร์ชันนี้เป็นร่างเรียบเรียงครบ 17 หน้าสำหรับทดสอบล็อกหน้า ไม่ใช่สำเนา Word ต้นฉบับที่เหมือนกันทุกตัวอักษร ข้อความกฎหมายบางช่วงถูกย่อสำหรับต้นแบบ รวมถึงตราครุฑยังเป็นสัญลักษณ์ตัวอย่าง จึงต้องตรวจและปรับเทียบกับต้นฉบับก่อนใช้ลงนามหรือเผยแพร่จริง</div>
 </aside>
 <section><div id="info" role="status">กำลังจัดหน้า…</div><nav class="pageNav" id="pageNav"></nav><div id="pages"></div></section></main>
-<script src="./official-fixed-17.js?v=1"></script></body></html>
+<script src="./official-fixed-17.js?v=2"></script></body></html>
