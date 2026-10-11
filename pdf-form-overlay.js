@@ -33,7 +33,7 @@ export async function fillProcurementPdf(pdfBlob,values,fields=[]){
  if(!globalThis.fontkit)throw Error("เครื่องมือฟอนต์ไทยไม่พร้อม");
  pdf.registerFontkit(globalThis.fontkit);
  const font=await pdf.embedFont(await fontBytes(),{subset:false});
- let count=0,skipped=0;
+ let count=0,skipped=0,issues=[];
  for(const field of mapped){
   let value=String(values[field.key]??"").trim();
   if(/^\d{4}-\d{2}-\d{2}$/.test(value)){
@@ -49,11 +49,11 @@ export async function fillProcurementPdf(pdfBlob,values,fields=[]){
   // Official document rule: constant THSarabunPSK 16 pt, never auto-shrink.
   const size=16;
   const textWidth=font.widthOfTextAtSize(value,size);
-  if(textWidth>width-4||height<size){skipped++;continue}
+  if(textWidth>width-4||height<size){skipped++;issues.push({page:field.page,key:field.key,reason:textWidth>width-4?'width':'height'});continue}
   if(field.clearBackground===true)page.drawRectangle({x:left,y:bottom,width,height,color:PDFLib.rgb(1,1,1)});
   const textX=field.align==="center"?left+(width-font.widthOfTextAtSize(value,size))/2:field.align==="right"?left+width-font.widthOfTextAtSize(value,size)-2:left+2;
   page.drawText(value,{x:textX,y:bottom+Math.max(0,(height-size)/2),font,size,color:PDFLib.rgb(0,0,0)});
   count++;
  }
- return {blob:new Blob([await pdf.save()],{type:"application/pdf"}),count,skipped,pageCount:pdf.getPageCount()};
+ return {blob:new Blob([await pdf.save()],{type:"application/pdf"}),count,skipped,issues,pageCount:pdf.getPageCount()};
 }
