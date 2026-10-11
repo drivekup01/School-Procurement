@@ -159,20 +159,70 @@ async function loadFieldMappings(){
   $("mappingStatus").textContent="ตำแหน่งที่บันทึกไว้: "+fieldMappings.length+" ช่อง";
  }catch(e){$("mappingStatus").textContent="ยังโหลดตำแหน่งช่องไม่ได้: "+(e.code||e.message)}
 }
+const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+let mappingMove=null;
+function normalizeMapping(f){
+ f.x=clamp(Number(f.x)||0,0,1);f.y=clamp(Number(f.y)||0,0,1);
+ f.w=clamp(Number(f.w)||.02,.005,1-f.x);f.h=clamp(Number(f.h)||.02,.005,1-f.y);
+}
 function updateMappingControls(){
  const f=fieldMappings[mappingSelection];
- if(f){$("mappingField").value=f.key;$("mappingFont").value=f.fontSize||12;$("mappingClear").checked=f.clearBackground===true}
+ for(const id of ["mappingX","mappingY","mappingW","mappingH"])$(id).disabled=!f;
+ if(!f)return;
+ $("mappingField").value=f.key;$("mappingFont").value=f.fontSize||12;$("mappingClear").checked=f.clearBackground===true;
+ for(const [name,val] of Object.entries({mappingX:f.x,mappingY:f.y,mappingW:f.w,mappingH:f.h}))$(name).value=(val*100).toFixed(2);
+}
+function redrawSelected(){
+ drawMappingRects();updateMappingControls();
+}
+function pointerOnMapping(e){
+ const b=$("mappingLayer").getBoundingClientRect();
+ return {x:clamp((e.clientX-b.left)/b.width,0,1),y:clamp((e.clientY-b.top)/b.height,0,1)}
+}
+function startMoveResize(e,index,handle){
+ e.stopPropagation();e.preventDefault();
+ mappingSelection=index;const f=fieldMappings[index];if(!f)return;
+ const pos=pointerOnMapping(e);
+ mappingMove={pointerId:e.pointerId,index,handle,start:pos,original:{x:f.x,y:f.y,w:f.w,h:f.h}};
+ $("mappingLayer").setPointerCapture(e.pointerId);
+ redrawSelected();
 }
 function drawMappingRects(){
  const layer=$("mappingLayer");layer.innerHTML="";
  fieldMappings.forEach((f,i)=>{
   if(f.page!==page)return;
+  normalizeMapping(f);
   const box=document.createElement("div");box.className="mappedField"+(i===mappingSelection?" selected":"");
-  box.style.left=(f.x*100)+"%";box.style.top=(f.y*100)+"%";box.style.width=(f.w*100)+"%";box.style.height=(f.h*100)+"%";
-  box.textContent=mappingFieldOptions().find(o=>o[0]===f.key)?.[1]||f.key;
-  box.addEventListener("pointerdown",e=>{e.stopPropagation();mappingSelection=i;updateMappingControls();drawMappingRects()});
+  Object.assign(box.style,{left:f.x*100+"%",top:f.y*100+"%",width:f.w*100+"%",height:f.h*100+"%"});
+  const title=document.createElement("span");title.className="fieldCaption";title.textContent=mappingFieldOptions().find(o=>o[0]===f.key)?.[1]||f.key;box.appendChild(title);
+  box.addEventListener("pointerdown",e=>startMoveResize(e,i,"move"));
+  if(i===mappingSelection){
+   for(const handle of ["nw","n","ne","e","se","s","sw","w"]){
+    const node=document.createElement("div");node.className="resizeHandle handle-"+handle;node.dataset.handle=handle;
+    node.addEventListener("pointerdown",e=>startMoveResize(e,i,handle));
+    box.appendChild(node);
+   }
+  }
   layer.appendChild(box);
  });
+}
+function applyMoveResize(pos){
+ if(!mappingMove)return;
+ const {index,handle,start,original:o}=mappingMove,f=fieldMappings[index];
+ if(!f)return;
+ const dx=pos.x-start.x,dy=pos.y-start.y,minW=.008,minH=.006;
+ if(handle==="move"){
+  f.x=clamp(o.x+dx,0,1-o.w);f.y=clamp(o.y+dy,0,1-o.h);
+  f.w=o.w;f.h=o.h;
+ }else{
+  let left=o.x,top=o.y,right=o.x+o.w,bottom=o.y+o.h;
+  if(handle.includes("w"))left=clamp(o.x+dx,0,right-minW);
+  if(handle.includes("e"))right=clamp(o.x+o.w+dx,left+minW,1);
+  if(handle.includes("n"))top=clamp(o.y+dy,0,bottom-minH);
+  if(handle.includes("s"))bottom=clamp(o.y+o.h+dy,top+minH,1);
+  f.x=left;f.y=top;f.w=right-left;f.h=bottom-top;
+ }
+ redrawSelected();
 }
 async function renderMappingPage(){
  if(!mappingMode||!templateBlob)return;
@@ -212,28 +262,47 @@ $("mappingLayer").addEventListener("pointerdown",e=>{
  $("mappingLayer").setPointerCapture(e.pointerId);
 });
 $("mappingLayer").addEventListener("pointermove",e=>{
+ if(mappingMove){applyMoveResize(pointerOnMapping(e));return}
  if(!mappingDrawing)return;
- const rect=$("mappingLayer").getBoundingClientRect();
- const x=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
- const y=Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height));
+ const {x,y}=pointerOnMapping(e);
  const d=$("mappingDraft");if(!d)return;
  Object.assign(d.style,{left:Math.min(x,mappingDrawing.x)*100+"%",top:Math.min(y,mappingDrawing.y)*100+"%",width:Math.abs(x-mappingDrawing.x)*100+"%",height:Math.abs(y-mappingDrawing.y)*100+"%"});
 });
 $("mappingLayer").addEventListener("pointerup",e=>{
+ if(mappingMove){mappingMove=null;return}
  if(!mappingDrawing)return;
- const rect=$("mappingLayer").getBoundingClientRect();
- const x=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
- const y=Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height));
+ const {x,y}=pointerOnMapping(e);
  const left=Math.min(x,mappingDrawing.x),top=Math.min(y,mappingDrawing.y),w=Math.abs(x-mappingDrawing.x),h=Math.abs(y-mappingDrawing.y);
  mappingDrawing=null;
  if(w<.015||h<.008){drawMappingRects();return}
  const f={page,key:$("mappingField").value,x:left,y:top,w,h,fontSize:Number($("mappingFont").value)||12,clearBackground:$("mappingClear").checked,align:"left"};
- fieldMappings.push(f);mappingSelection=fieldMappings.length-1;drawMappingRects();
+ fieldMappings.push(f);mappingSelection=fieldMappings.length-1;redrawSelected();
+});
+$("mappingLayer").addEventListener("pointercancel",()=>{mappingMove=null;mappingDrawing=null;drawMappingRects()});
+for(const [id,key] of [["mappingX","x"],["mappingY","y"],["mappingW","w"],["mappingH","h"]]){
+ $(id).onchange=()=>{
+  const f=fieldMappings[mappingSelection];if(!f)return;
+  const parsed=Number($(id).value);if(!Number.isFinite(parsed))return;
+  f[key]=parsed/100;normalizeMapping(f);redrawSelected();
+ };
+}
+document.addEventListener("keydown",e=>{
+ if(!mappingMode||mappingSelection<0||!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key))return;
+ const target=e.target;
+ if(target instanceof HTMLElement && target.matches("input,textarea,select,[contenteditable]"))return;
+ const f=fieldMappings[mappingSelection],layer=$("mappingLayer");
+ if(!f||!layer.clientWidth||!layer.clientHeight)return;
+ e.preventDefault();
+ const pixels=e.shiftKey?10:1;
+ const dx=(e.key==="ArrowLeft"?-pixels:e.key==="ArrowRight"?pixels:0)/layer.clientWidth;
+ const dy=(e.key==="ArrowUp"?-pixels:e.key==="ArrowDown"?pixels:0)/layer.clientHeight;
+ f.x=clamp(f.x+dx,0,1-f.w);f.y=clamp(f.y+dy,0,1-f.h);
+ redrawSelected();
 });
 $("mappingField").onchange=()=>{if(mappingSelection>=0){fieldMappings[mappingSelection].key=$("mappingField").value;drawMappingRects()}};
 $("mappingFont").onchange=()=>{if(mappingSelection>=0)fieldMappings[mappingSelection].fontSize=Number($("mappingFont").value)||12};
 $("mappingClear").onchange=()=>{if(mappingSelection>=0)fieldMappings[mappingSelection].clearBackground=$("mappingClear").checked};
-$("removeMapping").onclick=()=>{if(mappingSelection<0)return;fieldMappings.splice(mappingSelection,1);mappingSelection=-1;drawMappingRects()};
+$("removeMapping").onclick=()=>{if(mappingSelection<0)return;fieldMappings.splice(mappingSelection,1);mappingSelection=-1;redrawSelected()};
 $("saveMapping").onclick=async()=>{
  if(profile?.role!=="admin"||!activeDepartment)return;
  const btn=$("saveMapping");btn.disabled=true;
