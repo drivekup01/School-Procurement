@@ -57,7 +57,7 @@ function render(){
   template.innerHTML=replaceTokens(content);
   if(isMemo){
    const internalHeader=template.content.querySelector(".memoHead");
-   if(internalHeader){page.appendChild(internalHeader);internalHeader.remove()}
+   if(internalHeader){internalHeader.remove();page.appendChild(internalHeader)}
   }
   const body=document.createElement("div");
   body.className="pageBody";
