@@ -144,7 +144,16 @@ $("addItem").onclick=()=>{const tb=$("items");tb.appendChild(itemRow(freshItem()
 $("newBtn").onclick=()=>newFile(new URLSearchParams(location.search).get("projectId"));
 $("saveBtn").onclick=save;
 $("printBtn").onclick=()=>{if(dirty&&!confirm("มีข้อมูลยังไม่บันทึก ต้องการพิมพ์ฉบับปัจจุบันหรือไม่?"))return;window.print()};
-$("wordBtn").onclick=()=>{if(dirty&&!confirm("ข้อมูลยังไม่บันทึกในฐานข้อมูล ต้องการเปิดระบบ Word หรือไม่?"))return;window.location.href="./official-word-editor.html"};
+$("wordBtn").onclick=()=>{
+ if(dirty&&!confirm("ข้อมูลยังไม่บันทึกในฐานข้อมูล ต้องการส่งค่าที่แสดงไปทดลองในแม่แบบ Word หรือไม่?"))return;
+ const v=Object.fromEntries(new FormData($("form")).entries());
+ const p=findProject(v.projectId),a=(p?.activities||[]).find(x=>String(x.id)===String(v.activityId));
+ try{
+  const key="procurement-prototype-word-v1",old=JSON.parse(localStorage.getItem(key)||"{}");
+  localStorage.setItem(key,JSON.stringify({...old,division:DEPARTMENTS.find(d=>d.id===p?.department)?.name||"",project:p?.name||"",activity:a?.name||"",subject:v.title||"",requestDate:v.requestedDate||"",budget:(Number(v.requestedAmount)||0).toFixed(2)+" บาท",vendor:v.vendor||""}));
+ }catch(e){notify("ส่งข้อมูลไป Word ไม่สำเร็จ: "+e.message,true);return}
+ window.location.href="./official-word-editor.html";
+};
 $("loginBtn").onclick=()=>{if(user)signOut(auth);else $("loginDialog").showModal()};
 $("loginCancel").onclick=()=>$("loginDialog").close();
 $("loginForm").onsubmit=async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(e.target));try{await signInWithEmailAndPassword(auth,v.email,v.password);$("loginDialog").close()}catch(err){notify("เข้าสู่ระบบไม่สำเร็จ: "+err.message,true)}};
