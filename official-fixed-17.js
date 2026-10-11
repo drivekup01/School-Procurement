@@ -51,13 +51,17 @@ function render(){
  container.innerHTML="";
  sections.forEach(([heading,isMemo,content],i)=>{
   const page=document.createElement("article");
-  page.className="page"+(isMemo?" memo":"");
+  page.className="page"+(isMemo?" memo":"")+(i===0?" firstPage":"");
   page.id="p"+(i+1);
   const template=document.createElement("template");
   template.innerHTML=replaceTokens(content);
   if(isMemo){
    const internalHeader=template.content.querySelector(".memoHead");
    if(internalHeader){internalHeader.remove();page.appendChild(internalHeader)}
+  }
+  if(i===0){
+   const signature=template.content.querySelector(".sign");
+   if(signature){signature.remove();signature.classList.add("fixedSign");page.appendChild(signature)}
   }
   const body=document.createElement("div");
   body.className="pageBody";
