@@ -143,9 +143,14 @@ async function ensureTemplate(){
   referenceMessage("แสดง PDF แม่แบบกลางแล้ว • กำลังเตรียมตำแหน่ง Field สำหรับเติมข้อมูล…");
   $("templateInstallStatus").textContent="PDF ต้นฉบับพร้อมแล้ว · "+(blob.size/1024).toFixed(1)+" KB";
   // Field layouts need not prevent the original PDF being displayed.
-  await Promise.allSettled([mappingTask,fontTask]);
+  const postLoad=Promise.allSettled([mappingTask,fontTask]);
+  await Promise.race([postLoad,new Promise(resolve=>setTimeout(resolve,4500))]);
   if(activeDepartment!==requested||templateBlob!==blob)return;
   await refreshPdfPreview();
+  // A slow Firestore read can still finish later; update the preview when it does.
+  postLoad.then(()=>{
+   if(activeDepartment===requested&&templateBlob===blob)queueTemplateRefresh();
+  });
   $("templateInstallStatus").textContent="พบแม่แบบ PDF ใน Storage แล้ว ไม่ต้องอัปโหลดซ้ำ";
  }catch(error){
   if(activeDepartment!==requested)return;
