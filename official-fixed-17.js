@@ -47,13 +47,26 @@ function inputUi(){for(const [group,arr] of Object.entries(fields)){$(group).inn
  document.querySelectorAll("[data-k]").forEach(el=>{el.value=data[el.dataset.k]||"";el.oninput=()=>{data[el.dataset.k]=el.value;saveLocal();render()}})}
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
 function render(){
- $("pages").innerHTML=sections.map(([heading,isMemo,content],i)=>{
-  let m=isMemo?replaceTokens(memo(heading)):"";
-  const articleBody=replaceTokens(isMemo?content.replace(/^<div class="memoHead">[\s\S]*?<\/div><\/div>/,""):content);
-  return '<article class="page '+(isMemo?"memo":"")+'" id="p'+(i+1)+'">'+m+'<div class="pageBody">'+articleBody+'</div></article>'
- }).join("");
+ const container=$("pages");
+ container.innerHTML="";
+ sections.forEach(([heading,isMemo,content],i)=>{
+  const page=document.createElement("article");
+  page.className="page"+(isMemo?" memo":"");
+  page.id="p"+(i+1);
+  const template=document.createElement("template");
+  template.innerHTML=replaceTokens(content);
+  if(isMemo){
+   const internalHeader=template.content.querySelector(".memoHead");
+   if(internalHeader){page.appendChild(internalHeader);internalHeader.remove()}
+  }
+  const body=document.createElement("div");
+  body.className="pageBody";
+  body.appendChild(template.content);
+  page.appendChild(body);
+  container.appendChild(page);
+ });
  requestAnimationFrame(check);
- document.fonts.ready.then(check)
+ document.fonts.ready.then(check);
 }
 function check(){
  const failed=[];document.querySelectorAll(".page").forEach((page,i)=>{const b=page.querySelector(".pageBody"),h=page.querySelector(".memoHead");
