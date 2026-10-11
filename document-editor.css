@@ -136,3 +136,12 @@
 #commonFields .commonFieldBody>label{display:block;width:100%}
 #commonFields .commonFieldMeta{display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap;margin-top:6px;color:#788aa2;font-size:11px}
 #commonFields .commonPageJump{font-size:11px;padding:4px 8px;border-color:#dce6f5;background:#f8fbff}
+
+/* Font installation and durable Admin field mapping feedback. */
+.fontInstall{padding:12px;margin-top:12px;border:1px solid #cbdaf0;border-radius:10px;background:#f8fbff;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.fontInstall strong,.fontInstall p{flex-basis:100%;margin:0}
+.fontInstall p{font-size:12px;color:#56718f}
+#pdfFontStatus,#mappingSaveStatus{font-size:12px;color:#345b80;font-weight:500;line-height:1.5}
+.mappingBackupActions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:8px 0 12px}
+.mappingBackupActions label{font-size:12px;color:#56718f}
+.mappingBackupActions input{max-width:235px;font-size:12px}
