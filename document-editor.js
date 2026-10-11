@@ -81,7 +81,7 @@ async function refreshPdfPreview(){
   pdfObjectUrl=URL.createObjectURL(previewBlob);
   fileFrame().style.display="block";
   setPdfPage();
-  referenceMessage("Preview จาก PDF จริง "+filled.pageCount+" หน้า • เติมข้อมูล "+filled.count+" จุด • เว้นช่องที่ตรวจตำแหน่งไม่แน่ชัด "+filled.skipped+" จุด");
+  referenceMessage("Preview จาก PDF จริง "+filled.pageCount+" หน้า • เติมข้อมูล "+filled.count+" จุด • ข้ามช่องที่ข้อความไม่พอดีกับขนาด 16 pt / พิกัดไม่ถูกต้อง "+filled.skipped+" จุด (ต้องปรับพื้นที่ ไม่ย่อฟอนต์)");
  }catch(error){
   if(token!==pdfRenderToken)return;
   previewBlob=templateBlob;
@@ -493,7 +493,10 @@ function fieldMarkup(f){
  :'<input data-key="'+esc(key)+'" type="'+type+'" '+(type==="number"?'step="any"':'')+' value="'+esc(inputValue)+'">';
  return '<label class="'+(type==="textarea"?"wide":"")+'">'+esc(label)+control+(type==="date"?'<small class="dateHelp">เลือกจากปฏิทิน • แสดงวันที่ไทย พ.ศ. ใน PDF</small>':"")+'</label>';
 }
-function renderInputs(){ $("commonFields").innerHTML=commonFields.map(commonFieldMarkup).join("");$("specificFields").innerHTML=specificFields.filter(f=>sections.has(f[0])||!commonFields.some(c=>c[0]===f[0])).map(f=>sections.has(f[0])?'<div class="sectiontitle">'+esc(f[1])+'</div>':fieldMarkup(f)).join("");
+function renderInputs(){
+ $("commonFields").innerHTML=commonFields.map(commonFieldMarkup).join("");
+ const remaining=specificFields.filter(f=>!sections.has(f[0])&&!commonFields.some(c=>c[0]===f[0]));
+ $("specificFields").innerHTML=remaining.length?remaining.map(fieldMarkup).join(""):'<p class="sourceMessage">ข้อมูลที่ต้องกรอกจากไฟล์ตัวอย่างถูกรวมเรียงตามเอกสารไว้ใน “ข้อมูลกลาง” แล้ว • ส่วนนี้สงวนไว้สำหรับช่องเพิ่มเติมจากแม่แบบในอนาคต</p>';
 document.querySelectorAll("[data-key]").forEach(el=>el.oninput=()=>{state.values[el.dataset.key]=el.value;renderPaper();renderTotals();queueTemplateRefresh();});
 document.querySelectorAll("[data-common-page]").forEach(btn=>btn.onclick=()=>{goPage(Number(btn.dataset.commonPage));$("paperLabel").scrollIntoView({behavior:"smooth",block:"nearest"});});}
 function renderItems(){ $("itemsRows").innerHTML=state.items.map((r,i)=>'<div class="itemRow"><strong>รายการที่ '+(i+1)+'</strong><div class="rowgrid">'+[["description","ชื่อรายการพัสดุ"],["quantity","จำนวน"],["unit","หน่วยนับ"],["unitPrice","ราคาต่อหน่วย"]].map(([k,name])=>'<label>'+name+'<input data-item="'+i+'" data-col="'+k+'" value="'+esc(r[k])+'" '+(["quantity","unitPrice"].includes(k)?'type="number" min="0" step="any"':'')+'></label>').join("")+'</div><button data-remove="'+i+'" class="secondary">ลบรายการ</button></div>').join("");document.querySelectorAll("[data-item]").forEach(el=>el.oninput=()=>{state.items[Number(el.dataset.item)][el.dataset.col]=el.value;renderPaper();renderTotals()});document.querySelectorAll("[data-remove]").forEach(el=>el.onclick=()=>{if(state.items.length===1)return;state.items.splice(Number(el.dataset.remove),1);renderItems();renderPaper();queueTemplateRefresh()});renderTotals()}
