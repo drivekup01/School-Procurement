@@ -151,7 +151,7 @@ service cloud.firestore {
         'fiscalYear','department','projectId','activityId','title','requestedAmount',
         'requestedDate','status','createdBy','createdAt','updatedAt','procurementType',
         'procurementMethod','purpose','vendor','deliveryDate','deliveryDays',
-        'notes','preparedBy','items'
+        'notes','preparedBy','items','details'
       ]) &&
       d.fiscalYear == '2570' &&
       d.department is string &&
@@ -164,7 +164,8 @@ service cloud.firestore {
       d.get('items',[]) is list && d.get('items',[]).size() <= 80 &&
       d.get('purpose','') is string && d.get('purpose','').size() <= 3000 &&
       d.get('notes','') is string && d.get('notes','').size() <= 3000 &&
-      d.get('vendor','') is string && d.get('vendor','').size() <= 250;
+      d.get('vendor','') is string && d.get('vendor','').size() <= 250 &&
+      d.get('details',{}) is map && d.get('details',{}).size() <= 70;
     }
     match /procurement_v2_requests/{requestId} {
       allow read: if member();
