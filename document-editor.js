@@ -113,9 +113,23 @@ function queueTemplateRefresh(){
  pdfRenderTimer=setTimeout(refreshPdfPreview,550);
 }
 
+let pdfPreviewExpanded=false;
+function setPreviewExpanded(expanded){
+ pdfPreviewExpanded=Boolean(expanded);
+ document.body.classList.toggle("pdfPreviewExpanded",pdfPreviewExpanded);
+ const button=$("togglePreviewSize");
+ button.textContent=pdfPreviewExpanded?"⤢ กลับขนาดปกติ":"⛶ ขยายเต็มจอ";
+ button.setAttribute("aria-pressed",String(pdfPreviewExpanded));
+ // Re-render the mapping canvas at the available width if Admin is editing coordinates.
+ if(mappingMode)requestAnimationFrame(()=>renderMappingPage());
+}
+$("togglePreviewSize").onclick=()=>setPreviewExpanded(!pdfPreviewExpanded);
+document.addEventListener("keydown",event=>{
+ if(event.key==="Escape"&&pdfPreviewExpanded)setPreviewExpanded(false);
+});
 const setPdfPage=()=>{
  $("paperLabel").textContent="PDF ต้นฉบับจริง · หน้า "+page+" / "+pages.length;
- if(pdfObjectUrl){const next=pdfObjectUrl+"#page="+page+"&zoom=page-width";if(fileFrame().src!==next)fileFrame().src=next;}
+ if(pdfObjectUrl){const next=pdfObjectUrl+"#page="+page+"&zoom=page-fit";if(fileFrame().src!==next)fileFrame().src=next;}
 };
 async function loadPdfBlob(dept){
  const storageRef=firebaseFns.ref(templateStorage,templatePath(dept));
