@@ -38,10 +38,11 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 #docxPages{background:#e4eaf0;padding:0!important;max-width:none;overflow:visible}#docxPages .docx-wrapper{padding:0!important;background:transparent!important;display:block!important}#docxPages section.docx{box-shadow:0 3px 12px #22334420!important;margin:0 0 12px!important;transform-origin:top left!important}#docxPages section.docx:not(:first-child){margin-top:18px!important}.panel:nth-child(2) .pane #docxPages{min-height:297mm}@media print{#docxPages section.docx{transform:none!important;margin:0!important;break-after:page}#previewPage{display:none!important}}
 .preview-zoom #pageCount{font-size:11px;white-space:nowrap;min-width:38px;text-align:center}.preview-zoom button:disabled{opacity:.35;cursor:default}@media print{#docxPages section.docx{display:block!important}#docxPages .docx-wrapper{transform:none!important;margin:0!important}}
 #pdfPages{width:max-content;margin:0 auto}#pdfCanvas{display:block;background:white;box-shadow:0 2px 12px #0002;max-width:none}#pdfPages[hidden]{display:none!important}@media print{#pdfPages{transform:none!important;margin:0!important}}
+#pdfPages{position:relative}#pdfOverlay{position:absolute;left:0;top:0;pointer-events:none;display:block}#pdfCanvas,#pdfOverlay{width:auto;height:auto}
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
 <main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><div class="note">ชื่อพารามิเตอร์เชื่อมกับ Word ต้นฉบับที่คุณกำหนดไว้ ไม่ต้องกรอกชื่อซ้ำทุกหน้า</div><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar"><button id="save" class="secondary">บันทึกข้อมูลในเครื่อง</button><button id="reset" class="secondary">ล้างข้อมูลทดลอง</button></div></div></section>
-<section class="panel"><div class="rightsticky"><div class="preview-heading"><h2>ตรวจข้อมูลก่อนส่งออก</h2><div class="preview-zoom"><button id="zoomOut" type="button" class="secondary" title="ย่อกระดาษ">−</button><span id="zoomLevel" aria-live="polite">พอดีหน้า</span><button id="zoomIn" type="button" class="secondary" title="ขยายกระดาษ">+</button><button id="zoomFit" type="button" class="secondary">พอดีหน้า</button><button id="prevPage" type="button" class="secondary">◀</button><span id="pageCount">1 / 1</span><button id="nextPage" type="button" class="secondary">▶</button></div></div><div class="toolbar"><button id="export">ส่งออก Word ต้นฉบับ (.docx)</button><button id="print" class="secondary">พิมพ์ / บันทึก PDF (A4)</button></div><div id="status" class="alert">กำลังตรวจแม่แบบ Word…</div></div><div class="pane"><div id="previewPage"><div id="preview"></div></div><div id="docxPages" hidden></div><div id="pdfPages" hidden><canvas id="pdfCanvas"></canvas></div><p class="note">หากพบไฟล์ PDF ต้นฉบับ เว็บจะแสดงเอกสารนั้นทีละหน้า โดยรักษาตำแหน่งตาม PDF; Word ยังคงใช้สำหรับส่งออกและแทนพารามิเตอร์</p></div></section></main>
+<section class="panel"><div class="rightsticky"><div class="preview-heading"><h2>ตรวจข้อมูลก่อนส่งออก</h2><div class="preview-zoom"><button id="zoomOut" type="button" class="secondary" title="ย่อกระดาษ">−</button><span id="zoomLevel" aria-live="polite">พอดีหน้า</span><button id="zoomIn" type="button" class="secondary" title="ขยายกระดาษ">+</button><button id="zoomFit" type="button" class="secondary">พอดีหน้า</button><button id="prevPage" type="button" class="secondary">◀</button><span id="pageCount">1 / 1</span><button id="nextPage" type="button" class="secondary">▶</button></div></div><div class="toolbar"><button id="export">ส่งออก Word ต้นฉบับ (.docx)</button><button id="print" class="secondary">พิมพ์ / บันทึก PDF (A4)</button></div><div id="status" class="alert">กำลังตรวจแม่แบบ Word…</div></div><div class="pane"><div id="previewPage"><div id="preview"></div></div><div id="docxPages" hidden></div><div id="pdfPages" hidden><canvas id="pdfCanvas"></canvas><canvas id="pdfOverlay" aria-label="ข้อความที่กรอกลงในเอกสาร PDF"></canvas></div><p id="pdfLiveStatus" class="note"></p><p class="note">หากพบไฟล์ PDF ต้นฉบับ เว็บจะแสดงเอกสารนั้นทีละหน้า โดยรักษาตำแหน่งตาม PDF; Word ยังคงใช้สำหรับส่งออกและแทนพารามิเตอร์</p></div></section></main>
 <script>
 const definitions=[
 {title:'ข้อมูลเอกสาร',fields:[['document_date','เลขที่หนังสือ'],['main_date','วันที่หลัก','date'],['requesting_unit','ฝ่ายงาน / กลุ่มสาระ'],['procurement_type','ประเภทจัดซื้อ/จัดจ้าง'],['budget_year','ปีงบประมาณ'],['project_name','ชื่อโครงการ','textarea'],['activity_name','ชื่อกิจกรรม','textarea'],['expense_description','รายการค่าใช้จ่าย'],['budget_amount','วงเงินงบประมาณ','number'],['budget_amount_text','วงเงินเป็นตัวอักษร'],['assigned_officer_name','ชื่อผู้ได้รับมอบหมาย'],['assigned_officer_position','ตำแหน่งผู้ได้รับมอบหมาย'],['officer_signer_name','ชื่อเจ้าหน้าที่'],['chief_officer_signer_name','ชื่อหัวหน้าเจ้าหน้าที่']]},
@@ -59,12 +60,54 @@ function choose(k){[...$('groups').children].forEach((e,j)=>e.classList.toggle('
 function fieldValues(){let o={};document.querySelectorAll('[data-key]').forEach(x=>o[x.dataset.key]=x.value);return o}
 function thDate(s){if(!s||!/^\\d{4}-\\d{2}-\\d{2}$/.test(s))return s||'';let [y,m,d]=s.split('-').map(Number);return d+' '+['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'][m]+' '+(y+543)}
 function money(n){if(n===''||!Number.isFinite(Number(n)))return '';return Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2})}
-function refresh(){if(templateBuffer)queueSourcePreview();Object.assign(data,fieldValues());localStorage.setItem('schoolProcurementDemoV1',JSON.stringify(data));const d=fieldValues();const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');const val=k=>esc(d[k]||'................');const amount=money(d.budget_amount)||'................';let out='<div class="memohead"><img src="./krut-1.5-cm.png" alt="ตราครุฑ"><h3>บันทึกข้อความ</h3></div>';out+='<div class="twocol"><div><b>ส่วนราชการ</b> โรงเรียนค่ายบางระจันวิทยาคม</div><div>สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาสิงห์บุรี อ่างทอง</div></div>';out+='<div class="twocol doc-line"><div><b>ที่</b> '+val('document_date')+'</div><div><b>วันที่</b> '+esc(thDate(d.main_date)||'................')+'</div></div>';out+='<div class="subject"><b>เรื่อง</b> มอบหมายบุคลากรปฏิบัติหน้าที่กำหนดรายละเอียดคุณลักษณะของงานจัดซื้อ/จัดจ้าง</div>';out+='<div class="doc-line" style="margin-top:5mm"><b>เรียน</b> ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม</div>';out+='<div class="doc-body"><p>ด้วย '+val('requesting_unit')+' มีความประสงค์จะดำเนินการ'+val('procurement_type')+' ตามที่ได้รับแจ้งจัดสรรงบประมาณประจำปีงบประมาณ '+val('budget_year')+' ตามโครงการ '+val('project_name')+' กิจกรรม '+val('activity_name')+' เพื่อเป็นค่า'+val('expense_description')+' วงเงินงบประมาณ '+esc(amount)+' บาท ('+val('budget_amount_text')+')</p>';out+='<p>ดังนั้นเพื่อให้การจัดทำรายละเอียดคุณลักษณะพัสดุที่จะจัดซื้อ/จัดจ้างของงานดังกล่าว เป็นไปตามระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560 ข้อ 21 จึงเห็นสมควรมอบหมาย '+val('assigned_officer_name')+' ตำแหน่ง '+val('assigned_officer_position')+' เป็นผู้จัดทำคุณลักษณะเฉพาะงานจัดซื้อ/จัดจ้าง ทั้งนี้อำนาจเห็นชอบรายละเอียดคุณลักษณะพัสดุเป็นของผู้อำนวยการโรงเรียน</p><p>จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ</p></div>';out+='<div class="signatures"><div>ลงชื่อ................................เจ้าหน้าที่<div class="sign-name">('+val('officer_signer_name')+')</div></div><div>ลงชื่อ................................หัวหน้าเจ้าหน้าที่<div class="sign-name">('+val('chief_officer_signer_name')+')</div></div></div>';out+='<div class="approve">- อนุมัติ<br><br>ลงชื่อ........................................<br>(นายเรวัฒน์ พรหมสะโร)<br>ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม</div>';out+='<div class="source-note"><b>หมายเหตุ</b> : การจัดทำราคากลางของงานซื้อหรืองานจ้างที่มิใช่งานก่อสร้างวงเงินไม่เกิน 100,000 บาท จะแต่งตั้งเจ้าหน้าที่คนใดคนหนึ่งหรือคณะกรรมการฯ เป็นผู้ทำหน้าที่จัดทำราคากลางก็ได้</div>';$('preview').innerHTML=out}
+function refresh(){if(originalPdf)requestAnimationFrame(drawPdfOverlay);else if(templateBuffer)queueSourcePreview();Object.assign(data,fieldValues());localStorage.setItem('schoolProcurementDemoV1',JSON.stringify(data));const d=fieldValues();const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');const val=k=>esc(d[k]||'................');const amount=money(d.budget_amount)||'................';let out='<div class="memohead"><img src="./krut-1.5-cm.png" alt="ตราครุฑ"><h3>บันทึกข้อความ</h3></div>';out+='<div class="twocol"><div><b>ส่วนราชการ</b> โรงเรียนค่ายบางระจันวิทยาคม</div><div>สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาสิงห์บุรี อ่างทอง</div></div>';out+='<div class="twocol doc-line"><div><b>ที่</b> '+val('document_date')+'</div><div><b>วันที่</b> '+esc(thDate(d.main_date)||'................')+'</div></div>';out+='<div class="subject"><b>เรื่อง</b> มอบหมายบุคลากรปฏิบัติหน้าที่กำหนดรายละเอียดคุณลักษณะของงานจัดซื้อ/จัดจ้าง</div>';out+='<div class="doc-line" style="margin-top:5mm"><b>เรียน</b> ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม</div>';out+='<div class="doc-body"><p>ด้วย '+val('requesting_unit')+' มีความประสงค์จะดำเนินการ'+val('procurement_type')+' ตามที่ได้รับแจ้งจัดสรรงบประมาณประจำปีงบประมาณ '+val('budget_year')+' ตามโครงการ '+val('project_name')+' กิจกรรม '+val('activity_name')+' เพื่อเป็นค่า'+val('expense_description')+' วงเงินงบประมาณ '+esc(amount)+' บาท ('+val('budget_amount_text')+')</p>';out+='<p>ดังนั้นเพื่อให้การจัดทำรายละเอียดคุณลักษณะพัสดุที่จะจัดซื้อ/จัดจ้างของงานดังกล่าว เป็นไปตามระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560 ข้อ 21 จึงเห็นสมควรมอบหมาย '+val('assigned_officer_name')+' ตำแหน่ง '+val('assigned_officer_position')+' เป็นผู้จัดทำคุณลักษณะเฉพาะงานจัดซื้อ/จัดจ้าง ทั้งนี้อำนาจเห็นชอบรายละเอียดคุณลักษณะพัสดุเป็นของผู้อำนวยการโรงเรียน</p><p>จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ</p></div>';out+='<div class="signatures"><div>ลงชื่อ................................เจ้าหน้าที่<div class="sign-name">('+val('officer_signer_name')+')</div></div><div>ลงชื่อ................................หัวหน้าเจ้าหน้าที่<div class="sign-name">('+val('chief_officer_signer_name')+')</div></div></div>';out+='<div class="approve">- อนุมัติ<br><br>ลงชื่อ........................................<br>(นายเรวัฒน์ พรหมสะโร)<br>ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม</div>';out+='<div class="source-note"><b>หมายเหตุ</b> : การจัดทำราคากลางของงานซื้อหรืองานจ้างที่มิใช่งานก่อสร้างวงเงินไม่เกิน 100,000 บาท จะแต่งตั้งเจ้าหน้าที่คนใดคนหนึ่งหรือคณะกรรมการฯ เป็นผู้ทำหน้าที่จัดทำราคากลางก็ได้</div>';$('preview').innerHTML=out}
 
 $('save').onclick=()=>{refresh();alert('บันทึกข้อมูลในเบราว์เซอร์แล้ว')};$('reset').onclick=()=>{if(!confirm('ล้างเฉพาะข้อมูลที่กรอกในฟอร์มทดลอง?'))return;localStorage.removeItem('schoolProcurementDemoV1');document.querySelectorAll('[data-key]').forEach(i=>i.value='');refresh()};$('print').onclick=()=>window.print();
 async function findTemplate(){const r=await fetch('./procurement-template13.docx',{cache:'no-store'});if(!r.ok)return null;const b=await r.arrayBuffer();try{const zip=new PizZip(b);const xml=zip.file('word/document.xml')?.asText()||'';if(!xml.includes('<w:document')&&!xml.includes(':document'))throw Error('ไฟล์ไม่ใช่เอกสาร Word ที่อ่านได้');return b}catch(e){throw Error('แม่แบบบน GitHub ไม่ตรงกับไฟล์ล่าสุด: '+e.message)}}
 
-let originalPdf=null,pdfCurrentPage=1,pdfRenderId=0;
+let originalPdf=null,pdfCurrentPage=1,pdfRenderId=0,pdfPlaceholderPositions=[],pdfRenderedViewport=null;
+function locatePdfPlaceholders(content,viewport){
+ const positions=[],ctx=$('pdfOverlay').getContext('2d');
+ for(const item of content.items){
+  if(!item.str||!item.str.includes('{{'))continue;
+  const matrix=pdfjsLib.Util.transform(viewport.transform,item.transform);
+  const height=Math.max(10,Math.hypot(matrix[2],matrix[3]));
+  const totalWidth=item.width*viewport.scale;
+  ctx.font=height+'px ths, sans-serif';
+  const measured=ctx.measureText(item.str).width||1;
+  const re=/\\{\\{([a-zA-Z_][a-zA-Z_0-9]*)\\}\\}/g;
+  let m;
+  while((m=re.exec(item.str))){
+   const left=matrix[4]+totalWidth*ctx.measureText(item.str.slice(0,m.index)).width/measured;
+   const width=Math.max(12,totalWidth*ctx.measureText(m[0]).width/measured);
+   positions.push({key:m[1],x:left,y:matrix[5]-height*0.97,w:width,h:height*1.3});
+  }
+ }
+ return positions;
+}
+function drawPdfOverlay(){
+ if(!originalPdf||!pdfRenderedViewport)return;
+ const c=$('pdfOverlay'),ctx=c.getContext('2d'),values=fieldValues();
+ if(!c.width||!c.height)return;
+ ctx.clearRect(0,0,c.width,c.height);
+ let overflowing=0,filled=0;
+ for(const p of pdfPlaceholderPositions){
+  let value=String(values[p.key]??'').trim();
+  if(!value)continue;
+  if(/^\\d{4}-\\d{2}-\\d{2}$/.test(value))value=thDate(value);
+  if(['budget_amount','reference_price','agreed_price','pa','pv','pt','pw','pf','pn'].includes(p.key))value=money(value);
+  // PDF coordinate unit is 1/72 inch; use locked 16pt font.
+  const fontSize=16*pdfRenderedViewport.scale;
+  ctx.font=fontSize+'px ths, sans-serif';
+  const width=ctx.measureText(value).width;
+  // Never shrink official document text to fit.
+  if(width>p.w+2){overflowing++;ctx.strokeStyle='#dc3545';ctx.lineWidth=1.4;ctx.strokeRect(p.x,p.y,Math.max(p.w,14),Math.max(p.h,fontSize));continue}
+  ctx.fillStyle='#fff';ctx.fillRect(p.x-1,p.y-3,p.w+2,Math.max(p.h+5,fontSize+6));
+  ctx.fillStyle='#121212';ctx.textBaseline='alphabetic';ctx.fillText(value,p.x,p.y+fontSize*0.95);filled++;
+ }
+ const status=$('pdfLiveStatus');
+ if(status)status.textContent='หน้า '+pdfCurrentPage+': แสดงข้อมูล '+filled+' ช่อง'+(overflowing?' • '+overflowing+' ช่องข้อความยาวเกินพื้นที่ (กรอบสีแดง)':'');
+}
 async function loadOriginalPdf(){
  const response=await fetch('./procurement-template13.pdf',{cache:'no-store'});
  if(!response.ok)return false;
@@ -87,6 +130,12 @@ async function renderPdfPage(){
  canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
  await page.render({canvasContext:ctx,viewport}).promise;
  if(id!==pdfRenderId)return;
+ const textContent=await page.getTextContent();
+ if(id!==pdfRenderId)return;
+ pdfRenderedViewport=viewport;
+ pdfPlaceholderPositions=locatePdfPlaceholders(textContent,viewport);
+ const overlay=$('pdfOverlay');overlay.width=canvas.width;overlay.height=canvas.height;
+ drawPdfOverlay();
  $('pdfPages').hidden=false;$('pdfPages').style.display='block';
  $('docxPages').hidden=true;$('docxPages').style.display='none';
  $('previewPage').style.display='none';
@@ -95,7 +144,7 @@ async function renderPdfPage(){
  $('prevPage').disabled=pdfCurrentPage<=1;$('nextPage').disabled=pdfCurrentPage>=originalPdf.numPages;
  fitA4();
 }
-loadOriginalPdf().then(ok=>{if(ok){const e=$('status');e.textContent='แสดง PDF ต้นฉบับ '+originalPdf.numPages+' หน้า (ยังไม่ได้กรอกค่าทับ PDF)';e.className='alert good'}}).catch(e=>{console.warn('PDF Preview unavailable',e)});
+loadOriginalPdf().then(ok=>{if(ok){const e=$('status');e.textContent='แสดง PDF ต้นฉบับ '+originalPdf.numPages+' หน้า พร้อมแก้ไขข้อมูล Real-time (ตรวจช่องข้อความยาวก่อนส่งออก)';e.className='alert good'}}).catch(e=>{console.warn('PDF Preview unavailable',e)});
 let renderToken=0;
 function renderFromSource(){
  if(originalPdf||!templateBuffer||!window.docx||!window.docxtemplater||!window.PizZip)return;
