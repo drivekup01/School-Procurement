@@ -71,6 +71,7 @@ async function loadOriginalPdf(){
  if(!window.pdfjsLib)throw Error('เครื่องมือแสดง PDF ไม่พร้อม');
  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
  originalPdf=await pdfjsLib.getDocument({data:await response.arrayBuffer()}).promise;
+ ++renderToken;
  pdfCurrentPage=1;
  await renderPdfPage();
  return true;
@@ -94,10 +95,10 @@ async function renderPdfPage(){
  $('prevPage').disabled=pdfCurrentPage<=1;$('nextPage').disabled=pdfCurrentPage>=originalPdf.numPages;
  fitA4();
 }
-loadOriginalPdf().then(ok=>{if(ok){const e=$('status');e.textContent='แสดง PDF ต้นฉบับ 11 หน้า (Preview อ้างอิง ยังไม่ได้กรอกค่าทับ PDF)';e.className='alert good'}}).catch(e=>{console.warn('PDF Preview unavailable',e)});
+loadOriginalPdf().then(ok=>{if(ok){const e=$('status');e.textContent='แสดง PDF ต้นฉบับ '+originalPdf.numPages+' หน้า (ยังไม่ได้กรอกค่าทับ PDF)';e.className='alert good'}}).catch(e=>{console.warn('PDF Preview unavailable',e)});
 let renderToken=0;
 function renderFromSource(){
- if(!templateBuffer||!window.docx||!window.docxtemplater||!window.PizZip)return;
+ if(originalPdf||!templateBuffer||!window.docx||!window.docxtemplater||!window.PizZip)return;
  const job=++renderToken;
  try{
   const values=fieldValues(),v={...values};
@@ -109,7 +110,7 @@ function renderFromSource(){
   const blob=doc.getZip().generate({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
   const host=$('docxPages');host.hidden=false;
   window.docx.renderAsync(blob,host,null,{inWrapper:true,breakPages:true,ignoreLastRenderedPageBreak:false,experimental:true}).then(()=>{
-   if(job!==renderToken)return;
+   if(job!==renderToken||originalPdf)return;
    $('previewPage').style.display='none';
    host.style.display='block';
    currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));showDocumentPage();
