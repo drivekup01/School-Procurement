@@ -42,6 +42,7 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 #docxPages section.docx{box-sizing:border-box!important;border:1px solid #d0d9e3!important;overflow:hidden!important}#docxPages .docx-wrapper{width:max-content;max-width:none!important}#docxPages section.docx:not([style*="display: none"]){display:block}#docxPages section.docx *{max-width:none}@media print{#docxPages section.docx{border:none!important;overflow:visible!important}}
 .docx-split-wrapper{display:block!important;padding:0!important}#docxPages section.docx{margin:0!important;flex-shrink:0}#docxPages section.docx[style*="display: none"]{display:none!important}
 .viewer-choice{display:flex;gap:5px;flex-wrap:wrap}.viewer-choice button{font-size:12px!important;padding:7px 10px!important}.viewer-choice .mode-active{background:#126ca5!important;color:#fff!important}#googleViewer[hidden]{display:none!important}#googleViewer{padding:0 5px}#googleViewerFrame{width:100%;height:calc(100vh - 340px);min-height:480px;border:0;background:white}#googleViewer .note{margin:10px 0 2px}#googleOpen{font-size:13px;display:inline-block;margin-bottom:8px}
+.docx-edit-field{display:inline-block!important;width:auto;min-width:70px!important;max-width:430px!important;padding:1px 3px!important;margin:0 2px!important;border:1px dashed #3185b9!important;border-radius:3px!important;background:#eaf6ff!important;color:#172c3f!important;font-family:ths,'Sarabun',sans-serif!important;font-size:16pt!important;line-height:1.1!important;vertical-align:baseline!important;box-sizing:border-box!important}.docx-edit-field:focus{outline:2px solid #2178b5!important;background:white!important}@media print{.docx-edit-field{border:none!important;background:none!important}}
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
 <main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><div class="note">ชื่อพารามิเตอร์เชื่อมกับ Word ต้นฉบับที่คุณกำหนดไว้ ไม่ต้องกรอกชื่อซ้ำทุกหน้า</div><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar"><button id="save" class="secondary">บันทึกข้อมูลในเครื่อง</button><button id="reset" class="secondary">ล้างข้อมูลทดลอง</button></div></div></section>
@@ -120,6 +121,35 @@ function splitWordIntoPages(bytes){
   return z.generate({type:'arraybuffer'});
  });
 }
+function attachPreviewInputs(host){
+ const values=fieldValues(),re=/«([a-zA-Z_][a-zA-Z_0-9]*)»/g;
+ const walker=document.createTreeWalker(host,NodeFilter.SHOW_TEXT);
+ const nodes=[];while(walker.nextNode())if(walker.currentNode.nodeValue.includes('«'))nodes.push(walker.currentNode);
+ for(const node of nodes){
+  const text=node.nodeValue,fragment=document.createDocumentFragment();let start=0,match;
+  re.lastIndex=0;
+  while((match=re.exec(text))){
+   if(match.index>start)fragment.append(document.createTextNode(text.slice(start,match.index)));
+   const key=match[1],input=document.createElement('input');
+   input.type='text';input.className='docx-edit-field';input.dataset.previewKey=key;
+   input.title='แก้ไข '+key;input.setAttribute('aria-label','แก้ไข '+key);
+   input.value=String(values[key]??'');
+   input.placeholder=key;
+   const resize=()=>{input.style.width=Math.max(70,Math.min(430,(input.value||input.placeholder).length*9+28))+'px'};
+   resize();
+   input.addEventListener('input',()=>{
+    resize();
+    const matchInput=[...document.querySelectorAll('[data-key]')].filter(x=>x.dataset.key===key);
+    matchInput.forEach(e=>{e.value=input.value});
+    document.querySelectorAll('[data-preview-key]').forEach(e=>{if(e!==input&&e.dataset.previewKey===key)e.value=input.value});
+    data[key]=input.value;localStorage.setItem('schoolProcurementDemoV1',JSON.stringify(data));
+   });
+   input.addEventListener('change',()=>{});
+   fragment.append(input);start=re.lastIndex;
+  }
+  if(start){if(start<text.length)fragment.append(document.createTextNode(text.slice(start)));node.parentNode.replaceChild(fragment,node)}
+ }
+}
 async function renderWordPages(blob,host,job){
  const bytes=await blob.arrayBuffer(),parts=splitWordIntoPages(bytes);
  if(job!==renderToken)return;
@@ -134,18 +164,18 @@ async function renderWordPages(blob,host,job){
  if(job!==renderToken)return;
  host.replaceChildren();
  const wrapper=document.createElement('div');wrapper.className='docx-wrapper docx-split-wrapper';wrapper.appendChild(fragment);host.appendChild(wrapper);
+ attachPreviewInputs(host);
  $('previewPage').style.display='none';host.style.display=previewMode==='google'?'none':'block';
  currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));if(previewMode==='word')showDocumentPage();
- $('status').textContent='แยก Word เป็น '+host.querySelectorAll('section.docx').length+' หน้า/ส่วนจากโครงสร้างเอกสาร พร้อม Preview';
+ $('status').textContent='คลิกช่องพารามิเตอร์ในหน้า Word เพื่อแก้ค่าได้ (บันทึกเข้าฟอร์มและใช้ในการ Export) • แบ่งส่วนแสดง '+host.querySelectorAll('section.docx').length+' หน้า';
  $('status').className='alert good';
 }
 function renderFromSource(){
  if(!templateBuffer||!window.docx||!window.docxtemplater||!window.PizZip)return;
  const job=++renderToken;
  try{
-  const values=fieldValues(),v={...values};
-  definitions.forEach(g=>g.fields.forEach(f=>{if(f[2]==='date')v[f[0]]=thDate(values[f[0]])}));
-  for(const k of ['budget_amount','reference_price','agreed_price','pa','pv','pt','pw','pf','pn'])if(values[k]!==undefined&&values[k]!=='')v[k]=money(values[k]);
+  const values=fieldValues(),v={};
+  Object.keys(values).forEach(k=>v[k]='«'+k+'»');
   const zip=new PizZip(templateBuffer.slice(0));
   const doc=new window.docxtemplater(zip,{delimiters:{start:'{{',end:'}}'},nullGetter:()=>''});
   doc.render(v);
@@ -171,7 +201,7 @@ let templateBuffer=null;findTemplate().then(x=>{templateBuffer=x;if(x){addMissin
 $('export').onclick=async()=>{const b=$('export');b.disabled=true;try{if(!templateBuffer)templateBuffer=await findTemplate();if(!templateBuffer)throw Error('ยังไม่มีแม่แบบ Word ในระบบ กรุณาเพิ่มแม่แบบลง Repository ก่อน');if(!window.PizZip||!window.docxtemplater)throw Error('ไม่สามารถโหลดไลบรารีแก้ไข Word');const checkZip=new PizZip(templateBuffer.slice(0));if(!checkZip.file('word/document.xml'))throw Error('ต้นฉบับ Word ไม่ถูกต้อง');let d=fieldValues();let vals={...d};definitions.forEach(g=>g.fields.forEach(f=>{if(f[2]==='date')vals[f[0]]=thDate(d[f[0]])}));for(let k of ['budget_amount','reference_price','agreed_price','pa','pv','pt','pw','pf','pn']){if(d[k]!==undefined&&d[k]!=='')vals[k]=money(d[k])}function baht(n){if(n==='')return '';return String(Math.floor(Math.round(Number(n)*100)/100))}function satang(n){if(n==='')return '';return String(((Math.round(Number(n)*100)%100)+100)%100).padStart(2,'0')}
 for(let j=1;j<=5;j++){vals['a'+j]=d['b'+j]?String(j):'';vals['b'+j]=d['b'+j]||'';vals['c'+j]=d['c'+j]||'';vals['d'+j]=baht(d['r'+j]||'');vals['e'+j]=satang(d['r'+j]||'');vals['f'+j]=baht(d['u'+j]||'');vals['g'+j]=satang(d['u'+j]||'');vals['h'+j]=baht(d['z'+j]||'');vals['i'+j]=satang(d['z'+j]||'')}
 const doc=new docxtemplater(new PizZip(templateBuffer.slice(0)),{delimiters:{start:'{{',end:'}}'},nullGetter:()=>''});doc.render(vals);const blob=doc.getZip().generate({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});let u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='ชุดเอกสารจัดซื้อ_'+(d.main_date||'ทดลอง')+'.docx';a.click();setTimeout(()=>URL.revokeObjectURL(u),3000)}catch(e){alert('ส่งออก Word ไม่สำเร็จ: '+e.message)}finally{b.disabled=false}};
-let previewMode='google';
+let previewMode='word';
 const googleDocURL='https://docs.google.com/document/d/1eUoINJHesLdb-7m39BJwbel3ppN5ey99H93TKAtwahc/edit?tab=t.0';
 const googleViewerURL='https://docs.google.com/document/d/1eUoINJHesLdb-7m39BJwbel3ppN5ey99H93TKAtwahc/preview';
 function setPreviewMode(mode){
@@ -230,5 +260,5 @@ $('zoomIn').onclick=()=>{zoomAuto=false;zoomFactor=Math.min(3,zoomFactor+.15);fi
 $('zoomFit').onclick=()=>{zoomAuto=true;zoomFactor=1;fitA4()};
 window.addEventListener('resize',fitA4);window.addEventListener('load',fitA4);
 const sheetWatcher=new ResizeObserver(()=>fitA4());sheetWatcher.observe(document.querySelector('.panel:nth-child(2) .pane'));
-refresh();setPreviewMode('google');
+refresh();setPreviewMode('word');
 </script></body></html>
