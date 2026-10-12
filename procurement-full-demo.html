@@ -36,10 +36,11 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 .preview-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.preview-heading h2{margin:0}.preview-expanded main{grid-template-columns:minmax(0,23%) minmax(0,77%)}.preview-expanded .panel:first-child .pane{padding:8px}.preview-expanded #previewPage{transition:none}@media(max-width:900px){.preview-expanded main{display:block}}@media print{.preview-expanded main{display:block}}
 .preview-zoom{display:flex;align-items:center;gap:4px}.preview-zoom button{padding:4px 9px;min-width:25px}.preview-zoom span{font-size:11px;min-width:36px;text-align:center}@media print{.preview-zoom{display:none}#previewPage{transform:none!important;margin-left:0!important;margin-bottom:0!important}}
 #docxPages{background:#e4eaf0;padding:0!important;max-width:none;overflow:visible}#docxPages .docx-wrapper{padding:0!important;background:transparent!important;display:block!important}#docxPages section.docx{box-shadow:0 3px 12px #22334420!important;margin:0 0 12px!important;transform-origin:top left!important}#docxPages section.docx:not(:first-child){margin-top:18px!important}.panel:nth-child(2) .pane #docxPages{min-height:297mm}@media print{#docxPages section.docx{transform:none!important;margin:0!important;break-after:page}#previewPage{display:none!important}}
+.preview-zoom #pageCount{font-size:11px;white-space:nowrap;min-width:38px;text-align:center}.preview-zoom button:disabled{opacity:.35;cursor:default}@media print{#docxPages section.docx{display:block!important}#docxPages .docx-wrapper{transform:none!important;margin:0!important}}
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
 <main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><div class="note">ชื่อพารามิเตอร์เชื่อมกับ Word ต้นฉบับที่คุณกำหนดไว้ ไม่ต้องกรอกชื่อซ้ำทุกหน้า</div><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar"><button id="save" class="secondary">บันทึกข้อมูลในเครื่อง</button><button id="reset" class="secondary">ล้างข้อมูลทดลอง</button></div></div></section>
-<section class="panel"><div class="rightsticky"><div class="preview-heading"><h2>ตรวจข้อมูลก่อนส่งออก</h2><div class="preview-zoom"><button id="zoomOut" type="button" class="secondary" title="ย่อกระดาษ">−</button><span id="zoomLevel" aria-live="polite">พอดีหน้า</span><button id="zoomIn" type="button" class="secondary" title="ขยายกระดาษ">+</button><button id="zoomFit" type="button" class="secondary">พอดีหน้า</button></div></div><div class="toolbar"><button id="export">ส่งออก Word ต้นฉบับ (.docx)</button><button id="print" class="secondary">พิมพ์ / บันทึก PDF (A4)</button></div><div id="status" class="alert">กำลังตรวจแม่แบบ Word…</div></div><div class="pane"><div id="previewPage"><div id="preview"></div></div><div id="docxPages" hidden></div><p class="note">Preview ใช้เอกสาร Word ต้นฉบับผ่านตัวแสดง DOCX ในเบราว์เซอร์ ตำแหน่งอาจต่างจาก Microsoft Word เล็กน้อย</p></div></section></main>
+<section class="panel"><div class="rightsticky"><div class="preview-heading"><h2>ตรวจข้อมูลก่อนส่งออก</h2><div class="preview-zoom"><button id="zoomOut" type="button" class="secondary" title="ย่อกระดาษ">−</button><span id="zoomLevel" aria-live="polite">พอดีหน้า</span><button id="zoomIn" type="button" class="secondary" title="ขยายกระดาษ">+</button><button id="zoomFit" type="button" class="secondary">พอดีหน้า</button><button id="prevPage" type="button" class="secondary">◀</button><span id="pageCount">1 / 1</span><button id="nextPage" type="button" class="secondary">▶</button></div></div><div class="toolbar"><button id="export">ส่งออก Word ต้นฉบับ (.docx)</button><button id="print" class="secondary">พิมพ์ / บันทึก PDF (A4)</button></div><div id="status" class="alert">กำลังตรวจแม่แบบ Word…</div></div><div class="pane"><div id="previewPage"><div id="preview"></div></div><div id="docxPages" hidden></div><p class="note">Preview ใช้เอกสาร Word ต้นฉบับผ่านตัวแสดง DOCX ในเบราว์เซอร์ ตำแหน่งอาจต่างจาก Microsoft Word เล็กน้อย</p></div></section></main>
 <script>
 const definitions=[
 {title:'ข้อมูลเอกสาร',fields:[['document_date','เลขที่หนังสือ'],['main_date','วันที่หลัก','date'],['requesting_unit','ฝ่ายงาน / กลุ่มสาระ'],['procurement_type','ประเภทจัดซื้อ/จัดจ้าง'],['budget_year','ปีงบประมาณ'],['project_name','ชื่อโครงการ','textarea'],['activity_name','ชื่อกิจกรรม','textarea'],['expense_description','รายการค่าใช้จ่าย'],['budget_amount','วงเงินงบประมาณ','number'],['budget_amount_text','วงเงินเป็นตัวอักษร'],['assigned_officer_name','ชื่อผู้ได้รับมอบหมาย'],['assigned_officer_position','ตำแหน่งผู้ได้รับมอบหมาย'],['officer_signer_name','ชื่อเจ้าหน้าที่'],['chief_officer_signer_name','ชื่อหัวหน้าเจ้าหน้าที่']]},
@@ -79,7 +80,7 @@ function renderFromSource(){
    if(job!==renderToken)return;
    $('previewPage').style.display='none';
    host.style.display='block';
-   fitA4();
+   currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));showDocumentPage();
   }).catch(err=>{if(job===renderToken)$('status').textContent='ตัวแสดง Word ทำงานไม่สำเร็จ: '+err.message});
  }catch(e){$('status').textContent='Preview Word ไม่สำเร็จ: '+e.message}
 }
@@ -100,27 +101,38 @@ let templateBuffer=null;findTemplate().then(x=>{templateBuffer=x;if(x){addMissin
 $('export').onclick=async()=>{const b=$('export');b.disabled=true;try{if(!templateBuffer)templateBuffer=await findTemplate();if(!templateBuffer)throw Error('ยังไม่มีแม่แบบ Word ในระบบ กรุณาเพิ่มแม่แบบลง Repository ก่อน');if(!window.PizZip||!window.docxtemplater)throw Error('ไม่สามารถโหลดไลบรารีแก้ไข Word');const checkZip=new PizZip(templateBuffer.slice(0));if(!checkZip.file('word/document.xml'))throw Error('ต้นฉบับ Word ไม่ถูกต้อง');let d=fieldValues();let vals={...d};definitions.forEach(g=>g.fields.forEach(f=>{if(f[2]==='date')vals[f[0]]=thDate(d[f[0]])}));for(let k of ['budget_amount','reference_price','agreed_price','pa','pv','pt','pw','pf','pn']){if(d[k]!==undefined&&d[k]!=='')vals[k]=money(d[k])}function baht(n){if(n==='')return '';return String(Math.floor(Math.round(Number(n)*100)/100))}function satang(n){if(n==='')return '';return String(((Math.round(Number(n)*100)%100)+100)%100).padStart(2,'0')}
 for(let j=1;j<=5;j++){vals['a'+j]=d['b'+j]?String(j):'';vals['b'+j]=d['b'+j]||'';vals['c'+j]=d['c'+j]||'';vals['d'+j]=baht(d['r'+j]||'');vals['e'+j]=satang(d['r'+j]||'');vals['f'+j]=baht(d['u'+j]||'');vals['g'+j]=satang(d['u'+j]||'');vals['h'+j]=baht(d['z'+j]||'');vals['i'+j]=satang(d['z'+j]||'')}
 const doc=new docxtemplater(new PizZip(templateBuffer.slice(0)),{delimiters:{start:'{{',end:'}}'},nullGetter:()=>''});doc.render(vals);const blob=doc.getZip().generate({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});let u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='ชุดเอกสารจัดซื้อ_'+(d.main_date||'ทดลอง')+'.docx';a.click();setTimeout(()=>URL.revokeObjectURL(u),3000)}catch(e){alert('ส่งออก Word ไม่สำเร็จ: '+e.message)}finally{b.disabled=false}};
-let zoomFactor=1,zoomAuto=true;
+let zoomFactor=1,zoomAuto=true,currentPage=0;
+function showDocumentPage(){
+ const host=$('docxPages'),pages=[...host.querySelectorAll('section.docx')];
+ if(!pages.length){$('pageCount').textContent='1 / 1';fitA4();return}
+ currentPage=Math.max(0,Math.min(currentPage,pages.length-1));
+ pages.forEach((p,i)=>p.style.display=i===currentPage?'block':'none');
+ $('pageCount').textContent=(currentPage+1)+' / '+pages.length;
+ $('prevPage').disabled=currentPage===0;
+ $('nextPage').disabled=currentPage===pages.length-1;
+ fitA4();
+}
+$('prevPage').onclick=()=>{currentPage--;showDocumentPage()};
+$('nextPage').onclick=()=>{currentPage++;showDocumentPage()};
 function fitA4(){
- const source=document.getElementById('docxPages');
- const pane=document.querySelector('.panel:nth-child(2) .pane');
- const isDoc=source&&!source.hidden&&source.querySelector('section.docx');
- const page=isDoc?source.querySelector('section.docx'):document.getElementById('previewPage');
- const holder=isDoc?source.querySelector('.docx-wrapper'):page;
- if(!page||!pane||!holder)return;
+ const source=$('docxPages'),pane=document.querySelector('.panel:nth-child(2) .pane');
+ const page=source&&!source.hidden?source.querySelector('section.docx:not([style*="display: none"])'):null;
+ const active=page||$('previewPage');
+ if(!active||!pane)return;
+ const holder=page?source.querySelector('.docx-wrapper'):active;
+ if(!holder)return;
  holder.style.transform='none';holder.style.marginLeft='0';holder.style.marginBottom='0';
- const w=page.offsetWidth,h=page.offsetHeight;
- const fit=Math.min(1,(pane.clientWidth-24)/w,(pane.clientHeight-35)/h);
+ const w=active.offsetWidth,h=active.offsetHeight;
+ const fit=Math.min(1,(pane.clientWidth-25)/w,(pane.clientHeight-30)/h);
  const scale=Math.max(.2,Math.min(2.5,zoomAuto?fit:fit*zoomFactor));
  holder.style.transform='scale('+scale+')';holder.style.transformOrigin='top left';
  holder.style.marginLeft=Math.max(0,(pane.clientWidth-w*scale)/2)+'px';
- const wholeHeight=holder.offsetHeight;
- holder.style.marginBottom=-(wholeHeight*(1-scale))+15+'px';
+ holder.style.marginBottom=-(holder.offsetHeight*(1-scale))+15+'px';
  $('zoomLevel').textContent=Math.round(scale*100)+'%';
 }
-document.getElementById('zoomOut').onclick=()=>{zoomAuto=false;zoomFactor=Math.max(.4,zoomFactor-.15);fitA4()};
-document.getElementById('zoomIn').onclick=()=>{zoomAuto=false;zoomFactor=Math.min(3,zoomFactor+.15);fitA4()};
-document.getElementById('zoomFit').onclick=()=>{zoomAuto=true;zoomFactor=1;fitA4()};
+$('zoomOut').onclick=()=>{zoomAuto=false;zoomFactor=Math.max(.4,zoomFactor-.15);fitA4()};
+$('zoomIn').onclick=()=>{zoomAuto=false;zoomFactor=Math.min(3,zoomFactor+.15);fitA4()};
+$('zoomFit').onclick=()=>{zoomAuto=true;zoomFactor=1;fitA4()};
 window.addEventListener('resize',fitA4);window.addEventListener('load',fitA4);
 const sheetWatcher=new ResizeObserver(()=>fitA4());sheetWatcher.observe(document.querySelector('.panel:nth-child(2) .pane'));
 refresh();fitA4();
