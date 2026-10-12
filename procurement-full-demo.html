@@ -40,6 +40,7 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 
 
 #docxPages section.docx{box-sizing:border-box!important;border:1px solid #d0d9e3!important;overflow:hidden!important}#docxPages .docx-wrapper{width:max-content;max-width:none!important}#docxPages section.docx:not([style*="display: none"]){display:block}#docxPages section.docx *{max-width:none}@media print{#docxPages section.docx{border:none!important;overflow:visible!important}}
+.docx-split-wrapper{display:block!important;padding:0!important}#docxPages section.docx{margin:0!important;flex-shrink:0}#docxPages section.docx[style*="display: none"]{display:none!important}
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
 <main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><div class="note">ชื่อพารามิเตอร์เชื่อมกับ Word ต้นฉบับที่คุณกำหนดไว้ ไม่ต้องกรอกชื่อซ้ำทุกหน้า</div><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar"><button id="save" class="secondary">บันทึกข้อมูลในเครื่อง</button><button id="reset" class="secondary">ล้างข้อมูลทดลอง</button></div></div></section>
@@ -67,6 +68,76 @@ $('save').onclick=()=>{refresh();alert('บันทึกข้อมูลใ�
 async function findTemplate(){const r=await fetch('./procurement-template13.docx',{cache:'no-store'});if(!r.ok)return null;const b=await r.arrayBuffer();try{const zip=new PizZip(b);const xml=zip.file('word/document.xml')?.asText()||'';if(!xml.includes('<w:document')&&!xml.includes(':document'))throw Error('ไฟล์ไม่ใช่เอกสาร Word ที่อ่านได้');return b}catch(e){throw Error('แม่แบบบน GitHub ไม่ตรงกับไฟล์ล่าสุด: '+e.message)}}
 
 let renderToken=0;
+function splitWordIntoPages(bytes){
+ const zip=new PizZip(bytes.slice(0)),entry=zip.file('word/document.xml');
+ if(!entry)return [bytes];
+ const xml=new DOMParser().parseFromString(entry.asText(),'application/xml');
+ const ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+ const body=xml.getElementsByTagNameNS(ns,'body')[0];
+ if(!body)return [bytes];
+ const children=[...body.children],tail=children.find(x=>x.localName==='sectPr');
+ const content=children.filter(x=>x!==tail);
+ const pages=[[]];let hasExplicit=false;
+ function newPage(){if(pages[pages.length-1].length)pages.push([])}
+ const headingStarts=[
+  /ขอความเห็นชอบการจัดทำขอบเขต/,
+  /ขอบเขตของงานหรือรายละเอียดคุณลักษณะเฉพาะของพัสดุ/,
+  /รายละเอียดคุณลักษณะเฉพาะของพัสดุ/,
+  /รายงานขอซื้อ/,
+  /รายละเอียดแนบท้ายบันทึกข้อความ/,
+  /รายงานผลการพิจารณาและขออนุมัติสั่งซื้อ/,
+  /ประกาศโรงเรียนค่ายบางระจันวิทยาคม/,
+  /ใบตรวจรับพัสดุ/,
+  /รายงานผลการตรวจรับและอนุมัติเบิกจ่ายเงิน/,
+  /ใบเบิกพัสดุ/
+ ];
+ const containsBreak=n=>[...n.getElementsByTagNameNS(ns,'br')].some(e=>e.getAttributeNS(ns,'type')==='page')||n.getElementsByTagNameNS(ns,'lastRenderedPageBreak').length>0;
+ // Word page breaks are authoritative. Fallback headings are document boundaries,
+ // not guessed pixel cut-offs or hard-coded rows of a PDF.
+ hasExplicit=content.some(containsBreak);
+ let seenHeadings=new Set();
+ for(const node of content){
+  const txt=[...node.getElementsByTagNameNS(ns,'t')].map(x=>x.textContent).join('').trim();
+  let boundary=false;
+  if(hasExplicit)boundary=containsBreak(node);
+  else if(node.localName==='p'){
+   const hit=headingStarts.findIndex(re=>re.test(txt));
+   if(hit>=0&&!seenHeadings.has(hit)){seenHeadings.add(hit);boundary=true}
+  }
+  if(boundary)newPage();
+  pages[pages.length-1].push(node.cloneNode(true));
+ }
+ const groups=pages.filter(p=>p.length);
+ if(groups.length<2)return [bytes];
+ return groups.map(nodes=>{
+  const x=new DOMParser().parseFromString(entry.asText(),'application/xml');
+  const b=x.getElementsByTagNameNS(ns,'body')[0];
+  while(b.firstChild)b.removeChild(b.firstChild);
+  nodes.forEach(n=>b.appendChild(x.importNode(n,true)));
+  if(tail)b.appendChild(x.importNode(tail,true));
+  const z=new PizZip(bytes.slice(0));z.file('word/document.xml',new XMLSerializer().serializeToString(x));
+  return z.generate({type:'arraybuffer'});
+ });
+}
+async function renderWordPages(blob,host,job){
+ const bytes=await blob.arrayBuffer(),parts=splitWordIntoPages(bytes);
+ if(job!==renderToken)return;
+ const fragment=document.createDocumentFragment();
+ for(let i=0;i<parts.length;i++){
+  if(job!==renderToken)return;
+  const destination=document.createElement('div');
+  await window.docx.renderAsync(parts[i],destination,null,{inWrapper:true,breakPages:true,ignoreLastRenderedPageBreak:false});
+  const sections=[...destination.querySelectorAll('section.docx')];
+  for(const section of sections)fragment.appendChild(section);
+ }
+ if(job!==renderToken)return;
+ host.replaceChildren();
+ const wrapper=document.createElement('div');wrapper.className='docx-wrapper docx-split-wrapper';wrapper.appendChild(fragment);host.appendChild(wrapper);
+ $('previewPage').style.display='none';host.style.display='block';
+ currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));showDocumentPage();
+ $('status').textContent='แยก Word เป็น '+host.querySelectorAll('section.docx').length+' หน้า/ส่วนจากโครงสร้างเอกสาร พร้อม Preview';
+ $('status').className='alert good';
+}
 function renderFromSource(){
  if(!templateBuffer||!window.docx||!window.docxtemplater||!window.PizZip)return;
  const job=++renderToken;
@@ -79,15 +150,10 @@ function renderFromSource(){
   doc.render(v);
   const blob=doc.getZip().generate({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
   const host=$('docxPages');host.hidden=false;
-  window.docx.renderAsync(blob,host,null,{inWrapper:true,breakPages:true,ignoreLastRenderedPageBreak:false,experimental:true}).then(()=>{
-   if(job!==renderToken)return;
-   $('previewPage').style.display='none';
-   host.style.display='block';
-   currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));showDocumentPage();
-  }).catch(err=>{if(job===renderToken)$('status').textContent='ตัวแสดง Word ทำงานไม่สำเร็จ: '+err.message});
+  renderWordPages(blob,host,job).catch(err=>{if(job===renderToken)$('status').textContent='แยกหน้า Word ไม่สำเร็จ: '+err.message});
  }catch(e){$('status').textContent='Preview Word ไม่สำเร็จ: '+e.message}
 }
-let renderDebounce;function queueSourcePreview(){clearTimeout(renderDebounce);renderDebounce=setTimeout(renderFromSource,250)}
+let renderDebounce;function queueSourcePreview(){clearTimeout(renderDebounce);renderDebounce=setTimeout(renderFromSource,550)}
 function addMissingSourceFields(buffer){
  try{
  const z=new PizZip(buffer);const xml=z.file('word/document.xml')?.asText()||'';
