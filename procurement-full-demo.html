@@ -41,10 +41,11 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 
 #docxPages section.docx{box-sizing:border-box!important;border:1px solid #d0d9e3!important;overflow:hidden!important}#docxPages .docx-wrapper{width:max-content;max-width:none!important}#docxPages section.docx:not([style*="display: none"]){display:block}#docxPages section.docx *{max-width:none}@media print{#docxPages section.docx{border:none!important;overflow:visible!important}}
 .docx-split-wrapper{display:block!important;padding:0!important}#docxPages section.docx{margin:0!important;flex-shrink:0}#docxPages section.docx[style*="display: none"]{display:none!important}
+.viewer-choice{display:flex;gap:5px;flex-wrap:wrap}.viewer-choice button{font-size:12px!important;padding:7px 10px!important}.viewer-choice .mode-active{background:#126ca5!important;color:#fff!important}#googleViewer[hidden]{display:none!important}#googleViewer{padding:0 5px}#googleViewerFrame{width:100%;height:calc(100vh - 340px);min-height:480px;border:0;background:white}#googleViewer .note{margin:10px 0 2px}#googleOpen{font-size:13px;display:inline-block;margin-bottom:8px}
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
 <main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><div class="note">ชื่อพารามิเตอร์เชื่อมกับ Word ต้นฉบับที่คุณกำหนดไว้ ไม่ต้องกรอกชื่อซ้ำทุกหน้า</div><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar"><button id="save" class="secondary">บันทึกข้อมูลในเครื่อง</button><button id="reset" class="secondary">ล้างข้อมูลทดลอง</button></div></div></section>
-<section class="panel"><div class="rightsticky"><div class="preview-heading"><h2>ตรวจข้อมูลก่อนส่งออก</h2><div class="preview-zoom"><button id="zoomOut" type="button" class="secondary" title="ย่อกระดาษ">−</button><span id="zoomLevel" aria-live="polite">พอดีหน้า</span><button id="zoomIn" type="button" class="secondary" title="ขยายกระดาษ">+</button><button id="zoomFit" type="button" class="secondary">พอดีหน้า</button><button id="prevPage" type="button" class="secondary">◀</button><span id="pageCount">1 / 1</span><button id="nextPage" type="button" class="secondary">▶</button></div></div><div class="toolbar"><button id="export">ส่งออก Word ต้นฉบับ (.docx)</button><button id="print" class="secondary">พิมพ์ / บันทึก PDF (A4)</button></div><div id="status" class="alert">กำลังตรวจแม่แบบ Word…</div></div><div class="pane"><div id="previewPage"><div id="preview"></div></div><div id="docxPages" hidden></div><p class="note">Preview ใช้ขนาดหน้าและระยะขอบตาม Word ต้นฉบับ แสดงทีละหน้า และอัปเดตตามฟอร์ม</p></div></section></main>
+<section class="panel"><div class="rightsticky"><div class="preview-heading"><h2>ตรวจข้อมูลก่อนส่งออก</h2><div class="viewer-choice"><button id="googleMode" type="button" class="secondary">Google Docs Viewer</button><button id="wordMode" type="button" class="secondary">Word + CSS</button></div><div class="preview-zoom"><button id="zoomOut" type="button" class="secondary" title="ย่อกระดาษ">−</button><span id="zoomLevel" aria-live="polite">พอดีหน้า</span><button id="zoomIn" type="button" class="secondary" title="ขยายกระดาษ">+</button><button id="zoomFit" type="button" class="secondary">พอดีหน้า</button><button id="prevPage" type="button" class="secondary">◀</button><span id="pageCount">1 / 1</span><button id="nextPage" type="button" class="secondary">▶</button></div></div><div class="toolbar"><button id="export">ส่งออก Word ต้นฉบับ (.docx)</button><button id="print" class="secondary">พิมพ์ / บันทึก PDF (A4)</button></div><div id="status" class="alert">กำลังตรวจแม่แบบ Word…</div></div><div class="pane"><div id="previewPage"><div id="preview"></div></div><div id="docxPages" hidden></div><div id="googleViewer" hidden><iframe id="googleViewerFrame" title="ตัวอย่างไฟล์ Word ผ่าน Google Docs Viewer" loading="lazy" referrerpolicy="no-referrer"></iframe><p class="note">Google Docs Viewer เป็นตัวดูไฟล์ Word ต้นฉบับเท่านั้น การกรอกฟอร์มด้านซ้ายจะยังไม่เปลี่ยนเอกสารในกรอบนี้ทันที</p><a id="googleOpen" href="#" target="_blank" rel="noopener noreferrer">เปิดตัวแสดง Google Docs ในแท็บใหม่</a></div><p class="note">Preview ใช้ขนาดหน้าและระยะขอบตาม Word ต้นฉบับ แสดงทีละหน้า และอัปเดตตามฟอร์ม</p></div></section></main>
 <script>
 const definitions=[
 {title:'ข้อมูลเอกสาร',fields:[['document_date','เลขที่หนังสือ'],['main_date','วันที่หลัก','date'],['requesting_unit','ฝ่ายงาน / กลุ่มสาระ'],['procurement_type','ประเภทจัดซื้อ/จัดจ้าง'],['budget_year','ปีงบประมาณ'],['project_name','ชื่อโครงการ','textarea'],['activity_name','ชื่อกิจกรรม','textarea'],['expense_description','รายการค่าใช้จ่าย'],['budget_amount','วงเงินงบประมาณ','number'],['budget_amount_text','วงเงินเป็นตัวอักษร'],['assigned_officer_name','ชื่อผู้ได้รับมอบหมาย'],['assigned_officer_position','ตำแหน่งผู้ได้รับมอบหมาย'],['officer_signer_name','ชื่อเจ้าหน้าที่'],['chief_officer_signer_name','ชื่อหัวหน้าเจ้าหน้าที่']]},
@@ -133,8 +134,8 @@ async function renderWordPages(blob,host,job){
  if(job!==renderToken)return;
  host.replaceChildren();
  const wrapper=document.createElement('div');wrapper.className='docx-wrapper docx-split-wrapper';wrapper.appendChild(fragment);host.appendChild(wrapper);
- $('previewPage').style.display='none';host.style.display='block';
- currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));showDocumentPage();
+ $('previewPage').style.display='none';host.style.display=previewMode==='google'?'none':'block';
+ currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));if(previewMode==='word')showDocumentPage();
  $('status').textContent='แยก Word เป็น '+host.querySelectorAll('section.docx').length+' หน้า/ส่วนจากโครงสร้างเอกสาร พร้อม Preview';
  $('status').className='alert good';
 }
@@ -170,6 +171,30 @@ let templateBuffer=null;findTemplate().then(x=>{templateBuffer=x;if(x){addMissin
 $('export').onclick=async()=>{const b=$('export');b.disabled=true;try{if(!templateBuffer)templateBuffer=await findTemplate();if(!templateBuffer)throw Error('ยังไม่มีแม่แบบ Word ในระบบ กรุณาเพิ่มแม่แบบลง Repository ก่อน');if(!window.PizZip||!window.docxtemplater)throw Error('ไม่สามารถโหลดไลบรารีแก้ไข Word');const checkZip=new PizZip(templateBuffer.slice(0));if(!checkZip.file('word/document.xml'))throw Error('ต้นฉบับ Word ไม่ถูกต้อง');let d=fieldValues();let vals={...d};definitions.forEach(g=>g.fields.forEach(f=>{if(f[2]==='date')vals[f[0]]=thDate(d[f[0]])}));for(let k of ['budget_amount','reference_price','agreed_price','pa','pv','pt','pw','pf','pn']){if(d[k]!==undefined&&d[k]!=='')vals[k]=money(d[k])}function baht(n){if(n==='')return '';return String(Math.floor(Math.round(Number(n)*100)/100))}function satang(n){if(n==='')return '';return String(((Math.round(Number(n)*100)%100)+100)%100).padStart(2,'0')}
 for(let j=1;j<=5;j++){vals['a'+j]=d['b'+j]?String(j):'';vals['b'+j]=d['b'+j]||'';vals['c'+j]=d['c'+j]||'';vals['d'+j]=baht(d['r'+j]||'');vals['e'+j]=satang(d['r'+j]||'');vals['f'+j]=baht(d['u'+j]||'');vals['g'+j]=satang(d['u'+j]||'');vals['h'+j]=baht(d['z'+j]||'');vals['i'+j]=satang(d['z'+j]||'')}
 const doc=new docxtemplater(new PizZip(templateBuffer.slice(0)),{delimiters:{start:'{{',end:'}}'},nullGetter:()=>''});doc.render(vals);const blob=doc.getZip().generate({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});let u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='ชุดเอกสารจัดซื้อ_'+(d.main_date||'ทดลอง')+'.docx';a.click();setTimeout(()=>URL.revokeObjectURL(u),3000)}catch(e){alert('ส่งออก Word ไม่สำเร็จ: '+e.message)}finally{b.disabled=false}};
+let previewMode='google';
+const googleViewerURL='https://docs.google.com/gview?embedded=1&url='+encodeURIComponent('https://drivekup01.github.io/School-Procurement/procurement-template13.docx');
+function setPreviewMode(mode){
+ previewMode=mode;
+ const google=mode==='google';
+ $('googleViewer').hidden=!google;
+ $('googleViewer').style.display=google?'block':'none';
+ $('docxPages').style.display=google?'none':'block';
+ $('previewPage').style.display='none';
+ $('googleMode').classList.toggle('mode-active',google);
+ $('wordMode').classList.toggle('mode-active',!google);
+ if(google){
+   if(!$('googleViewerFrame').src)$('googleViewerFrame').src=googleViewerURL;
+   $('googleOpen').href=googleViewerURL;
+   $('zoomOut').disabled=true;$('zoomIn').disabled=true;$('zoomFit').disabled=true;
+   $('prevPage').disabled=true;$('nextPage').disabled=true;
+   $('zoomLevel').textContent='Google';$('pageCount').textContent='เลื่อนหน้าในกรอบ';
+ }else{
+   $('zoomOut').disabled=false;$('zoomIn').disabled=false;$('zoomFit').disabled=false;
+   showDocumentPage();
+ }
+}
+$('googleMode').onclick=()=>setPreviewMode('google');
+$('wordMode').onclick=()=>setPreviewMode('word');
 let zoomFactor=1,zoomAuto=true,currentPage=0;
 function showDocumentPage(){
  const host=$('docxPages'),pages=[...host.querySelectorAll('section.docx')];
@@ -183,7 +208,7 @@ function showDocumentPage(){
 }
 $('prevPage').onclick=()=>{currentPage--;showDocumentPage()};
 $('nextPage').onclick=()=>{currentPage++;showDocumentPage()};
-function fitA4(){
+function fitA4(){if(previewMode==='google')return;
  const source=$('docxPages'),pane=document.querySelector('.panel:nth-child(2) .pane');
  const page=source&&!source.hidden?source.querySelector('section.docx:not([style*="display: none"])'):null;
  const active=page||$('previewPage');
@@ -204,5 +229,5 @@ $('zoomIn').onclick=()=>{zoomAuto=false;zoomFactor=Math.min(3,zoomFactor+.15);fi
 $('zoomFit').onclick=()=>{zoomAuto=true;zoomFactor=1;fitA4()};
 window.addEventListener('resize',fitA4);window.addEventListener('load',fitA4);
 const sheetWatcher=new ResizeObserver(()=>fitA4());sheetWatcher.observe(document.querySelector('.panel:nth-child(2) .pane'));
-refresh();fitA4();
+refresh();setPreviewMode('google');
 </script></body></html>
