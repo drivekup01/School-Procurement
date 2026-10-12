@@ -102,16 +102,21 @@ for(let j=1;j<=5;j++){vals['a'+j]=d['b'+j]?String(j):'';vals['b'+j]=d['b'+j]||''
 const doc=new docxtemplater(new PizZip(templateBuffer.slice(0)),{delimiters:{start:'{{',end:'}}'},nullGetter:()=>''});doc.render(vals);const blob=doc.getZip().generate({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});let u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='ชุดเอกสารจัดซื้อ_'+(d.main_date||'ทดลอง')+'.docx';a.click();setTimeout(()=>URL.revokeObjectURL(u),3000)}catch(e){alert('ส่งออก Word ไม่สำเร็จ: '+e.message)}finally{b.disabled=false}};
 let zoomFactor=1,zoomAuto=true;
 function fitA4(){
- const source=document.getElementById('docxPages');const page=(source&&!source.hidden&&source.querySelector('.docx'))||document.getElementById('previewPage'),pane=page?.parentElement;
- if(!page||!pane)return;
- page.style.transform='none';page.style.marginLeft='0';page.style.marginBottom='0';
+ const source=document.getElementById('docxPages');
+ const pane=document.querySelector('.panel:nth-child(2) .pane');
+ const isDoc=source&&!source.hidden&&source.querySelector('section.docx');
+ const page=isDoc?source.querySelector('section.docx'):document.getElementById('previewPage');
+ const holder=isDoc?source.querySelector('.docx-wrapper'):page;
+ if(!page||!pane||!holder)return;
+ holder.style.transform='none';holder.style.marginLeft='0';holder.style.marginBottom='0';
  const w=page.offsetWidth,h=page.offsetHeight;
- const fit=Math.min(1,(pane.clientWidth-22)/w,(pane.clientHeight-28)/h);
+ const fit=Math.min(1,(pane.clientWidth-24)/w,(pane.clientHeight-35)/h);
  const scale=Math.max(.2,Math.min(2.5,zoomAuto?fit:fit*zoomFactor));
- page.style.transform='scale('+scale+')';page.style.transformOrigin='top left';
- page.style.marginLeft=Math.max(0,(pane.clientWidth-w*scale)/2)+'px';
- page.style.marginBottom=-(h*(1-scale))+15+'px';
- document.getElementById('zoomLevel').textContent=Math.round(scale*100)+'%';
+ holder.style.transform='scale('+scale+')';holder.style.transformOrigin='top left';
+ holder.style.marginLeft=Math.max(0,(pane.clientWidth-w*scale)/2)+'px';
+ const wholeHeight=holder.offsetHeight;
+ holder.style.marginBottom=-(wholeHeight*(1-scale))+15+'px';
+ $('zoomLevel').textContent=Math.round(scale*100)+'%';
 }
 document.getElementById('zoomOut').onclick=()=>{zoomAuto=false;zoomFactor=Math.max(.4,zoomFactor-.15);fitA4()};
 document.getElementById('zoomIn').onclick=()=>{zoomAuto=false;zoomFactor=Math.min(3,zoomFactor+.15);fitA4()};
