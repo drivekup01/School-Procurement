@@ -81,33 +81,17 @@ function splitWordIntoPages(bytes){
  const content=children.filter(x=>x!==tail);
  const pages=[[]];let hasExplicit=false;
  function newPage(){if(pages[pages.length-1].length)pages.push([])}
- const headingStarts=[
-  /ขอความเห็นชอบการจัดทำขอบเขต/,
-  /ขอบเขตของงานหรือรายละเอียดคุณลักษณะเฉพาะของพัสดุ/,
-  /รายละเอียดคุณลักษณะเฉพาะของพัสดุ/,
-  /รายงานขอซื้อ/,
-  /รายละเอียดแนบท้ายบันทึกข้อความ/,
-  /รายงานผลการพิจารณาและขออนุมัติสั่งซื้อ/,
-  /ประกาศโรงเรียนค่ายบางระจันวิทยาคม/,
-  /ใบตรวจรับพัสดุ/,
-  /รายงานผลการตรวจรับและอนุมัติเบิกจ่ายเงิน/,
-  /ใบเบิกพัสดุ/
- ];
- const containsBreak=n=>[...n.getElementsByTagNameNS(ns,'br')].some(e=>e.getAttributeNS(ns,'type')==='page')||n.getElementsByTagNameNS(ns,'lastRenderedPageBreak').length>0;
- // Word page breaks are authoritative. Fallback headings are document boundaries,
- // not guessed pixel cut-offs or hard-coded rows of a PDF.
- hasExplicit=content.some(containsBreak);
- let seenHeadings=new Set();
+ const hasRenderedMark=node=>node.getElementsByTagNameNS(ns,'lastRenderedPageBreak').length>0;
+ const hasHardPageBreak=node=>[...node.getElementsByTagNameNS(ns,'br')].some(e=>e.getAttributeNS(ns,'type')==='page');
+ // Use Word's saved page markers only. Headings are never page boundaries.
  for(const node of content){
-  const txt=[...node.getElementsByTagNameNS(ns,'t')].map(x=>x.textContent).join('').trim();
-  let boundary=false;
-  if(hasExplicit)boundary=containsBreak(node);
-  else if(node.localName==='p'){
-   const hit=headingStarts.findIndex(re=>re.test(txt));
-   if(hit>=0&&!seenHeadings.has(hit)){seenHeadings.add(hit);boundary=true}
-  }
-  if(boundary)newPage();
-  pages[pages.length-1].push(node.cloneNode(true));
+  const marked=hasRenderedMark(node)||hasHardPageBreak(node);
+  // The known Word pagination markers precede the next page's content.
+  if(marked)newPage();
+  const copy=node.cloneNode(true);
+  // Remove old renderer's pagination hint from each newly isolated Word part.
+  for(const e of [...copy.getElementsByTagNameNS(ns,'lastRenderedPageBreak')])e.parentNode.removeChild(e);
+  pages[pages.length-1].push(copy);
  }
  const groups=pages.filter(p=>p.length);
  if(groups.length<2)return [bytes];
