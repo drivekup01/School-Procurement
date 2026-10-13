@@ -43,8 +43,8 @@ button{font-weight:650;border-color:#dbe6f5;color:#163f75}
 .muted{color:#7384a2}
 @media(max-width:1000px){header.school-top{padding:12px 20px}.campus-banner{height:135px}.workspace-heading{padding:18px 16px 5px}main{padding:12px 16px 24px;grid-template-columns:1fr}.fields{max-height:none}.system-status{display:none}}
 @media(max-width:600px){.brand-logo{width:43px;height:43px}.brand h1{font-size:16px}.brand small{font-size:10px}.campus-shade{padding:15px 20px}.banner-title{font-size:19px}.banner-subtitle{font-size:11px}.workspace-heading h2{font-size:19px}.work-chip{display:none}}
-</style></head><body>
-<header class="school-top"><div class="brand"><img src="https://drivekup01.github.io/School-OS/assets/school-logo.svg" alt="ตราโรงเรียน" class="brand-logo"><div><h1>โรงเรียนค่ายบางระจันวิทยาคม</h1><small>ระบบจัดทำเอกสารราชการ · School Procurement</small></div></div><span id="state" class="system-status">ขั้นตอนเริ่มต้น</span></header><div class="workspace-heading"><div><h2>🏠 จัดทำเอกสารราชการ</h2><p>กรอกข้อมูลจากพารามิเตอร์ของเอกสาร แล้วตรวจสอบความถูกต้องทางด้านขวา</p></div><span class="work-chip">● พร้อมตรวจเอกสาร</span></div>
+#exportWord{background:#173f75;color:#fff;border:1px solid #173f75;padding:11px 17px;border-radius:10px;white-space:nowrap}#exportWord:hover{background:#245992}#exportWord:disabled{opacity:.65;cursor:wait}.system-status[hidden]{display:none!important}</style></head><body>
+<header class="school-top"><div class="brand"><img src="https://drivekup01.github.io/School-OS/assets/school-logo.svg" alt="ตราโรงเรียน" class="brand-logo"><div><h1>โรงเรียนค่ายบางระจันวิทยาคม</h1><small>ระบบจัดทำเอกสารราชการ · School Procurement</small></div></div><span id="state" class="system-status" hidden>ขั้นตอนเริ่มต้น</span></header><div class="workspace-heading"><div><h2>🏠 จัดทำเอกสารราชการ</h2><p>กรอกข้อมูลจากพารามิเตอร์ของเอกสาร แล้วตรวจสอบความถูกต้องทางด้านขวา</p></div></div>
 <main><section class="fields"><div class="section-head"><span class="section-icon">📝</span><div><strong>ข้อมูลสำหรับจัดทำเอกสาร</strong><small>กรอกข้อมูลตามหน้าเอกสาร</small></div></div>
 <h2>ข้อมูลเอกสาร</h2><label for="page">หน้าเอกสาร</label><select id="page" disabled><option>รอตรวจสอบจำนวนหน้าจริงจาก Word</option></select>
 <div class="group"><button type="button" id="sharedToggle" class="shared-toggle" aria-expanded="true" aria-controls="sharedBody"><span>ข้อมูลใช้ร่วมกัน</span><span id="sharedChevron" aria-hidden="true">▾</span></button><div id="sharedBody"><div id="sharedFields"><p class="muted">กำลังตรวจพารามิเตอร์...</p></div><p class="muted">ข้อมูลฝ่าย โครงการ กิจกรรมจากไฟล์งบประมาณยังไม่ได้เชื่อม</p></div></div>
@@ -52,13 +52,13 @@ button{font-weight:650;border-color:#dbe6f5;color:#163f75}
 <p class="muted" id="saveNote">ข้อมูลทดลองเก็บเฉพาะในเบราว์เซอร์นี้ ยังไม่บันทึกออนไลน์</p>
 <p><a class="ref" href="procurement-template13.docx">เปิดไฟล์ต้นฉบับ Word</a></p>
 <p><a class="ref" href="%E0%B8%AA%E0%B8%A3%E0%B8%B8%E0%B8%9B%E0%B8%87%E0%B8%9A%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%A1%E0%B8%B2%E0%B8%93%E0%B9%83%E0%B8%99%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%94%E0%B8%B3%E0%B9%80%E0%B8%99%E0%B8%B4%E0%B8%99%E0%B9%82%E0%B8%84%E0%B8%A3%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%88%E0%B8%B3%E0%B8%9B%E0%B8%B5%202570.docx">เปิดไฟล์ข้อมูลกลาง</a></p>
-</section><section class="preview"><div class="toolbar"><strong>ตัวอย่างเอกสาร PDF ต้นฉบับ</strong><span id="zoomIndicator" title="หมุนล้อเมาส์บน Preview เพื่อย่อหรือขยาย" style="font-size:12px;color:#486080;white-space:nowrap">ขยาย 100%</span><div class="toolbar-controls"><label for="viewerMode" style="margin:0">วิธีแสดง</label><select id="viewerMode"><option value="pdf">PDF ต้นฉบับ (หลัก)</option><option value="docx">แสดง Word ในเว็บ (ทดลอง)</option><option value="office">Office Viewer (เดิม)</option></select><button id="openWord">เปิดเอกสารในหน้าต่างใหม่ ↗</button></div></div><div class="document-frame"><div id="pdfRender" class="renderer-scroll" style="display:none"><p class="renderer-message">กำลังโหลด PDF...</p></div><div id="docxRender" class="renderer-scroll"><p class="renderer-message">กำลังอ่านไฟล์ต้นฉบับ Word...</p></div><iframe id="word" hidden title="ต้นฉบับ Word ผ่าน Microsoft Office viewer" referrerpolicy="no-referrer" loading="lazy"></iframe><div id="parameterOverlay" class="overlay-layer" aria-label="ตำแหน่งพารามิเตอร์ที่แก้ไข" aria-live="polite"></div></div><div class="note">โหมดหลักแสดง PDF ต้นฉบับแต่ละหน้าโดยตรง ไม่เปลี่ยนขอบกระดาษหรือการเว้นบรรทัด พารามิเตอร์ Overlay จะเพิ่มเมื่อยืนยันพิกัดจริงแล้ว ยังสามารถเปลี่ยนกลับเป็น Word Preview เดิมได้</div></section></main>
+</section><section class="preview"><div class="toolbar"><strong>ตัวอย่างเอกสาร PDF ต้นฉบับ</strong><span id="zoomIndicator" title="หมุนล้อเมาส์บน Preview เพื่อย่อหรือขยาย" style="font-size:12px;color:#486080;white-space:nowrap">ขยาย 100%</span><div class="toolbar-controls"><button id="exportWord" type="button">⬇ Export Word</button></div></div><div class="document-frame"><div id="pdfRender" class="renderer-scroll" style="display:none"><p class="renderer-message">กำลังโหลด PDF...</p></div><div id="docxRender" class="renderer-scroll"><p class="renderer-message">กำลังอ่านไฟล์ต้นฉบับ Word...</p></div><iframe id="word" hidden title="ต้นฉบับ Word ผ่าน Microsoft Office viewer" referrerpolicy="no-referrer" loading="lazy"></iframe><div id="parameterOverlay" class="overlay-layer" aria-label="ตำแหน่งพารามิเตอร์ที่แก้ไข" aria-live="polite"></div></div><div class="note">โหมดหลักแสดง PDF ต้นฉบับแต่ละหน้าโดยตรง ไม่เปลี่ยนขอบกระดาษหรือการเว้นบรรทัด พารามิเตอร์ Overlay จะเพิ่มเมื่อยืนยันพิกัดจริงแล้ว ยังสามารถเปลี่ยนกลับเป็น Word Preview เดิมได้</div></section></main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.6/dist/docx-preview.min.js"></script>
 <script>
 const raw='https://raw.githubusercontent.com/drivekup01/School-Procurement/main/procurement-template13.docx';
 const viewer='https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(raw);
 const office=document.getElementById('word');office.src=viewer;
-const stage=document.getElementById('docxRender'),mode=document.getElementById('viewerMode'),pageSelect=document.getElementById('page');
+const stage=document.getElementById('docxRender'),mode={value:'pdf'},pageSelect=document.getElementById('page');
 let pdfZoom=1,zoomTimer=null,pdfRenderSerial=0;let rendered=false,pdfDocument=null,parameterIndex=new Map(),detectedPages=new Set(),currentPDFPage=1,activeField=null,lastFormPage=0;const formValues=(()=>{try{return JSON.parse(localStorage.getItem("school-procurement-preview-values-v1")||"{}")}catch{return {}}})();const pdfStage=document.getElementById("pdfRender");
 function setMode(value){
  mode.value=value;office.hidden=value!=='office';stage.hidden=value!=='docx';pdfStage.style.display=value==='pdf'?'block':'none';
@@ -68,7 +68,7 @@ function setMode(value){
  if(value==='docx'&&rendered)setupDocxPages();
  if(value==='office'){pageSelect.disabled=true;pageSelect.replaceChildren(new Option('เลือกหน้าไม่ได้ใน Office Viewer',''));}
 }
-mode.addEventListener('change',()=>setMode(mode.value));
+
 async function renderDocx(){
  stage.innerHTML='<p class="renderer-message">กำลังอ่านไฟล์ต้นฉบับ Word...</p>';
  try {
@@ -326,7 +326,59 @@ sharedToggle.addEventListener('click',()=>{
  document.getElementById('sharedChevron').textContent=expanded?'▸':'▾';
 });
 setMode('pdf');
-document.getElementById('openWord').addEventListener('click',()=>window.open(viewer,'_blank','noopener,noreferrer'));
+document.getElementById('exportWord').addEventListener('click',exportFilledWord);
+async function exportFilledWord(){
+ const button=document.getElementById('exportWord');button.disabled=true;button.textContent='กำลังสร้าง Word...';
+ try{
+  if(!window.JSZip)throw new Error('ไม่สามารถโหลดเครื่องมือสร้าง Word ได้');
+  const response=await fetch('procurement-template13.docx',{cache:'no-store'});
+  if(!response.ok)throw new Error('ไม่สามารถอ่าน Word ต้นฉบับ');
+  const zip=await JSZip.loadAsync(await response.arrayBuffer());
+  const xmlFiles=Object.keys(zip.files).filter(name=>/^word\/(document|header\d*|footer\d*)\.xml$/.test(name));
+  let replacements=0;
+  for(const filename of xmlFiles){
+   const xml=await zip.file(filename).async('string');
+   const doc=new DOMParser().parseFromString(xml,'application/xml');
+   if(doc.querySelector('parsererror'))throw new Error('ไฟล์เอกสารมี XML ที่อ่านไม่ได้');
+   const paragraphs=Array.from(doc.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','p'));
+   let changed=false;
+   for(const paragraph of paragraphs){
+    const nodes=Array.from(paragraph.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','t'));
+    if(!nodes.length)continue;
+    let full='',offset=[];
+    for(const node of nodes){const str=node.textContent||'';for(const ch of Array.from(str)){offset.push({node,char:ch});full+=ch;}}
+    const regex=/\{\{\s*([\w.-]+)\s*\}\}/g;
+    const matches=Array.from(full.matchAll(regex)).reverse();
+    for(const match of matches){
+     const key=match[1],replacement=String(formValues[key]??'');
+     if(replacement==='')continue;
+     const start=match.index,end=start+match[0].length;
+     const first=offset[start]?.node,last=offset[end-1]?.node;
+     if(!first||!last)continue;
+     const firstStart=offset.findIndex(x=>x.node===first),lastStart=offset.findIndex(x=>x.node===last);
+     if(first===last){
+      const source=first.textContent||'';
+      first.textContent=Array.from(source).slice(0,start-firstStart).join('')+replacement+Array.from(source).slice(end-firstStart).join('');
+     }else{
+      const firstSource=Array.from(first.textContent||'');
+      const lastSource=Array.from(last.textContent||'');
+      const prefix=firstSource.slice(0,start-firstStart).join('');
+      const suffix=lastSource.slice(end-lastStart).join('');
+      first.textContent=prefix+replacement;
+      let between=false;
+      for(const n of nodes){if(n===first){between=true;continue;}if(n===last){n.textContent=suffix;break;}if(between)n.textContent='';}
+     }
+     replacements++;changed=true;
+    }
+   }
+   if(changed)zip.file(filename,new XMLSerializer().serializeToString(doc));
+  }
+  if(replacements===0)throw new Error('ยังไม่มีค่าพารามิเตอร์ที่ตรงกับข้อความใน Word ให้ส่งออก');
+  const blob=await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='เอกสารราชการ_กรอกข้อมูล.docx';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+ }catch(error){alert('ส่งออก Word ไม่สำเร็จ: '+error.message);}
+ finally{button.disabled=false;button.textContent='⬇ Export Word';}
+}
 
 /* Overlay registry: require verified rendered-page coordinates.
    Never infer a position from field order or from an Office iframe's viewport.
