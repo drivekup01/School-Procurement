@@ -1,27 +1,33 @@
 /* Page 2: same document component system as page 1. */
-.word-page2{height:297mm;min-height:297mm;overflow:hidden}
-.word-page2 .p2-head p:first-child{display:flex;align-items:baseline;gap:4mm;flex-wrap:nowrap;white-space:nowrap}
+.word-page2{--p2-spacing:12pt;height:297mm;min-height:297mm;overflow:hidden}
+.word-page2 .p2-head p:first-child{display:flex;align-items:baseline;gap:var(--p2-spacing);flex-wrap:nowrap;white-space:nowrap}
 .word-page2 .p2-head p:nth-child(2){position:relative}
 .word-page2 .p2-head .word-date{float:right;margin-right:20mm}
 .word-page2 .p2-head p:nth-child(3){border-bottom:0}
-.word-page2 .p2-rule{font-size:12pt;white-space:nowrap;overflow:hidden;line-height:1;margin-top:2mm!important;border-bottom:0!important}
-.word-page2 .p2-opening{margin-top:3mm}
-.word-page2 .p2-label{display:flex;align-items:baseline;gap:5mm}
+.word-page2 .p2-rule{font-size:12pt;white-space:nowrap;overflow:hidden;line-height:1;margin-top:var(--p2-spacing)!important;border-bottom:0!important}
+.word-page2 .p2-opening{margin-top:var(--p2-spacing)}
+.word-page2 .p2-label{display:flex;align-items:baseline;gap:var(--p2-spacing)}
 .word-page2 .p2-label strong{flex:0 0 16mm}
-.word-page2 .p2-attachment{margin-top:7mm}
+.word-page2 .p2-attachment{margin-top:var(--p2-spacing)}
 .word-page2 .p2-attachment strong{flex-basis:22mm}
 .word-page2 .p2-attachment span:last-child{margin-left:auto;white-space:nowrap;margin-right:15mm}
-.word-page2 .p2-content{margin-top:7mm}
-.word-page2 .p2-topic{margin-bottom:5mm}
+.word-page2 .p2-content{margin-top:var(--p2-spacing)}
+.word-page2 .p2-topic{margin-bottom:var(--p2-spacing)}
 .word-page2 .p2-topic p:first-child{margin-left:13mm}
 .word-page2 .p2-topic p:nth-child(2){text-indent:13mm;text-align:justify;line-height:1.12}
-.word-page2 .p2-conclusion{text-indent:13mm;margin-top:5mm}
-.word-page2 .p2-signature-area{margin-top:9mm}
+.word-page2 .p2-conclusion{text-indent:13mm;margin-top:var(--p2-spacing)}
+.word-page2 .p2-signature-area{margin-top:var(--p2-spacing)}
 .word-page2 .p2-preparer{width:75%;margin-left:auto;text-align:center}
 .word-page2 .p2-preparer p{white-space:nowrap}
-.word-page2 .p2-signatures{margin-top:12mm;gap:4mm;grid-template-columns:1fr 1fr}
+.word-page2 .p2-signatures{margin-top:var(--p2-spacing);gap:var(--p2-spacing);grid-template-columns:1fr 1fr}
 .word-page2 .p2-signatures>div p{white-space:nowrap}
-.word-page2 .p2-approval{margin:10mm 0 0 50%;text-align:left}
-.word-page2 .p2-director{margin:6mm 0 0 46%;text-align:center}
+.word-page2 .p2-approval{margin:var(--p2-spacing) 0 0 50%;text-align:left}
+.word-page2 .p2-director{margin:var(--p2-spacing) 0 0 46%;text-align:center}
 .word-page2 .p2-director p{white-space:nowrap}
 .word-page2 .p2-director p:first-child{text-align:center;margin-bottom:0}
+
+.word-page2 .p2-signatures{margin-top:var(--p2-spacing)}
+.word-page2 .p2-signatures>div{display:flex;flex-direction:column;gap:var(--p2-spacing)}
+.word-page2 .p2-preparer{display:flex;flex-direction:column;gap:var(--p2-spacing)}
+.word-page2 .p2-approval{display:flex;flex-direction:column;gap:var(--p2-spacing)}
+.word-page2 .p2-director{display:flex;flex-direction:column;gap:var(--p2-spacing)}
