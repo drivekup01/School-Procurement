@@ -1,5 +1,5 @@
-/* Page 4 table only: compact cell geometry, retain 16pt THSarabun text. */
+/* Page 4 table only: fixed grid within the A4 content area; keep 16pt text. */
 .word-generated .word-page4-table{width:100%;table-layout:fixed;border-collapse:collapse;margin:0}
-.word-generated .word-page4-table th,.word-generated .word-page4-table td{border:1px solid #111;padding:0 0.5mm;vertical-align:middle;overflow-wrap:break-word;font:16pt/1 ProcurementSarabun,"TH Sarabun New",serif}
+.word-generated .word-page4-table th,.word-generated .word-page4-table td{border:1px solid #111;padding:5px;vertical-align:top;overflow:hidden;overflow-wrap:break-word;word-wrap:break-word;font:16pt/1 ProcurementSarabun,"TH Sarabun New",serif}
 .word-generated .word-page4-table th{font-weight:normal;text-align:center}
 .word-generated .word-page4-table .word-paragraph{margin:0;white-space:pre-wrap;line-height:1}
