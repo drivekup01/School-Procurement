@@ -1,0 +1,6 @@
+/* Scope: table on document page 4 only. Grid widths come from Word tblGrid. */
+.word-generated .word-page4-table{width:100%;table-layout:fixed;border-collapse:collapse;margin:0}
+.word-generated .word-page4-table th,.word-generated .word-page4-table td{border:1px solid #111;padding:0 1mm;vertical-align:middle;overflow-wrap:break-word;font:16pt/1 ProcurementSarabun,"TH Sarabun New",serif}
+.word-generated .word-page4-table th{font-weight:normal;text-align:center}
+.word-generated .word-page4-table .word-paragraph{margin:0;white-space:pre-wrap}
+.word-generated .word-page4-table tr:nth-child(n+3):nth-child(-n+7){height:12mm}
