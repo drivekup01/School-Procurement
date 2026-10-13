@@ -308,6 +308,82 @@ function toCalendarValue(value){
  const year=Number(found[3])>2400?Number(found[3])-543:Number(found[3]);
  return year+'-'+String(m+1).padStart(2,'0')+'-'+String(Number(found[1])).padStart(2,'0');
 }
+
+let projectActivityData=null,projectActivityError='กำลังอ่านข้อมูลโครงการและกิจกรรมจาก Word...';
+const budgetSourceFile='สรุปงบประมาณในการดำเนินโครงการประจำปี 2570.docx';
+function docxCellText(cell){
+ const ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+ return Array.from(cell.getElementsByTagNameNS(ns,'p')).map(p=>Array.from(p.getElementsByTagNameNS(ns,'t')).map(t=>t.textContent).join('')).join(' ').replace(/\\s+/g,' ').trim();
+}
+async function loadProjectActivities(){
+ try{
+  if(!window.JSZip)throw new Error('ไม่สามารถเปิดเครื่องมืออ่าน Word');
+  const response=await fetch(encodeURI(budgetSourceFile),{cache:'no-store'});
+  if(!response.ok)throw new Error('ดาวน์โหลดไฟล์ข้อมูลกลางไม่ได้ ('+response.status+')');
+  const zip=await JSZip.loadAsync(await response.arrayBuffer());
+  const content=await zip.file('word/document.xml')?.async('string');
+  if(!content)throw new Error('ไม่พบตารางข้อมูลใน Word');
+  const doc=new DOMParser().parseFromString(content,'application/xml');
+  const ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const tables=Array.from(doc.getElementsByTagNameNS(ns,'tbl'));
+  const projects=new Map();
+  for(const table of tables){
+   const rows=Array.from(table.children).filter(el=>el.localName==='tr');
+   let projectColumn=-1,activityColumn=-1,currentProject='';
+   for(const row of rows){
+    const cells=Array.from(row.children).filter(el=>el.localName==='tc');
+    const texts=cells.map(docxCellText);
+    if(!texts.length)continue;
+    // Require explicit column titles; do not treat arbitrary budget rows as project/activity.
+    const pIndex=texts.findIndex(t=>/^(?:ชื่อ)?โครงการ(?:\\s*\\/.*)?$/.test(t));
+    const aIndex=texts.findIndex(t=>/^(?:ชื่อ)?กิจกรรม(?:\\s*\\/.*)?$/.test(t));
+    if(pIndex>=0&&aIndex>=0&&pIndex!==aIndex){projectColumn=pIndex;activityColumn=aIndex;currentProject='';continue;}
+    if(projectColumn<0||activityColumn<0||texts.length<=Math.max(projectColumn,activityColumn))continue;
+    const p=texts[projectColumn].replace(/^\\d+[.)]\\s*/,'').trim();
+    const a=texts[activityColumn].replace(/^\\d+[.)]\\s*/,'').trim();
+    if(p&&!/^(?:รวม|รวมทั้งสิ้น|ยอดรวม|งบประมาณ)/.test(p))currentProject=p;
+    if(!currentProject||!a||/^(?:รวม|รวมทั้งสิ้น|ยอดรวม|งบประมาณ)/.test(a))continue;
+    if(!projects.has(currentProject))projects.set(currentProject,new Set());
+    projects.get(currentProject).add(a);
+   }
+  }
+  if(!projects.size)throw new Error('ยังตรวจไม่พบคอลัมน์ “โครงการ” และ “กิจกรรม” ที่เชื่อมกันอย่างชัดเจนในตาราง Word');
+  projectActivityData=projects;projectActivityError='';
+ }catch(e){projectActivityData=null;projectActivityError=e.message;}
+ renderFormFields();
+}
+function saveFieldValue(key,value){
+ formValues[key]=value;
+ try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}
+ activeField=key;
+ if(mode.value==='pdf')renderPDFPage(currentPDFPage);
+}
+function addRelatedSelect(parent,key){
+ const wrap=document.createElement('div');wrap.className='input-wrap';
+ const label=document.createElement('label');label.textContent=thaiFieldLabel(key);wrap.append(label);
+ if(!projectActivityData){
+  const msg=document.createElement('p');msg.className='muted';msg.textContent=projectActivityError;wrap.append(msg);parent.append(wrap);return;
+ }
+ const select=document.createElement('select');select.id='field-'+key;
+ const choices=key==='project_name'?[...projectActivityData.keys()]:[...(projectActivityData.get(formValues.project_name)||[])];
+ select.append(new Option(key==='project_name'?'เลือกโครงการ':'เลือกกิจกรรม',''));
+ for(const value of choices)select.add(new Option(value,value));
+ select.value=choices.includes(formValues[key])?formValues[key]:'';
+ if(key==='activity_name'&&!formValues.project_name)select.disabled=true;
+ select.addEventListener('focus',()=>{activeField=key;highlightField(key)});
+ select.addEventListener('change',()=>{
+  if(key==='project_name'){
+   formValues.project_name=select.value;
+   const activities=projectActivityData.get(select.value)||new Set();
+   if(!activities.has(formValues.activity_name))formValues.activity_name='';
+  }else{formValues.activity_name=select.value;}
+  try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}
+  activeField=key;renderFormFields();renderPDFPage(currentPDFPage);
+ });
+ wrap.append(select);parent.append(wrap);
+}
+loadProjectActivities();
+
 function renderFormFields(){
  lastFormPage=currentPDFPage;
  const shared=document.getElementById('sharedFields'),specific=document.getElementById('pageFields');
@@ -319,6 +395,7 @@ function renderFormFields(){
   else if(pages.has(currentPDFPage))unique.push(key);
  }
  function addField(parent,key){
+  if(key==='project_name'||key==='activity_name'){addRelatedSelect(parent,key);return;}
   const wrap=document.createElement('div');wrap.className='input-wrap';
   const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;
   const input=document.createElement('input');input.id='field-'+key;input.type=calendarFieldKeys.has(key)?'date':'text';input.autocomplete='off';
