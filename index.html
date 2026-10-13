@@ -292,6 +292,22 @@ function thaiFieldLabel(key){
  if(words.every(w=>dict[w]))return words.map(w=>dict[w]).join(' ');
  return 'ข้อมูลเพิ่มเติม';
 }
+const calendarFieldKeys=new Set(['activity_date','change_end_date','change_start_date','delivery_document_date','delivery_due_date','inspection_date','main_date','purchase_order_date','purchase_report_date','announcement_date']);
+function toThaiDocumentDate(iso){
+ if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(iso))return iso;
+ const parts=iso.split('-').map(Number),dt=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]));
+ if(dt.getUTCFullYear()!==parts[0]||dt.getUTCMonth()!==parts[1]-1||dt.getUTCDate()!==parts[2])return iso;
+ return new Intl.DateTimeFormat('th-TH-u-ca-buddhist',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(dt);
+}
+function toCalendarValue(value){
+ if(/^\\d{4}-\\d{2}-\\d{2}$/.test(value))return value;
+ const months=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+ const found=String(value).trim().match(/^(\\d{1,2})\\s+([^\\s]+)\\s+(\\d{4})$/);
+ if(!found)return '';
+ const m=months.indexOf(found[2]);if(m<0)return '';
+ const year=Number(found[3])>2400?Number(found[3])-543:Number(found[3]);
+ return year+'-'+String(m+1).padStart(2,'0')+'-'+String(Number(found[1])).padStart(2,'0');
+}
 function renderFormFields(){
  lastFormPage=currentPDFPage;
  const shared=document.getElementById('sharedFields'),specific=document.getElementById('pageFields');
@@ -305,11 +321,12 @@ function renderFormFields(){
  function addField(parent,key){
   const wrap=document.createElement('div');wrap.className='input-wrap';
   const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;
-  const input=document.createElement('input');input.id='field-'+key;input.type='text';input.autocomplete='off';
-  input.placeholder='กรอก'+thaiFieldLabel(key);input.value=formValues[key]??'';
+  const input=document.createElement('input');input.id='field-'+key;input.type=calendarFieldKeys.has(key)?'date':'text';input.autocomplete='off';
+  input.placeholder=calendarFieldKeys.has(key)?'เลือกวันที่':'กรอก'+thaiFieldLabel(key);
+  input.value=calendarFieldKeys.has(key)?toCalendarValue(formValues[key]??''):(formValues[key]??'');
   input.addEventListener('focus',()=>{activeField=key;highlightField(key)});
   input.addEventListener('input',()=>{
-   formValues[key]=input.value;
+   formValues[key]=calendarFieldKeys.has(key)?toThaiDocumentDate(input.value):input.value;
    try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}
    activeField=key;
    renderPDFPage(currentPDFPage);
