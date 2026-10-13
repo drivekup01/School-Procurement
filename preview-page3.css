@@ -1,9 +1,11 @@
-/* Page 3 uses the same A4 and THSarabun foundation as pages 1–2. */
+/* Page 3: Word No Spacing style has 0pt paragraph spacing and single line spacing. */
 .word-page3{height:297mm;min-height:297mm;overflow:hidden}
 .word-page3 .p3-layout{display:flex;flex-direction:column;gap:12pt}
-.word-page3 .p3-layout p{margin:0;line-height:1.12}
+.word-page3 .p3-layout p{margin:0;line-height:1}
 .word-page3 .p3-title{text-align:center;font-weight:bold}
+.word-page3 .p3-choices,.word-page3 .p3-mains,.word-page3 .p3-subs{display:flex;flex-direction:column;gap:0}
 .word-page3 .p3-choice{padding-left:12mm}
 .word-page3 .p3-rule{text-align:center;white-space:nowrap;overflow:hidden}
-.word-page3 .p3-main{text-align:justify}
-.word-page3 .p3-sub{padding-left:9mm;text-indent:-9mm;text-align:justify}
+.word-page3 .p3-main{text-align:left}
+.word-page3 .p3-sub{padding-left:9mm;text-indent:-9mm;text-align:left}
+.word-page3 .p3-sub-cont{padding-left:9mm;text-align:left}
