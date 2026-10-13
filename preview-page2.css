@@ -1,39 +1,27 @@
-/* Page 2 is reconstructed from the actual DOCX paragraphs, one A4 sheet. */
-.word-page2{position:relative;box-sizing:border-box;width:210mm;height:297mm;min-height:297mm;padding:10mm 13mm 10mm 25mm;overflow:hidden;font:16pt/1.12 ProcurementSarabun,"TH Sarabun New",serif}
-.word-page2 .p2-heading{position:absolute;left:25mm;right:13mm;top:10mm;height:18mm;display:flex;align-items:center;justify-content:center}
-.word-page2 .p2-heading img{position:absolute;left:0;top:0;width:15mm;height:15mm;object-fit:contain}
-.word-page2 .p2-heading h1{font:700 22pt/1 ProcurementSarabun,"TH Sarabun New",serif;margin:0}
-.word-page2 .p2-line{position:absolute;left:25mm;right:13mm;margin:0!important;line-height:1.12;white-space:normal;overflow-wrap:normal;text-indent:0}
-.word-page2 .p2-line-1{top:27mm;white-space:nowrap;font-size:15pt}
-.word-page2 .p2-line-2{top:33.5mm;white-space:nowrap}
-.word-page2 .p2-line-3{top:40mm;white-space:nowrap}
-.word-page2 .p2-line-4{top:47.5mm;white-space:nowrap;overflow:hidden;font-size:12pt}
-.word-page2 .p2-line-5{top:54.5mm}
-.word-page2 .p2-line-6{top:65.5mm}
-.word-page2 .p2-line-7{top:76mm;left:38mm;font-weight:bold}
-.word-page2 .p2-line-8{top:82.5mm;text-indent:13mm;text-align:justify}
-.word-page2 .p2-line-9{top:106mm;left:38mm;font-weight:bold}
-.word-page2 .p2-line-10{top:113mm;text-indent:13mm;text-align:justify}
-.word-page2 .p2-line-11{top:137mm;left:38mm;font-weight:bold}
-.word-page2 .p2-line-12{top:144mm;text-indent:13mm;text-align:justify}
-.word-page2 .p2-line-13{top:163mm;left:38mm}
-.word-page2 .p2-line-14{top:178mm;left:80mm;right:15mm;white-space:nowrap}
-.word-page2 .p2-line-15{top:184mm;left:80mm;right:15mm;white-space:nowrap}
-.word-page2 .p2-line-17{top:202mm;left:37mm;right:17mm;white-space:nowrap}
-.word-page2 .p2-line-18{top:209mm;left:40mm;right:17mm;white-space:nowrap}
-.word-page2 .p2-line-20{top:224mm;left:100mm}
-.word-page2 .p2-line-21{top:231mm;left:100mm}
-.word-page2 .p2-line-23{top:245mm;left:90mm;right:25mm;text-align:center}
-.word-page2 .p2-line-24{top:252mm;left:90mm;right:25mm;text-align:center}
-.word-page2 .p2-line-25{top:259mm;left:90mm;right:25mm;text-align:center}
-.word-page2 .p2-line-26{top:266mm;left:90mm;right:25mm;text-align:center}
-
-/* Word tab-stop equivalents for the page-2 heading and signature rows. */
-.word-page2 .p2-line-1,.word-page2 .p2-line-2,.word-page2 .p2-line-3,.word-page2 .p2-line-5,.word-page2 .p2-line-6{display:flex;align-items:baseline;gap:3mm}
-.word-page2 .p2-line-1 span:first-child,.word-page2 .p2-line-2 span:first-child,.word-page2 .p2-line-3 span:first-child,.word-page2 .p2-line-5 span:first-child,.word-page2 .p2-line-6 span:first-child{font-weight:bold;flex:none}
-.word-page2 .p2-line-1 span:last-child{margin-left:auto}
-.word-page2 .p2-line-2 span:last-child{margin-left:39mm}
-.word-page2 .p2-line-6 span:last-child{margin-left:auto;margin-right:18mm}
-.word-page2 .p2-line-17,.word-page2 .p2-line-18{display:grid;grid-template-columns:1fr 1fr;gap:12mm;text-align:center}
-.word-page2 .p2-line-17 span,.word-page2 .p2-line-18 span{display:block;white-space:nowrap}
-.word-page2 .p2-line-17 span:first-child,.word-page2 .p2-line-18 span:first-child{margin-left:-4mm}
+/* Page 2: same document component system as page 1. */
+.word-page2{height:297mm;min-height:297mm;overflow:hidden}
+.word-page2 .p2-head p:first-child{display:flex;align-items:baseline;gap:4mm;flex-wrap:nowrap;white-space:nowrap}
+.word-page2 .p2-head p:nth-child(2){position:relative}
+.word-page2 .p2-head .word-date{float:right;margin-right:20mm}
+.word-page2 .p2-head p:nth-child(3){border-bottom:0}
+.word-page2 .p2-rule{font-size:12pt;white-space:nowrap;overflow:hidden;line-height:1;margin-top:2mm!important;border-bottom:0!important}
+.word-page2 .p2-opening{margin-top:3mm}
+.word-page2 .p2-label{display:flex;align-items:baseline;gap:5mm}
+.word-page2 .p2-label strong{flex:0 0 16mm}
+.word-page2 .p2-attachment{margin-top:7mm}
+.word-page2 .p2-attachment strong{flex-basis:22mm}
+.word-page2 .p2-attachment span:last-child{margin-left:auto;white-space:nowrap;margin-right:15mm}
+.word-page2 .p2-content{margin-top:7mm}
+.word-page2 .p2-topic{margin-bottom:5mm}
+.word-page2 .p2-topic p:first-child{margin-left:13mm}
+.word-page2 .p2-topic p:nth-child(2){text-indent:13mm;text-align:justify;line-height:1.12}
+.word-page2 .p2-conclusion{text-indent:13mm;margin-top:5mm}
+.word-page2 .p2-signature-area{margin-top:9mm}
+.word-page2 .p2-preparer{width:75%;margin-left:auto;text-align:center}
+.word-page2 .p2-preparer p{white-space:nowrap}
+.word-page2 .p2-signatures{margin-top:12mm;gap:4mm;grid-template-columns:1fr 1fr}
+.word-page2 .p2-signatures>div p{white-space:nowrap}
+.word-page2 .p2-approval{margin:10mm 0 0 50%;text-align:left}
+.word-page2 .p2-director{margin:6mm 0 0 46%;text-align:center}
+.word-page2 .p2-director p{white-space:nowrap}
+.word-page2 .p2-director p:first-child{text-align:center;margin-bottom:0}
