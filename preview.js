@@ -41,7 +41,7 @@ function paragraphHTML(p){
  if(hanging)el.style.textIndent=(-hanging/20)+'pt';
  const before=Number(wa(spacing,'before')),after=Number(wa(spacing,'after'));
  if(before)el.style.marginTop=(before/20)+'pt';
- el.style.marginBottom=(after?after/20:12)+'pt';
+ el.style.marginBottom=(wa(spacing,'after')!==''?after/20:0)+'pt';
  const line=Number(wa(spacing,'line')),lineRule=wa(spacing,'lineRule');
  if(line){if(lineRule==='exact')el.style.lineHeight=(line/20)+'pt';else if(lineRule==='atLeast')el.style.lineHeight='max(1.12em,'+(line/20)+'pt)';else el.style.lineHeight=String(line/240)}
  for(const run of Array.from(p.getElementsByTagNameNS(WORD_NS,'r'))){
