@@ -293,20 +293,24 @@ function thaiFieldLabel(key){
  return 'ข้อมูลเพิ่มเติม';
 }
 const calendarFieldKeys=new Set(['activity_date','change_end_date','change_start_date','delivery_document_date','delivery_due_date','inspection_date','main_date','purchase_order_date','purchase_report_date','announcement_date']);
-function toThaiDocumentDate(iso){
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(iso))return iso;
- const parts=iso.split('-').map(Number),dt=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]));
- if(dt.getUTCFullYear()!==parts[0]||dt.getUTCMonth()!==parts[1]-1||dt.getUTCDate()!==parts[2])return iso;
- return new Intl.DateTimeFormat('th-TH-u-ca-buddhist',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(dt);
+function toThaiDocumentDate(value){
+ const iso=String(value||'').trim();
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(iso))return iso;
+ const [year,month,day]=iso.split('-').map(Number);
+ const dt=new Date(Date.UTC(year,month-1,day));
+ if(dt.getUTCFullYear()!==year||dt.getUTCMonth()!==month-1||dt.getUTCDate()!==day)return iso;
+ const months=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+ return day+' '+months[month-1]+' '+(year+543);
 }
 function toCalendarValue(value){
- if(/^\\d{4}-\\d{2}-\\d{2}$/.test(value))return value;
+ const input=String(value||'').trim();
+ if(/^\d{4}-\d{2}-\d{2}$/.test(input))return input;
  const months=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
- const found=String(value).trim().match(/^(\\d{1,2})\\s+([^\\s]+)\\s+(\\d{4})$/);
- if(!found)return '';
- const m=months.indexOf(found[2]);if(m<0)return '';
- const year=Number(found[3])>2400?Number(found[3])-543:Number(found[3]);
- return year+'-'+String(m+1).padStart(2,'0')+'-'+String(Number(found[1])).padStart(2,'0');
+ const match=input.match(/^(\d{1,2})\s+(\S+)\s+(\d{4})$/);
+ if(!match)return '';
+ const month=months.indexOf(match[2]);if(month<0)return '';
+ const year=Number(match[3])>2400?Number(match[3])-543:Number(match[3]);
+ return year+'-'+String(month+1).padStart(2,'0')+'-'+String(Number(match[1])).padStart(2,'0');
 }
 
 const departments=[
@@ -423,13 +427,14 @@ function renderFormFields(){
   const wrap=document.createElement('div');wrap.className='input-wrap';
   const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;
   if(calendarFieldKeys.has(key)){
-   const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:6px';
-   const display=document.createElement('input');display.id='field-'+key;display.type='text';display.readOnly=true;display.placeholder='เลือกวันที่';display.style.flex='1';display.value=toThaiDocumentDate(formValues[key]||'');
-   const picker=document.createElement('input');picker.type='date';picker.setAttribute('aria-label','เลือก'+thaiFieldLabel(key));picker.style.cssText='width:44px;min-width:44px;padding:8px 2px;cursor:pointer';picker.value=toCalendarValue(formValues[key]||'');
+   const field=document.createElement('div');field.style.cssText='position:relative;width:100%';
+   const display=document.createElement('input');display.id='field-'+key;display.type='text';display.readOnly=true;display.placeholder='เลือกวันที่';display.style.cssText='width:100%;padding-right:42px;cursor:pointer';display.value=toThaiDocumentDate(formValues[key]||'');
+   const picker=document.createElement('input');picker.type='date';picker.setAttribute('aria-label','เลือก'+thaiFieldLabel(key));picker.value=toCalendarValue(formValues[key]||'');picker.style.cssText='position:absolute;right:12px;top:50%;width:20px;height:24px;transform:translateY(-50%);opacity:0;pointer-events:none';
+   const button=document.createElement('button');button.type='button';button.textContent='▣';button.setAttribute('aria-label','เปิดปฏิทิน');button.style.cssText='position:absolute;right:7px;top:50%;transform:translateY(-50%);border:0;background:transparent;width:32px;height:32px;padding:0;font-size:20px;color:#234e86;cursor:pointer';
    const choose=()=>{try{picker.showPicker()}catch{picker.focus();picker.click()}};
-   display.addEventListener('click',choose);
+   button.addEventListener('click',choose);display.addEventListener('click',choose);
    picker.addEventListener('change',()=>{const value=toThaiDocumentDate(picker.value);display.value=value;formValues[key]=value;try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}activeField=key;renderPDFPage(currentPDFPage)});
-   row.append(display,picker);wrap.append(label,row);parent.appendChild(wrap);return;
+   field.append(display,picker,button);wrap.append(label,field);parent.appendChild(wrap);return;
   }
   const input=document.createElement('input');input.id='field-'+key;input.type='text';input.autocomplete='off';
   input.placeholder='กรอก'+thaiFieldLabel(key);input.value=formValues[key]??'';
