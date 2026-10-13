@@ -38,15 +38,15 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 
 
 /* --- Single source of truth: Preview paper/layout (2026-10-13) --- */
-:root{--preview-paper-w:210mm;--preview-paper-h:297mm;--preview-top:5mm;--preview-bottom:10mm;--preview-left:22.5mm;--preview-right:13.5mm;--preview-blank:10pt}
+:root{--preview-paper-w:210mm;--preview-paper-h:297mm;--preview-top:10mm;--preview-bottom:10mm;--preview-left:22.5mm;--preview-right:13.5mm;--preview-blank:10pt}
 .panel:nth-child(2) .pane{background:#e4eaf0;overflow:auto;min-height:0;padding:6px 8px}
 .preview-zoom{display:flex;align-items:center;gap:4px}
 .preview-zoom button{padding:4px 9px;min-width:25px}
 .preview-zoom span{font-size:11px;min-width:36px;text-align:center}
 .preview-zoom button:disabled{opacity:.35;cursor:default}
 #previewPage{width:var(--preview-paper-w);height:var(--preview-paper-h);padding:var(--preview-top) var(--preview-right) var(--preview-bottom) var(--preview-left);box-sizing:border-box;background:white;position:relative;box-shadow:0 3px 12px #22334420;transform-origin:top left}
-#preview{font-family:ths,'THSarabunPSK',serif;font-size:16pt;line-height:1.12;color:#111}
-#preview h3{text-align:center;font-size:24pt;margin:0 0 1em}
+#preview{font-family:'THSarabunPSK',ths,serif;font-size:16pt;line-height:26pt;color:#111}
+#preview h3,#docxPages section.docx .memo-title,#docxPages section.docx .memo-title *{text-align:center;font-family:'THSarabunPSK',ths,serif!important;font-size:22pt!important;line-height:32pt!important;margin:0 0 1em}
 #preview .line{padding:2mm 0}
 #preview .memohead{position:relative;margin-bottom:1em}
 #preview .memohead img{position:absolute;left:0;top:0;width:15mm;height:15mm;object-fit:contain}
@@ -63,10 +63,10 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 #docxPages section.docx{width:var(--preview-paper-w)!important;min-width:var(--preview-paper-w)!important;max-width:var(--preview-paper-w)!important;height:var(--preview-paper-h)!important;min-height:var(--preview-paper-h)!important;max-height:var(--preview-paper-h)!important;box-sizing:border-box!important;padding:var(--preview-top) var(--preview-right) var(--preview-bottom) var(--preview-left)!important;margin:0!important;background:white!important;position:relative!important;overflow:visible!important;box-shadow:0 3px 12px #22334420!important;border:1px solid #d0d9e3!important}
 #docxPages section.docx[style*="display: none"]{display:none!important}
 #docxPages section.docx>header,#docxPages section.docx>footer{display:none!important}
-#docxPages section.docx .docx-page-content{max-width:100%!important}
+#docxPages section.docx .docx-page-content{max-width:100%!important}#docxPages section.docx p,#docxPages section.docx td,#docxPages section.docx span{font-family:'THSarabunPSK',ths,serif!important;font-size:16pt!important;line-height:26pt!important}
 #docxPages .word-empty-spacer{height:var(--preview-blank)!important;min-height:var(--preview-blank)!important;max-height:var(--preview-blank)!important;line-height:var(--preview-blank)!important;margin:0!important;padding:0!important;border:0!important;box-sizing:border-box!important}
 #docxPages .word-empty-spacer *{line-height:inherit!important}
-#docxPages .docx-edit-field{display:inline-block!important;font-family:ths,'THSarabunPSK',serif!important;font-size:16pt!important;line-height:1!important;height:1.2em!important;min-width:28px!important;max-width:350px!important;padding:0 2px!important;margin:0!important;border:0!important;border-bottom:1px dashed #3185b9!important;vertical-align:baseline!important;box-sizing:border-box!important;background:#eaf6ff!important;color:#172c3f!important}
+#docxPages .docx-edit-field{display:inline-block!important;font-family:'THSarabunPSK',ths,serif!important;font-size:16pt!important;line-height:26pt!important;height:1.2em!important;min-width:28px!important;max-width:350px!important;padding:0 2px!important;margin:0!important;border:0!important;border-bottom:1px dashed #3185b9!important;vertical-align:baseline!important;box-sizing:border-box!important;background:#eaf6ff!important;color:#172c3f!important}
 #docxPages .docx-edit-field:focus{outline:2px solid #2178b5!important;background:#fff!important}
 #docxPages .page-overflow{outline:2px solid #c43d30!important}
 #googleViewer{display:none!important}
@@ -175,6 +175,7 @@ function attachPreviewInputs(host){
 function normalizeBlankLineSpacing(host){
  // The 10pt rule is applied to empty Word paragraphs only, not to text or signatures.
  host.querySelectorAll('section.docx p').forEach(p=>{
+  if(p.textContent.trim()==='บันทึกข้อความ')p.classList.add('memo-title');
   if(!p.textContent.trim()&&!p.querySelector('img,svg,table,input,object')){
    p.classList.add('word-empty-spacer');
   }
