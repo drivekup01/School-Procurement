@@ -191,7 +191,7 @@ async function markPDFParameters(page,viewport,layer,pageNumber){
    if(entered!==undefined&&entered!==''){
      marker.classList.add('has-value');marker.replaceChildren();
      marker.style.width='auto';marker.style.minWidth=(right-x)+'px';
-     const text=document.createElement('span');text.className='replacement-text';text.textContent=entered;
+     const text=document.createElement('span');text.className='replacement-text';text.textContent=calendarFieldKeys.has(match[1])?toThaiDocumentDate(entered):entered;
      marker.append(text);
    }
    if(activeField===match[1])marker.classList.add('active');
