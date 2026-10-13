@@ -35,17 +35,24 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 @media print{body{font-size:initial}main{display:block;height:auto;padding:0}.panel{height:auto;overflow:visible}.panel:nth-child(2) .pane{padding:0}}
 .preview-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.preview-heading h2{margin:0}.preview-expanded main{grid-template-columns:minmax(0,23%) minmax(0,77%)}.preview-expanded .panel:first-child .pane{padding:8px}.preview-expanded #previewPage{transition:none}@media(max-width:900px){.preview-expanded main{display:block}}@media print{.preview-expanded main{display:block}}
 .preview-zoom{display:flex;align-items:center;gap:4px}.preview-zoom button{padding:4px 9px;min-width:25px}.preview-zoom span{font-size:11px;min-width:36px;text-align:center}@media print{.preview-zoom{display:none}#previewPage{transform:none!important;margin-left:0!important;margin-bottom:0!important}}
-#docxPages{background:#e4eaf0;padding:0!important;max-width:none;overflow:visible}#docxPages .docx-wrapper{padding:0!important;background:transparent!important;display:block!important}#docxPages section.docx{box-shadow:0 3px 12px #22334420!important;margin:0 0 12px!important;transform-origin:top left!important}#docxPages section.docx:not(:first-child){margin-top:18px!important}@media print{#docxPages section.docx{transform:none!important;margin:0!important;break-after:page}#previewPage{display:none!important}}
-.preview-zoom #pageCount{font-size:11px;white-space:nowrap;min-width:38px;text-align:center}.preview-zoom button:disabled{opacity:.35;cursor:default}@media print{#docxPages section.docx{display:block!important}#docxPages .docx-wrapper{transform:none!important;margin:0!important}}
-
-
-#docxPages section.docx{box-sizing:border-box!important;border:1px solid #d0d9e3!important;overflow:hidden!important}#docxPages .docx-wrapper{width:max-content;max-width:none!important}#docxPages section.docx:not([style*="display: none"]){display:block}#docxPages section.docx *{max-width:none}@media print{#docxPages section.docx{border:none!important;overflow:visible!important}}
-.docx-split-wrapper{display:block!important;padding:0!important}#docxPages section.docx{margin:0!important;flex-shrink:0}#docxPages section.docx[style*="display: none"]{display:none!important}
+/* Preview navigation (paper layout is defined once in the A4 block below) */
+.preview-zoom #pageCount{font-size:11px;white-space:nowrap;min-width:38px;text-align:center}
+.preview-zoom button:disabled{opacity:.35;cursor:default}
+.docx-split-wrapper{display:block!important}
+#docxPages section.docx[style*="display: none"]{display:none!important}
 .viewer-choice{display:flex;gap:5px;flex-wrap:wrap}.viewer-choice button{font-size:12px!important;padding:7px 10px!important}.viewer-choice .mode-active{background:#126ca5!important;color:#fff!important}#googleViewer[hidden]{display:none!important}#googleViewer{padding:0 5px}#googleViewerFrame{width:100%;height:calc(100vh - 340px);min-height:480px;border:0;background:white}#googleViewer .note{margin:10px 0 2px}#googleOpen{font-size:13px;display:inline-block;margin-bottom:8px}
 .docx-edit-field{display:inline-block!important;width:auto;min-width:70px!important;max-width:430px!important;padding:1px 3px!important;margin:0 2px!important;border:1px dashed #3185b9!important;border-radius:3px!important;background:#eaf6ff!important;color:#172c3f!important;font-family:ths,'Sarabun',sans-serif!important;font-size:16pt!important;line-height:1.1!important;vertical-align:baseline!important;box-sizing:border-box!important}.docx-edit-field:focus{outline:2px solid #2178b5!important;background:white!important}@media print{.docx-edit-field{border:none!important;background:none!important}}
 .google-api-test{border:1px solid #bcdacf;background:#f1faf6;padding:12px;border-radius:9px;margin:12px 0;font-size:13px}.google-api-test p{margin:6px 0}.google-api-test a{font-weight:600}
 .apps-script-link{display:inline-block;padding:10px 14px;border-radius:8px;background:#147b55;color:white!important;text-decoration:none;font-size:13px;font-weight:700}.apps-script-link:hover{background:#0b6444}
 
+#docxPages .docx-wrapper{padding:0!important;background:transparent!important;display:block!important}
+#docxPages section.docx{box-shadow:0 3px 12px #22334420!important;border:1px solid #d0d9e3!important}
+#docxPages .word-empty-spacer{
+ box-sizing:border-box!important;height:10pt!important;min-height:10pt!important;
+ max-height:10pt!important;line-height:10pt!important;
+ margin:0!important;padding:0!important;border:0!important;
+}
+#docxPages .word-empty-spacer *{line-height:inherit!important}
 /* Uniform government A4 sheets: explicit approved layout, not implicit DOCX CSS */
 :root{--paper-width:210mm;--paper-height:297mm;--paper-top:5mm;--paper-bottom:10mm;--paper-left:22.5mm;--paper-right:13.5mm}
 #docxPages section.docx{
@@ -64,7 +71,7 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
  #docxPages section.docx{width:210mm!important;height:297mm!important;max-height:none!important;border:0!important;break-after:page!important}
  #docxPages section.docx[style*="display: none"]{display:block!important}
 }
-#docxPages .page-overflow{outline:2px solid #c34f39!important;outline-offset:1px}#pageAudit{font-size:11px;color:#94533f;margin:4px 0}#docxPages section.docx p:empty{min-height:0}
+#docxPages .page-overflow{outline:2px solid #c34f39!important;outline-offset:1px}#pageAudit{font-size:11px;color:#94533f;margin:4px 0}
 .left-exports{position:sticky;bottom:0;background:#fff;padding:9px 4px 3px;z-index:5;border-top:1px solid #dce7ef;box-shadow:0 -4px 12px #fff9}.left-exports button{font-size:12px;padding:8px 10px}#docxPages .docx-edit-field{min-width:28px!important;max-width:350px!important;padding:0 2px!important;margin:0!important;line-height:1!important;height:1.2em!important;border-width:0 0 1px!important;vertical-align:baseline!important}#docxPages .docx-edit-field:placeholder-shown{background:transparent!important;border-bottom:1px dashed #a7c8da!important}#docxPages section.docx p{max-width:100%}#docxPages .page-overflow{outline:2px solid #c43d30!important}
 #status,#pageAudit{display:none!important}
 #docxPages section.docx > header,#docxPages section.docx > footer{display:none!important}
@@ -162,45 +169,25 @@ function attachPreviewInputs(host){
  }
 }
 function normalizeBlankLineSpacing(host){
- // Limit spacing from empty Word paragraphs; preserve every text run and signature.
+ // The 10pt rule is applied to empty Word paragraphs only, not to text or signatures.
  host.querySelectorAll('section.docx p').forEach(p=>{
-  if(p.textContent.trim()||p.querySelector('img,svg,table,input,object'))return;
-  p.style.lineHeight='10pt';
-  p.style.minHeight='0';
-  p.style.marginTop='0';
-  p.style.marginBottom='0';
-  p.style.paddingTop='0';
-  p.style.paddingBottom='0';
+  if(!p.textContent.trim()&&!p.querySelector('img,svg,table,input,object')){
+   p.classList.add('word-empty-spacer');
+  }
  });
 }
 function auditPageSpacing(host){
- const sheets=[...host.querySelectorAll('section.docx')],issues=[];
- const yBottom=el=>{const r=el.getBoundingClientRect();return r.bottom};
- sheets.forEach((page,index)=>{
-  const content=page.querySelector('article')||page.querySelector('.docx-page-content')||page;
-  const elements=[...content.querySelectorAll('p,table')];
-  const allowed=()=>{const p=page.getBoundingClientRect();const style=getComputedStyle(page);return p.bottom-parseFloat(style.paddingBottom||0)};
-  const extent=()=>Math.max(0,...elements.filter(e=>e.getClientRects().length).map(yBottom));
-  // Preserve content and font sizes. Only reduce empty-line spacing if a page overflows.
-  let over=extent()-allowed();
-  if(over>2){
-   const blanks=elements.filter(p=>p.tagName==='P'&&!p.textContent.trim()&&!p.querySelector('img,svg,table,input'));
-   // The blank paragraphs are already present in Word; reduce their display height only as necessary.
-   for(const p of blanks){
-    if(over<=2)break;
-    const before=p.getBoundingClientRect().height;
-    const style=getComputedStyle(p);
-    p.style.marginTop='0';p.style.marginBottom='0';
-    p.style.paddingTop='0';p.style.paddingBottom='0';
-    // Standard blank-paragraph spacing stays 10pt on every page.
-    over=extent()-allowed();
-    if(before-p.getBoundingClientRect().height<.5)continue;
-   }
-  }
-  // Report remaining overflow visibly; do not crop or silently shrink text.
-  if(over>2){page.classList.add('page-overflow');issues.push('หน้า '+(index+1)+' เกิน '+Math.ceil(over)+'px')}else page.classList.remove('page-overflow');
+ // Read-only audit; never modify spacing again after the 10pt rule.
+ const problems=[];
+ [...host.querySelectorAll('section.docx')].forEach((page,i)=>{
+  const bounds=page.getBoundingClientRect();
+  const limit=bounds.bottom-(parseFloat(getComputedStyle(page).paddingBottom)||0);
+  const visible=[...page.querySelectorAll('p,table')].filter(el=>el.getClientRects().length);
+  const bottom=visible.reduce((v,el)=>Math.max(v,el.getBoundingClientRect().bottom),bounds.top);
+  page.classList.toggle('page-overflow',bottom>limit+2);
+  if(bottom>limit+2)problems.push('หน้า '+(i+1));
  });
- const status=$('pageAudit');if(status)status.textContent=issues.length?'ตรวจพบเนื้อหาล้น: '+issues.join(' • '):'';
+ const msg=$('pageAudit');if(msg)msg.textContent=problems.length?'เนื้อหาล้นหน้าที่ '+problems.join(', '):'';
 }
 
 async function renderWordPages(blob,host,job){
