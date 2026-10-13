@@ -63,6 +63,7 @@ function paragraphHTML(p){
  return el;
 }
 /* Page 4 table only: preserve the original DOCX grid and merged cells. */
+let sourcePage4Table=null;
 function page4TableHTML(tbl){
  const table=document.createElement('table');table.className='word-table word-page4-table';
  const grid=wn(tbl,'tblGrid'),widths=wns(grid,'gridCol').map(c=>Number(wa(c,'w'))||1);
@@ -187,7 +188,7 @@ function paginateWord(groups){
    const page=buildPage(group);
    const table=page.querySelector('table.word-table');
    if(table){
-    const sourceTable=Array.from(document.getElementsByTagNameNS(WORD_NS,'tbl')).find(t=>Array.from(t.getElementsByTagNameNS(WORD_NS,'t')).some(n=>(n.textContent||'').includes('รายละเอียดของวัสดุที่จะซื้อ/จ้าง')));
+    const sourceTable=sourcePage4Table;
     if(sourceTable)table.replaceWith(page4TableHTML(sourceTable));
    }
    return page;
@@ -208,6 +209,7 @@ async function loadPDF(){
   const doc=new DOMParser().parseFromString(await file.async('string'),'application/xml');
   if(doc.querySelector('parsererror'))throw Error('อ่าน XML ของ Word ไม่สำเร็จ');
   const body=doc.getElementsByTagNameNS(WORD_NS,'body')[0];
+  sourcePage4Table=Array.from(body.getElementsByTagNameNS(WORD_NS,'tbl')).find(t=>Array.from(t.getElementsByTagNameNS(WORD_NS,'t')).some(n=>(n.textContent||'').includes('รายละเอียดของวัสดุที่จะซื้อ/จ้าง')))||null;
   const groups=wordBlocks(body);
   if(groups.length!==11)throw Error('แบ่งหน้า Word ได้ '+groups.length+' หน้า แต่ต้นฉบับมี 11 หน้า');
   await document.fonts?.load('16pt ProcurementSarabun');
