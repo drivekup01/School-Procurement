@@ -45,10 +45,29 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 .docx-edit-field{display:inline-block!important;width:auto;min-width:70px!important;max-width:430px!important;padding:1px 3px!important;margin:0 2px!important;border:1px dashed #3185b9!important;border-radius:3px!important;background:#eaf6ff!important;color:#172c3f!important;font-family:ths,'Sarabun',sans-serif!important;font-size:16pt!important;line-height:1.1!important;vertical-align:baseline!important;box-sizing:border-box!important}.docx-edit-field:focus{outline:2px solid #2178b5!important;background:white!important}@media print{.docx-edit-field{border:none!important;background:none!important}}
 .google-api-test{border:1px solid #bcdacf;background:#f1faf6;padding:12px;border-radius:9px;margin:12px 0;font-size:13px}.google-api-test p{margin:6px 0}.google-api-test a{font-weight:600}
 .apps-script-link{display:inline-block;padding:10px 14px;border-radius:8px;background:#147b55;color:white!important;text-decoration:none;font-size:13px;font-weight:700}.apps-script-link:hover{background:#0b6444}
+
+/* Uniform government A4 sheets: explicit approved layout, not implicit DOCX CSS */
+:root{--paper-width:210mm;--paper-height:297mm;--paper-top:15mm;--paper-bottom:10mm;--paper-left:22.5mm;--paper-right:13.5mm}
+#docxPages section.docx{
+ width:var(--paper-width)!important;min-width:var(--paper-width)!important;max-width:var(--paper-width)!important;
+ height:var(--paper-height)!important;min-height:var(--paper-height)!important;max-height:var(--paper-height)!important;
+ padding:var(--paper-top) var(--paper-right) var(--paper-bottom) var(--paper-left)!important;
+ background:#fff!important;box-sizing:border-box!important;overflow:hidden!important;position:relative!important;
+ margin:0!important;
+}
+#docxPages section.docx .docx-page-content{max-width:100%!important}
+#docxPages .docx-wrapper{width:var(--paper-width)!important;min-width:var(--paper-width)!important;margin:0!important}
+#docxPages .docx-edit-field{font-family:ths,'THSarabunPSK',serif!important;font-size:16pt!important}
+#googleViewer{display:none!important}
+@media print{
+ @page{size:A4;margin:0}
+ #docxPages section.docx{width:210mm!important;height:297mm!important;max-height:none!important;border:0!important;break-after:page!important}
+ #docxPages section.docx[style*="display: none"]{display:block!important}
+}
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
 <main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><div class="note">ชื่อพารามิเตอร์เชื่อมกับ Word ต้นฉบับที่คุณกำหนดไว้ ไม่ต้องกรอกชื่อซ้ำทุกหน้า</div><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar"><button id="save" class="secondary">บันทึกข้อมูลในเครื่อง</button><button id="reset" class="secondary">ล้างข้อมูลทดลอง</button></div></div></section>
-<section class="panel"><div class="rightsticky"><div class="preview-heading"><h2>ตรวจข้อมูลก่อนส่งออก</h2><div class="viewer-choice"><button id="googleMode" type="button" class="secondary">Google Docs Viewer</button><button id="wordMode" type="button" class="secondary">Word + CSS</button></div><div class="preview-zoom"><button id="zoomOut" type="button" class="secondary" title="ย่อกระดาษ">−</button><span id="zoomLevel" aria-live="polite">พอดีหน้า</span><button id="zoomIn" type="button" class="secondary" title="ขยายกระดาษ">+</button><button id="zoomFit" type="button" class="secondary">พอดีหน้า</button><button id="prevPage" type="button" class="secondary">◀</button><span id="pageCount">1 / 1</span><button id="nextPage" type="button" class="secondary">▶</button></div></div><div class="toolbar"><a href="https://script.google.com/macros/s/AKfycbwviP3VFqwYVKotaUkSPsIMfXhUtsvobgIWkO8Wrvy2cRuRmwx_C1nWPlpVQ4FnuJcgjw/exec" target="_blank" rel="noopener noreferrer" class="apps-script-link">กรอกข้อมูลผ่าน Google Docs ↗</a><button id="export">ส่งออก Word ต้นฉบับ (.docx)</button><button id="print" class="secondary">พิมพ์ / บันทึก PDF (A4)</button></div><div id="status" class="alert">กำลังตรวจแม่แบบ Word…</div></div><div class="pane"><div id="previewPage"><div id="preview"></div></div><div id="docxPages" hidden></div><div id="googleViewer" hidden><iframe id="googleViewerFrame" title="ตัวอย่างไฟล์ Word ผ่าน Google Docs Viewer" loading="lazy" referrerpolicy="no-referrer"></iframe><p class="note">ทดลองแสดง Google Docs ตามลิงก์ใหม่ หากเห็นแจ้งไม่มีสิทธิ์หรือไม่สามารถฝังได้ ให้เปิดเอกสารในแท็บใหม่ด้วยบัญชีที่มีสิทธิ์ การกรอกฟอร์มด้านซ้ายยังไม่เปลี่ยนเอกสาร Google Docs</p><a id="googleOpen" href="#" target="_blank" rel="noopener noreferrer">เปิดเอกสาร Google Docs ฉบับนี้ในแท็บใหม่</a><div class="google-api-test"><strong>ทดสอบการแก้ข้อมูลผ่าน Google Docs API สำเร็จ</strong><p>สำเนาทดสอบเปลี่ยนพารามิเตอร์ project_name จำนวน 2 จุด โดยไม่แก้ต้นฉบับ</p><a href="https://docs.google.com/document/d/1qNaEkgtvEPkoqoGSa5UfE2yVVGufMWpQSWjs0vnEfJE/edit" target="_blank" rel="noopener noreferrer">เปิดสำเนา Google Docs ที่ทดลองแก้แล้ว ↗</a><p>การพิมพ์ในฟอร์มแล้วส่งไป Google Docs อัตโนมัติ ยังไม่ได้เปิดใช้งาน ต้องมีการยืนยันตัวตนและตัวเชื่อม API เพื่อไม่ให้เว็บสาธารณะแก้เอกสารได้</p></div></div><p class="note">Preview ใช้ขนาดหน้าและระยะขอบตาม Word ต้นฉบับ แสดงทีละหน้า และอัปเดตตามฟอร์ม</p></div></section></main>
+<section class="panel"><div class="rightsticky"><div class="preview-heading"><h2>ตรวจข้อมูลก่อนส่งออก</h2><div class="preview-zoom"><button id="zoomOut" type="button" class="secondary" title="ย่อกระดาษ">−</button><span id="zoomLevel" aria-live="polite">พอดีหน้า</span><button id="zoomIn" type="button" class="secondary" title="ขยายกระดาษ">+</button><button id="zoomFit" type="button" class="secondary">พอดีหน้า</button><button id="prevPage" type="button" class="secondary">◀</button><span id="pageCount">1 / 1</span><button id="nextPage" type="button" class="secondary">▶</button></div></div><div class="toolbar"><button id="export">ส่งออก Word ต้นฉบับ (.docx)</button><button id="print" class="secondary">พิมพ์ / บันทึก PDF (A4)</button></div><div id="status" class="alert">กำลังตรวจแม่แบบ Word…</div></div><div class="pane"><div id="previewPage"><div id="preview"></div></div><div id="docxPages" hidden></div><div id="googleViewer" hidden><iframe id="googleViewerFrame" title="ตัวอย่างไฟล์ Word ผ่าน Google Docs Viewer" loading="lazy" referrerpolicy="no-referrer"></iframe><p class="note">ทดลองแสดง Google Docs ตามลิงก์ใหม่ หากเห็นแจ้งไม่มีสิทธิ์หรือไม่สามารถฝังได้ ให้เปิดเอกสารในแท็บใหม่ด้วยบัญชีที่มีสิทธิ์ การกรอกฟอร์มด้านซ้ายยังไม่เปลี่ยนเอกสาร Google Docs</p><a id="googleOpen" href="#" target="_blank" rel="noopener noreferrer">เปิดเอกสาร Google Docs ฉบับนี้ในแท็บใหม่</a><div class="google-api-test"><strong>ทดสอบการแก้ข้อมูลผ่าน Google Docs API สำเร็จ</strong><p>สำเนาทดสอบเปลี่ยนพารามิเตอร์ project_name จำนวน 2 จุด โดยไม่แก้ต้นฉบับ</p><a href="https://docs.google.com/document/d/1qNaEkgtvEPkoqoGSa5UfE2yVVGufMWpQSWjs0vnEfJE/edit" target="_blank" rel="noopener noreferrer">เปิดสำเนา Google Docs ที่ทดลองแก้แล้ว ↗</a><p>การพิมพ์ในฟอร์มแล้วส่งไป Google Docs อัตโนมัติ ยังไม่ได้เปิดใช้งาน ต้องมีการยืนยันตัวตนและตัวเชื่อม API เพื่อไม่ให้เว็บสาธารณะแก้เอกสารได้</p></div></div><p class="note">Preview ใช้ขนาดหน้าและระยะขอบตาม Word ต้นฉบับ แสดงทีละหน้า และอัปเดตตามฟอร์ม</p></div></section></main>
 <script>
 const definitions=[
 {title:'ข้อมูลเอกสาร',fields:[['document_date','เลขที่หนังสือ'],['main_date','วันที่หลัก','date'],['requesting_unit','ฝ่ายงาน / กลุ่มสาระ'],['procurement_type','ประเภทจัดซื้อ/จัดจ้าง'],['budget_year','ปีงบประมาณ'],['project_name','ชื่อโครงการ','textarea'],['activity_name','ชื่อกิจกรรม','textarea'],['expense_description','รายการค่าใช้จ่าย'],['budget_amount','วงเงินงบประมาณ','number'],['budget_amount_text','วงเงินเป็นตัวอักษร'],['assigned_officer_name','ชื่อผู้ได้รับมอบหมาย'],['assigned_officer_position','ตำแหน่งผู้ได้รับมอบหมาย'],['officer_signer_name','ชื่อเจ้าหน้าที่'],['chief_officer_signer_name','ชื่อหัวหน้าเจ้าหน้าที่']]},
@@ -197,8 +216,8 @@ function setPreviewMode(mode){
  $('googleViewer').style.display=google?'block':'none';
  $('docxPages').style.display=google?'none':'block';
  $('previewPage').style.display='none';
- $('googleMode').classList.toggle('mode-active',google);
- $('wordMode').classList.toggle('mode-active',!google);
+ if($('googleMode'))$('googleMode').classList.toggle('mode-active',google);
+ if($('wordMode'))$('wordMode').classList.toggle('mode-active',!google);
  if(google){
    if(!$('googleViewerFrame').src)$('googleViewerFrame').src=googleViewerURL;
    $('googleOpen').href=googleDocURL;
@@ -210,8 +229,8 @@ function setPreviewMode(mode){
    showDocumentPage();
  }
 }
-$('googleMode').onclick=()=>setPreviewMode('google');
-$('wordMode').onclick=()=>setPreviewMode('word');
+if($('googleMode'))$('googleMode').onclick=()=>setPreviewMode('google');
+if($('wordMode'))$('wordMode').onclick=()=>setPreviewMode('word');
 let zoomFactor=1,zoomAuto=true,currentPage=0;
 function showDocumentPage(){
  const host=$('docxPages'),pages=[...host.querySelectorAll('section.docx')];
