@@ -68,6 +68,7 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 .left-exports{position:sticky;bottom:0;background:#fff;padding:9px 4px 3px;z-index:5;border-top:1px solid #dce7ef;box-shadow:0 -4px 12px #fff9}.left-exports button{font-size:12px;padding:8px 10px}#docxPages .docx-edit-field{min-width:28px!important;max-width:350px!important;padding:0 2px!important;margin:0!important;line-height:1!important;height:1.2em!important;border-width:0 0 1px!important;vertical-align:baseline!important}#docxPages .docx-edit-field:placeholder-shown{background:transparent!important;border-bottom:1px dashed #a7c8da!important}#docxPages section.docx p{max-width:100%}#docxPages .page-overflow{outline:2px solid #c43d30!important}
 #status,#pageAudit{display:none!important}
 #docxPages section.docx > header,#docxPages section.docx > footer{display:none!important}
+#docxPages .director-signature-line{text-align:center!important}#docxPages table.paired-signature-block{margin-left:auto!important;margin-right:auto!important;max-width:100%!important}#docxPages table.paired-signature-block td{vertical-align:top!important} 
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
 <main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar left-exports"><button id="export">ส่งออก Word (.docx)</button><button id="print" class="secondary">พิมพ์ / PDF</button><button id="save" class="secondary">บันทึกข้อมูล</button><button id="reset" class="secondary">ล้างข้อมูล</button></div></div></section>
@@ -171,6 +172,32 @@ function normalizeBlankLineSpacing(host){
   p.style.paddingBottom='0';
  });
 }
+function alignSignatureBlocks(host){
+ host.querySelectorAll('section.docx').forEach(page=>{
+  // Keep two-person signatures in their original row/table layout.
+  page.querySelectorAll('table').forEach(table=>{
+   const t=table.textContent||'';
+   if(t.includes('เจ้าหน้าที่')&&t.includes('หัวหน้าเจ้าหน้าที่')&&t.includes('ลงชื่อ')){
+    table.classList.add('paired-signature-block');
+   }
+  });
+  // Center the director approval group only, not surrounding document paragraphs.
+  const ps=[...page.querySelectorAll('p')];
+  ps.forEach((p,i)=>{
+   const text=p.textContent.replace(/\\s+/g,' ').trim();
+   if(!/ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม/.test(text))return;
+   const context=ps.slice(Math.max(0,i-4),Math.min(ps.length,i+3)).map(x=>x.textContent).join(' ');
+   if(!/ลงชื่อ|อนุมัติ|ทราบ|เรวัฒน์/.test(context))return;
+   const lo=Math.max(0,i-2),hi=Math.min(ps.length-1,i+1);
+   for(let j=lo;j<=hi;j++){
+    const q=ps[j],t=q.textContent.trim();
+    if(/ลงชื่อ|เรวัฒน์|ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม|วันที่/.test(t)){
+     q.classList.add('director-signature-line');
+    }
+   }
+  });
+ });
+}
 function auditPageSpacing(host){
  const sheets=[...host.querySelectorAll('section.docx')],issues=[];
  const yBottom=el=>{const r=el.getBoundingClientRect();return r.bottom};
@@ -218,6 +245,7 @@ async function renderWordPages(blob,host,job){
  const wrapper=document.createElement('div');wrapper.className='docx-wrapper docx-split-wrapper';wrapper.appendChild(fragment);host.appendChild(wrapper);
  attachPreviewInputs(host);
  normalizeBlankLineSpacing(host);
+ alignSignatureBlocks(host);
  requestAnimationFrame(()=>{if(job===renderToken){showDocumentPage();auditPageSpacing(host)}});
  $('previewPage').style.display='none';host.style.display='block';
  currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));showDocumentPage();
