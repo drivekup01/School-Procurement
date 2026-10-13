@@ -159,6 +159,18 @@ function attachPreviewInputs(host){
   if(start){if(start<text.length)fragment.append(document.createTextNode(text.slice(start)));node.parentNode.replaceChild(fragment,node)}
  }
 }
+function normalizeBlankLineSpacing(host){
+ // Limit spacing from empty Word paragraphs; preserve every text run and signature.
+ host.querySelectorAll('section.docx p').forEach(p=>{
+  if(p.textContent.trim()||p.querySelector('img,svg,table,input,object'))return;
+  p.style.lineHeight='12pt';
+  p.style.minHeight='0';
+  p.style.marginTop='0';
+  p.style.marginBottom='0';
+  p.style.paddingTop='0';
+  p.style.paddingBottom='0';
+ });
+}
 function auditPageSpacing(host){
  const sheets=[...host.querySelectorAll('section.docx')],issues=[];
  const yBottom=el=>{const r=el.getBoundingClientRect();return r.bottom};
@@ -205,6 +217,7 @@ async function renderWordPages(blob,host,job){
  host.replaceChildren();
  const wrapper=document.createElement('div');wrapper.className='docx-wrapper docx-split-wrapper';wrapper.appendChild(fragment);host.appendChild(wrapper);
  attachPreviewInputs(host);
+ normalizeBlankLineSpacing(host);
  requestAnimationFrame(()=>{if(job===renderToken){showDocumentPage();auditPageSpacing(host)}});
  $('previewPage').style.display='none';host.style.display='block';
  currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));showDocumentPage();
