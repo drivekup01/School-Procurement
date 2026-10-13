@@ -1,0 +1,23 @@
+@font-face{font-family:ProcurementSarabun;src:url("THSarabun.ttf") format("truetype");font-display:swap}
+.word-page-shell{position:relative;margin:0 auto;flex:none}
+.word-a4{box-sizing:border-box;width:210mm;min-height:297mm;padding:10mm 13mm 10mm 25mm;background:#fff;color:#111;font:16pt/1.12 ProcurementSarabun,"TH Sarabun New",serif;transform-origin:top left;box-shadow:0 2px 9px #0002;overflow-wrap:anywhere}
+.word-a4 p{margin:0}
+.word-heading{position:relative;height:20mm;display:flex;align-items:center;justify-content:center}
+.word-heading img{position:absolute;left:0;top:0;width:15mm;height:15mm;object-fit:contain}
+.word-heading h1{font:700 22pt ProcurementSarabun,"TH Sarabun New",serif;margin:0}
+.word-document-head p{position:relative}
+.word-document-head p:first-child{display:flex;gap:4mm;align-items:baseline;flex-wrap:wrap}
+.word-agency{margin-left:auto}
+.word-date{float:right}
+.word-document-head p:last-child{border-bottom:1px solid #222}
+.word-body{margin-top:12pt}
+.word-body p+p{margin-top:12pt}
+.word-salutation strong{display:inline-block;min-width:16mm}
+.word-indent{text-indent:20mm}
+.word-signatures{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin-top:12pt;text-align:center}
+.word-director{margin:12pt 0 0 48%;text-align:center}
+.word-director p:first-child{text-align:left;margin-bottom:12pt}
+.word-footnote{margin-top:12pt;font-size:12pt}
+.word-parameter{border-bottom:1px dotted #8aa2c2;color:#365a80;cursor:pointer;white-space:normal;overflow-wrap:anywhere}
+.word-parameter.word-filled{color:#111;border-bottom:0}
+@media print{.word-a4{box-shadow:none;transform:none!important;break-after:page}}
