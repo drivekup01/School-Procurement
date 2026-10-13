@@ -165,7 +165,7 @@ function normalizeBlankLineSpacing(host){
  // Limit spacing from empty Word paragraphs; preserve every text run and signature.
  host.querySelectorAll('section.docx p').forEach(p=>{
   if(p.textContent.trim()||p.querySelector('img,svg,table,input,object'))return;
-  p.style.lineHeight='12pt';
+  p.style.lineHeight='10pt';
   p.style.minHeight='0';
   p.style.marginTop='0';
   p.style.marginBottom='0';
@@ -192,8 +192,7 @@ function auditPageSpacing(host){
     const style=getComputedStyle(p);
     p.style.marginTop='0';p.style.marginBottom='0';
     p.style.paddingTop='0';p.style.paddingBottom='0';
-    const lh=parseFloat(style.lineHeight);
-    if(Number.isFinite(lh)&&lh>0)p.style.lineHeight=Math.max(4,Math.min(lh,Math.max(4,lh-over)))+'px';
+    // Standard blank-paragraph spacing stays 10pt on every page.
     over=extent()-allowed();
     if(before-p.getBoundingClientRect().height<.5)continue;
    }
