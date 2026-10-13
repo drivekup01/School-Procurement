@@ -27,3 +27,13 @@
 .word-page2 .p2-line-24{top:252mm;left:90mm;right:25mm;text-align:center}
 .word-page2 .p2-line-25{top:259mm;left:90mm;right:25mm;text-align:center}
 .word-page2 .p2-line-26{top:266mm;left:90mm;right:25mm;text-align:center}
+
+/* Word tab-stop equivalents for the page-2 heading and signature rows. */
+.word-page2 .p2-line-1,.word-page2 .p2-line-2,.word-page2 .p2-line-3,.word-page2 .p2-line-5,.word-page2 .p2-line-6{display:flex;align-items:baseline;gap:3mm}
+.word-page2 .p2-line-1 span:first-child,.word-page2 .p2-line-2 span:first-child,.word-page2 .p2-line-3 span:first-child,.word-page2 .p2-line-5 span:first-child,.word-page2 .p2-line-6 span:first-child{font-weight:bold;flex:none}
+.word-page2 .p2-line-1 span:last-child{margin-left:auto}
+.word-page2 .p2-line-2 span:last-child{margin-left:39mm}
+.word-page2 .p2-line-6 span:last-child{margin-left:auto;margin-right:18mm}
+.word-page2 .p2-line-17,.word-page2 .p2-line-18{display:grid;grid-template-columns:1fr 1fr;gap:12mm;text-align:center}
+.word-page2 .p2-line-17 span,.word-page2 .p2-line-18 span{display:block;white-space:nowrap}
+.word-page2 .p2-line-17 span:first-child,.word-page2 .p2-line-18 span:first-child{margin-left:-4mm}
