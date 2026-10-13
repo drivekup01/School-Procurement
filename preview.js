@@ -186,6 +186,22 @@ function paginateWord(groups){
   }
   if(groupIndex===3){
    const page=buildPage(group);
+   const content=page.querySelector('.word-content');
+   if(content){
+    const nodes=Array.from(content.children);
+    const sourceTableNode=nodes.find(node=>node.matches('table.word-table'));
+    const before=document.createElement('div');before.className='p4-before-table';
+    const after=document.createElement('div');after.className='p4-after-table';
+    const tableGroup=document.createElement('div');tableGroup.className='p4-table-group';
+    let pastTable=false;
+    for(const node of nodes){
+     if(node===sourceTableNode){pastTable=true;tableGroup.append(node)}
+     else if(pastTable)after.append(node);
+     else before.append(node);
+    }
+    content.replaceChildren(before,tableGroup,after);
+    content.classList.add('p4-layout');
+   }
    const table=page.querySelector('table.word-table');
    if(table){
     const sourceTable=sourcePage4Table;
