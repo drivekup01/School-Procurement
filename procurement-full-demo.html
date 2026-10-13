@@ -68,8 +68,8 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 .left-exports{position:sticky;bottom:0;background:#fff;padding:9px 4px 3px;z-index:5;border-top:1px solid #dce7ef;box-shadow:0 -4px 12px #fff9}.left-exports button{font-size:12px;padding:8px 10px}#docxPages .docx-edit-field{min-width:28px!important;max-width:350px!important;padding:0 2px!important;margin:0!important;line-height:1!important;height:1.2em!important;border-width:0 0 1px!important;vertical-align:baseline!important}#docxPages .docx-edit-field:placeholder-shown{background:transparent!important;border-bottom:1px dashed #a7c8da!important}#docxPages section.docx p{max-width:100%}#docxPages .page-overflow{outline:2px solid #c43d30!important}
 #status,#pageAudit{display:none!important}
 #docxPages section.docx > header,#docxPages section.docx > footer{display:none!important}
-#docxPages .director-signature-line{text-align:center!important;text-indent:0!important;margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;width:100%!important;clear:both!important}#docxPages .director-signature-line [style*="margin-left"],#docxPages .director-signature-line [style*="text-indent"]{margin-left:0!important;text-indent:0!important}#docxPages table.paired-signature-block{margin-left:auto!important;margin-right:auto!important;max-width:100%!important}#docxPages table.paired-signature-block td{vertical-align:top!important} 
-#docxPages .officer-name-aligned,#docxPages .director-signature-anchored{transition:none!important}
+ 
+
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
 <main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar left-exports"><button id="export">ส่งออก Word (.docx)</button><button id="print" class="secondary">พิมพ์ / PDF</button><button id="save" class="secondary">บันทึกข้อมูล</button><button id="reset" class="secondary">ล้างข้อมูล</button></div></div></section>
@@ -173,74 +173,6 @@ function normalizeBlankLineSpacing(host){
   p.style.paddingBottom='0';
  });
 }
-function alignSignatureBlocks(host){
- host.querySelectorAll('section.docx').forEach(page=>{
-  // Keep two-person signatures in their original row/table layout.
-  page.querySelectorAll('table').forEach(table=>{
-   const t=table.textContent||'';
-   if(t.includes('เจ้าหน้าที่')&&t.includes('หัวหน้าเจ้าหน้าที่')&&t.includes('ลงชื่อ')){
-    table.classList.add('paired-signature-block');
-   }
-  });
-  // Center the director approval group only, not surrounding document paragraphs.
-  const ps=[...page.querySelectorAll('p')];
-  ps.forEach((p,i)=>{
-   const text=p.textContent.replace(/\\s+/g,' ').trim();
-   if(!/ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม/.test(text))return;
-   const context=ps.slice(Math.max(0,i-4),Math.min(ps.length,i+3)).map(x=>x.textContent).join(' ');
-   if(!/ลงชื่อ|อนุมัติ|ทราบ|เรวัฒน์/.test(context))return;
-   const lo=Math.max(0,i-2),hi=Math.min(ps.length-1,i+1);
-   for(let j=lo;j<=hi;j++){
-    const q=ps[j],t=q.textContent.trim();
-    if(/ลงชื่อ|เรวัฒน์|ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม|วันที่/.test(t)){
-     q.classList.add('director-signature-line');
-     q.style.setProperty('text-indent','0px','important');
-     q.style.setProperty('margin-left','0px','important');
-     q.style.setProperty('padding-left','0px','important');
-     q.querySelectorAll('[style]').forEach(el=>{el.style.setProperty('margin-left','0px','important');el.style.setProperty('text-indent','0px','important');el.style.setProperty('padding-left','0px','important')});
-     for(const child of q.childNodes){if(child.nodeType===Node.TEXT_NODE&&/^\\s+$/.test(child.textContent||''))child.textContent=''}
-    }
-   }
-  });
- });
-}
-function alignSignatureTextAnchors(host){
- const findRange=(root,needle)=>{
-  const nodes=[],walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
-  while(walk.nextNode())nodes.push(walk.currentNode);
-  let joined='',offsets=[];for(const n of nodes){offsets.push(joined.length);joined+=n.textContent||''}
-  const at=joined.indexOf(needle);if(at<0)return null;
-  const point=index=>{for(let j=nodes.length-1;j>=0;j--)if(offsets[j]<=index)return [nodes[j],index-offsets[j]];return null};
-  const a=point(at),b=point(at+needle.length);if(!a||!b)return null;
-  const r=document.createRange();r.setStart(a[0],a[1]);r.setEnd(b[0],b[1]);return r.getBoundingClientRect();
- };
- host.querySelectorAll('section.docx').forEach(page=>{
-  const ps=[...page.querySelectorAll('p')];
-  // Match signatures by proximity and wording, not a global paragraph position.
-  ps.forEach((p,i)=>{
-   const value=p.textContent.trim();
-   if(!value.includes('ลงชื่อ')||!value.includes('เจ้าหน้าที่'))return;
-   if(value.includes('หัวหน้าเจ้าหน้าที่')&&!value.includes('เจ้าหน้าที่'))return;
-   const sign=findRange(p,'ลงชื่อ'),officer=findRange(p,'เจ้าหน้าที่');
-   if(!sign||!officer)return;
-   // Parenthesized officer's name begins where the word ลงชื่อ ends.
-   const following=ps.slice(i+1,i+4).find(q=>/^\\s*\\(/.test(q.textContent)&&/officer|«|นาย|นาง/.test(q.textContent));
-   if(following&&!following.classList.contains('director-signature-line')){
-    const old=following.style.transform;following.style.transform='none';
-    const line=findRange(following,'(');
-    if(line){const delta=sign.right-line.left;following.style.transform='translateX('+delta.toFixed(1)+'px)';following.classList.add('officer-name-aligned')}
-    else following.style.transform=old;
-   }
-   // Director's ลงชื่อ starts at the right edge of the first officer's title.
-   const director=ps.slice(i+1).find(q=>q.classList.contains('director-signature-line')&&q.textContent.includes('ลงชื่อ'));
-   if(director){
-    director.style.transform='none';
-    const directorSign=findRange(director,'ลงชื่อ');
-    if(directorSign){director.style.transform='translateX('+(officer.right-directorSign.left).toFixed(1)+'px)';director.classList.add('director-signature-anchored')}
-   }
-  });
- });
-}
 function auditPageSpacing(host){
  const sheets=[...host.querySelectorAll('section.docx')],issues=[];
  const yBottom=el=>{const r=el.getBoundingClientRect();return r.bottom};
@@ -288,8 +220,7 @@ async function renderWordPages(blob,host,job){
  const wrapper=document.createElement('div');wrapper.className='docx-wrapper docx-split-wrapper';wrapper.appendChild(fragment);host.appendChild(wrapper);
  attachPreviewInputs(host);
  normalizeBlankLineSpacing(host);
- alignSignatureBlocks(host);
- requestAnimationFrame(()=>{if(job===renderToken){showDocumentPage();alignSignatureTextAnchors(host);auditPageSpacing(host)}});
+ requestAnimationFrame(()=>{if(job===renderToken){showDocumentPage();auditPageSpacing(host)}});
  $('previewPage').style.display='none';host.style.display='block';
  currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));showDocumentPage();
  $('status').textContent='คลิกช่องพารามิเตอร์ในหน้า Word เพื่อแก้ค่าได้ (บันทึกเข้าฟอร์มและใช้ในการ Export) • แบ่งส่วนแสดง '+host.querySelectorAll('section.docx').length+' หน้า';
@@ -306,7 +237,7 @@ function renderFromSource(){
   doc.render(v);
   const blob=doc.getZip().generate({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
   const host=$('docxPages');host.hidden=false;
-  renderWordPages(blob,host,job).catch(err=>{if(job===renderToken)$('status').textContent='แยกหน้า Word ไม่สำเร็จ: '+err.message});
+  renderWordPages(blob,host,job).catch(err=>{if(job===renderToken){$('previewPage').style.display='block';$('status').textContent='Preview Word ไม่สำเร็จ: '+err.message;console.error(err)}});
  }catch(e){$('status').textContent='Preview Word ไม่สำเร็จ: '+e.message}
 }
 let renderDebounce;function queueSourcePreview(){clearTimeout(renderDebounce);renderDebounce=setTimeout(renderFromSource,550)}
@@ -331,7 +262,7 @@ function setPreviewMode(){previewMode='word';$('docxPages').style.display='block
 let zoomFactor=1,zoomAuto=true,currentPage=0;
 function showDocumentPage(){
  const host=$('docxPages'),pages=[...host.querySelectorAll('section.docx')];
- if(!pages.length){$('pageCount').textContent='1 / 1';fitA4();return}
+ if(!pages.length){$('previewPage').style.display='block';$('pageCount').textContent='1 / 1';fitA4();return}
  currentPage=Math.max(0,Math.min(currentPage,pages.length-1));
  pages.forEach((p,i)=>p.style.display=i===currentPage?'block':'none');
  $('pageCount').textContent=(currentPage+1)+' / '+pages.length;
