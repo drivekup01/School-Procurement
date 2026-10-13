@@ -313,7 +313,7 @@ let projectActivityData=null,projectActivityError='กำลังอ่าน�
 const budgetSourceFile='สรุปงบประมาณในการดำเนินโครงการประจำปี 2570.docx';
 function docxCellText(cell){
  const ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
- return Array.from(cell.getElementsByTagNameNS(ns,'p')).map(p=>Array.from(p.getElementsByTagNameNS(ns,'t')).map(t=>t.textContent).join('')).join(' ').replace(/\\s+/g,' ').trim();
+ return Array.from(cell.getElementsByTagNameNS(ns,'p')).map(p=>Array.from(p.getElementsByTagNameNS(ns,'t')).map(t=>t.textContent).join('')).join(' ').replace(/\s+/g,' ').trim();
 }
 async function loadProjectActivities(){
  try{
@@ -335,12 +335,12 @@ async function loadProjectActivities(){
     const texts=cells.map(docxCellText);
     if(!texts.length)continue;
     // Require explicit column titles; do not treat arbitrary budget rows as project/activity.
-    const pIndex=texts.findIndex(t=>/^(?:ชื่อ)?โครงการ(?:\\s*\\/.*)?$/.test(t));
-    const aIndex=texts.findIndex(t=>/^(?:ชื่อ)?กิจกรรม(?:\\s*\\/.*)?$/.test(t));
+    const pIndex=texts.findIndex(t=>/^(?:ชื่อ)?โครงการ(?:\s*\/.*)?$/.test(t));
+    const aIndex=texts.findIndex(t=>/^(?:ชื่อ)?กิจกรรม(?:\s*\/.*)?$/.test(t));
     if(pIndex>=0&&aIndex>=0&&pIndex!==aIndex){projectColumn=pIndex;activityColumn=aIndex;currentProject='';continue;}
     if(projectColumn<0||activityColumn<0||texts.length<=Math.max(projectColumn,activityColumn))continue;
-    const p=texts[projectColumn].replace(/^\\d+[.)]\\s*/,'').trim();
-    const a=texts[activityColumn].replace(/^\\d+[.)]\\s*/,'').trim();
+    const p=texts[projectColumn].replace(/^\d+[.)]\s*/,'').trim();
+    const a=texts[activityColumn].replace(/^\d+[.)]\s*/,'').trim();
     if(p&&!/^(?:รวม|รวมทั้งสิ้น|ยอดรวม|งบประมาณ)/.test(p))currentProject=p;
     if(!currentProject||!a||/^(?:รวม|รวมทั้งสิ้น|ยอดรวม|งบประมาณ)/.test(a))continue;
     if(!projects.has(currentProject))projects.set(currentProject,new Set());
