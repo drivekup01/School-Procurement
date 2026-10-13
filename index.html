@@ -422,16 +422,19 @@ function renderFormFields(){
   if(key==='project_name'||key==='activity_name'||key==='requesting_unit'){addRelatedSelect(parent,key);return;}
   const wrap=document.createElement('div');wrap.className='input-wrap';
   const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;
-  const input=document.createElement('input');input.id='field-'+key;input.type=calendarFieldKeys.has(key)?'date':'text';input.autocomplete='off';
-  input.placeholder=calendarFieldKeys.has(key)?'เลือกวันที่':'กรอก'+thaiFieldLabel(key);
-  input.value=calendarFieldKeys.has(key)?toCalendarValue(formValues[key]??''):(formValues[key]??'');
+  if(calendarFieldKeys.has(key)){
+   const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:6px';
+   const display=document.createElement('input');display.id='field-'+key;display.type='text';display.readOnly=true;display.placeholder='เลือกวันที่';display.style.flex='1';display.value=toThaiDocumentDate(formValues[key]||'');
+   const picker=document.createElement('input');picker.type='date';picker.setAttribute('aria-label','เลือก'+thaiFieldLabel(key));picker.style.cssText='width:44px;min-width:44px;padding:8px 2px;cursor:pointer';picker.value=toCalendarValue(formValues[key]||'');
+   const choose=()=>{try{picker.showPicker()}catch{picker.focus();picker.click()}};
+   display.addEventListener('click',choose);
+   picker.addEventListener('change',()=>{const value=toThaiDocumentDate(picker.value);display.value=value;formValues[key]=value;try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}activeField=key;renderPDFPage(currentPDFPage)});
+   row.append(display,picker);wrap.append(label,row);parent.appendChild(wrap);return;
+  }
+  const input=document.createElement('input');input.id='field-'+key;input.type='text';input.autocomplete='off';
+  input.placeholder='กรอก'+thaiFieldLabel(key);input.value=formValues[key]??'';
   input.addEventListener('focus',()=>{activeField=key;highlightField(key)});
-  input.addEventListener('input',()=>{
-   formValues[key]=calendarFieldKeys.has(key)?toThaiDocumentDate(input.value):input.value;
-   try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}
-   activeField=key;
-   renderPDFPage(currentPDFPage);
-  });
+  input.addEventListener('input',()=>{formValues[key]=input.value;try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}activeField=key;renderPDFPage(currentPDFPage)});
   wrap.append(label,input);parent.appendChild(wrap);
  }
  if(!common.length)shared.innerHTML='<p class="muted">ยังไม่พบพารามิเตอร์ที่ซ้ำข้ามหน้า</p>';
