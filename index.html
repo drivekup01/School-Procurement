@@ -81,11 +81,76 @@ async function renderPDFPage(number){
  const canvas=document.createElement('canvas');const scale=window.devicePixelRatio||1;
  canvas.width=Math.round(viewport.width*scale);canvas.height=Math.round(viewport.height*scale);
  canvas.style.cssText='display:block;margin:0 auto;background:white;box-shadow:0 2px 9px #0002;max-width:100%;width:'+viewport.width+'px;height:'+viewport.height+'px';
- const ctx=canvas.getContext('2d');pdfStage.replaceChildren(canvas);
+ const ctx=canvas.getContext('2d');
+ const sheet=document.createElement('div');
+ sheet.style.cssText='position:relative;margin:0 auto;width:'+viewport.width+'px;height:'+viewport.height+'px;max-width:100%;';
+ canvas.style.margin='0';sheet.appendChild(canvas);
+ const layer=document.createElement('div');
+ layer.className='pdf-parameter-overlay';
+ layer.style.cssText='position:absolute;inset:0;pointer-events:none';
+ sheet.appendChild(layer);pdfStage.replaceChildren(sheet);
  await p.render({canvasContext:ctx,viewport,transform:scale===1?null:[scale,0,0,scale,0,0]}).promise;
  pdfStage.scrollTop=0;
  document.getElementById('parameterOverlay').replaceChildren();
+ try { await markPDFParameters(p,viewport,layer,number); }
+ catch(e){console.warn('Parameter overlay unavailable:',e);}
+
 }
+
+/* Read parameters from the actual PDF text layer; never estimate using page order.
+   Each rectangle follows PDF.js text-item coordinates on the matching canvas. */
+async function markPDFParameters(page,viewport,layer,pageNumber){
+ const content=await page.getTextContent();
+ const rows=[];
+ for(const it of content.items){
+  if(!it.str||!it.transform||!it.width)continue;
+  const tr=pdfjsLib.Util.transform(viewport.transform,it.transform);
+  const x=tr[4],baseline=tr[5],height=Math.max(6,Math.hypot(tr[2],tr[3]));
+  const width=it.width*viewport.scale;
+  let row=rows.find(r=>Math.abs(r.baseline-baseline)<Math.max(3,height*.32));
+  if(!row){row={baseline,items:[]};rows.push(row);}
+  row.items.push({str:it.str,x,width,height,baseline});
+ }
+ let count=0;
+ for(const row of rows){
+  row.items.sort((a,b)=>a.x-b.x);
+  let joined='',charBoxes=[];
+  for(const it of row.items){
+   // PDF text fragments may split a single parameter into several items.
+   const chars=Array.from(it.str);
+   for(let j=0;j<chars.length;j++){
+    joined+=chars[j];
+    charBoxes.push({x:it.x+it.width*j/chars.length,w:it.width/chars.length,h:it.height,y:it.baseline-it.height});
+   }
+  }
+  // Supports {{parameter_name}}. Do not draw on ordinary text.
+  const matches=[...joined.matchAll(/\{\{\s*([\w.-]+)\s*\}\}/g)];
+  for(const match of matches){
+   const start=match.index,end=start+Array.from(match[0]).length;
+   const relevant=charBoxes.slice(start,end);
+   if(!relevant.length)continue;
+   const x=Math.max(0,Math.min(...relevant.map(v=>v.x))-2);
+   const y=Math.max(0,Math.min(...relevant.map(v=>v.y))-2);
+   const right=Math.min(viewport.width,Math.max(...relevant.map(v=>v.x+v.w))+2);
+   const bottom=Math.min(viewport.height,Math.max(...relevant.map(v=>v.y+v.h))+2);
+   if(right<=x||bottom<=y)continue;
+   const marker=document.createElement('div');marker.className='parameter-marker';
+   marker.style.cssText='left:'+x+'px;top:'+y+'px;width:'+(right-x)+'px;height:'+(bottom-y)+'px;';
+   marker.setAttribute('title',match[1]);
+   const tag=document.createElement('span');tag.className='field-tag';tag.textContent=match[1];
+   marker.appendChild(tag);layer.appendChild(marker);count++;
+  }
+ }
+ const status=document.getElementById('state');
+ status.textContent='PDF หน้า '+pageNumber+' · พารามิเตอร์ที่พบ '+count+' ตำแหน่ง';
+ if(count===0){
+  const msg=document.createElement('div');
+  msg.style.cssText='position:absolute;right:10px;bottom:10px;background:#fff9ee;color:#715223;border:1px solid #e9d4ac;border-radius:6px;padding:7px 9px;font-size:12px;pointer-events:none';
+  msg.textContent='หน้านี้ไม่พบพารามิเตอร์ {{...}} ในชั้นข้อความ PDF';
+  layer.append(msg);
+ }
+}
+
 setMode('pdf');
 document.getElementById('openWord').addEventListener('click',()=>window.open(viewer,'_blank','noopener,noreferrer'));
 
