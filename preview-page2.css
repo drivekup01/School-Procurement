@@ -1,0 +1,29 @@
+/* Page 2 is reconstructed from the actual DOCX paragraphs, one A4 sheet. */
+.word-page2{position:relative;box-sizing:border-box;width:210mm;height:297mm;min-height:297mm;padding:10mm 13mm 10mm 25mm;overflow:hidden;font:16pt/1.12 ProcurementSarabun,"TH Sarabun New",serif}
+.word-page2 .p2-heading{position:absolute;left:25mm;right:13mm;top:10mm;height:18mm;display:flex;align-items:center;justify-content:center}
+.word-page2 .p2-heading img{position:absolute;left:0;top:0;width:15mm;height:15mm;object-fit:contain}
+.word-page2 .p2-heading h1{font:700 22pt/1 ProcurementSarabun,"TH Sarabun New",serif;margin:0}
+.word-page2 .p2-line{position:absolute;left:25mm;right:13mm;margin:0!important;line-height:1.12;white-space:normal;overflow-wrap:normal;text-indent:0}
+.word-page2 .p2-line-1{top:27mm;white-space:nowrap;font-size:15pt}
+.word-page2 .p2-line-2{top:33.5mm;white-space:nowrap}
+.word-page2 .p2-line-3{top:40mm;white-space:nowrap}
+.word-page2 .p2-line-4{top:47.5mm;white-space:nowrap;overflow:hidden;font-size:12pt}
+.word-page2 .p2-line-5{top:54.5mm}
+.word-page2 .p2-line-6{top:65.5mm}
+.word-page2 .p2-line-7{top:76mm;left:38mm;font-weight:bold}
+.word-page2 .p2-line-8{top:82.5mm;text-indent:13mm;text-align:justify}
+.word-page2 .p2-line-9{top:106mm;left:38mm;font-weight:bold}
+.word-page2 .p2-line-10{top:113mm;text-indent:13mm;text-align:justify}
+.word-page2 .p2-line-11{top:137mm;left:38mm;font-weight:bold}
+.word-page2 .p2-line-12{top:144mm;text-indent:13mm;text-align:justify}
+.word-page2 .p2-line-13{top:163mm;left:38mm}
+.word-page2 .p2-line-14{top:178mm;left:80mm;right:15mm;white-space:nowrap}
+.word-page2 .p2-line-15{top:184mm;left:80mm;right:15mm;white-space:nowrap}
+.word-page2 .p2-line-17{top:202mm;left:37mm;right:17mm;white-space:nowrap}
+.word-page2 .p2-line-18{top:209mm;left:40mm;right:17mm;white-space:nowrap}
+.word-page2 .p2-line-20{top:224mm;left:100mm}
+.word-page2 .p2-line-21{top:231mm;left:100mm}
+.word-page2 .p2-line-23{top:245mm;left:90mm;right:25mm;text-align:center}
+.word-page2 .p2-line-24{top:252mm;left:90mm;right:25mm;text-align:center}
+.word-page2 .p2-line-25{top:259mm;left:90mm;right:25mm;text-align:center}
+.word-page2 .p2-line-26{top:266mm;left:90mm;right:25mm;text-align:center}
