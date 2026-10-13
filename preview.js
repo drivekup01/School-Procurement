@@ -58,6 +58,32 @@ function paragraphHTML(p){
   }
   el.append(span);
  }
+ // Resolve placeholders spanning multiple Word runs without changing surrounding text.
+ const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+ const textNodes=[];while(walker.nextNode())textNodes.push(walker.currentNode);
+ const full=textNodes.map(n=>n.nodeValue||'').join('');
+ const matches=Array.from(full.matchAll(/\\{\\{\\s*([\\w.-]+)\\s*\\}\\}/g)).reverse();
+ for(const match of matches){
+  const begin=match.index,end=begin+match[0].length;
+  let pos=0,first=null,last=null,firstOffset=0,lastOffset=0;
+  for(const node of textNodes){
+   const next=pos+(node.nodeValue||'').length;
+   if(!first&&begin>=pos&&begin<next){first=node;firstOffset=begin-pos}
+   if(end>pos&&end<=next){last=node;lastOffset=end-pos;break}
+   pos=next;
+  }
+  if(!first||!last)continue;
+  if(first.parentElement?.closest('[data-field]')||last.parentElement?.closest('[data-field]'))continue;
+  const marker=document.createElement('span');marker.dataset.field=match[1];marker.className='word-parameter word-overlay-field';
+  marker.textContent=match[0];
+  if(first===last){const original=first.nodeValue||'';first.nodeValue=original.slice(0,firstOffset);first.after(marker,document.createTextNode(original.slice(lastOffset)))}
+  else{
+   const prefix=(first.nodeValue||'').slice(0,firstOffset),suffix=(last.nodeValue||'').slice(lastOffset);
+   let between=false;
+   for(const node of textNodes){if(node===first){between=true;node.nodeValue=prefix;continue}if(node===last){node.nodeValue=suffix;break}if(between)node.nodeValue=''}
+   first.after(marker);
+  }
+ }
  if(!el.textContent.trim()&&!el.querySelector('br'))el.classList.add('word-empty');
  if(el.textContent.trim()==='บันทึกข้อความ')el.classList.add('word-memo-title');
  return el;
