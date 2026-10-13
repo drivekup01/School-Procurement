@@ -68,7 +68,7 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 .left-exports{position:sticky;bottom:0;background:#fff;padding:9px 4px 3px;z-index:5;border-top:1px solid #dce7ef;box-shadow:0 -4px 12px #fff9}.left-exports button{font-size:12px;padding:8px 10px}#docxPages .docx-edit-field{min-width:28px!important;max-width:350px!important;padding:0 2px!important;margin:0!important;line-height:1!important;height:1.2em!important;border-width:0 0 1px!important;vertical-align:baseline!important}#docxPages .docx-edit-field:placeholder-shown{background:transparent!important;border-bottom:1px dashed #a7c8da!important}#docxPages section.docx p{max-width:100%}#docxPages .page-overflow{outline:2px solid #c43d30!important}
 #status,#pageAudit{display:none!important}
 #docxPages section.docx > header,#docxPages section.docx > footer{display:none!important}
-#docxPages .director-signature-line{text-align:center!important}#docxPages table.paired-signature-block{margin-left:auto!important;margin-right:auto!important;max-width:100%!important}#docxPages table.paired-signature-block td{vertical-align:top!important} 
+#docxPages .director-signature-line{text-align:center!important;text-indent:0!important;margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;width:100%!important;clear:both!important}#docxPages .director-signature-line [style*="margin-left"],#docxPages .director-signature-line [style*="text-indent"]{margin-left:0!important;text-indent:0!important}#docxPages table.paired-signature-block{margin-left:auto!important;margin-right:auto!important;max-width:100%!important}#docxPages table.paired-signature-block td{vertical-align:top!important} 
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
 <main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar left-exports"><button id="export">ส่งออก Word (.docx)</button><button id="print" class="secondary">พิมพ์ / PDF</button><button id="save" class="secondary">บันทึกข้อมูล</button><button id="reset" class="secondary">ล้างข้อมูล</button></div></div></section>
@@ -193,6 +193,11 @@ function alignSignatureBlocks(host){
     const q=ps[j],t=q.textContent.trim();
     if(/ลงชื่อ|เรวัฒน์|ผู้อำนวยการโรงเรียนค่ายบางระจันวิทยาคม|วันที่/.test(t)){
      q.classList.add('director-signature-line');
+     q.style.setProperty('text-indent','0px','important');
+     q.style.setProperty('margin-left','0px','important');
+     q.style.setProperty('padding-left','0px','important');
+     q.querySelectorAll('[style]').forEach(el=>{el.style.setProperty('margin-left','0px','important');el.style.setProperty('text-indent','0px','important');el.style.setProperty('padding-left','0px','important')});
+     for(const child of q.childNodes){if(child.nodeType===Node.TEXT_NODE&&/^\\s+$/.test(child.textContent||''))child.textContent=''}
     }
    }
   });
