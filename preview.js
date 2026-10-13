@@ -62,6 +62,44 @@ function paragraphHTML(p){
  if(el.textContent.trim()==='บันทึกข้อความ')el.classList.add('word-memo-title');
  return el;
 }
+/* Page 4 table only: preserve the original DOCX grid and merged cells. */
+function page4TableHTML(tbl){
+ const table=document.createElement('table');table.className='word-table word-page4-table';
+ const grid=wn(tbl,'tblGrid'),widths=wns(grid,'gridCol').map(c=>Number(wa(c,'w'))||1);
+ const colgroup=document.createElement('colgroup');
+ for(const width of widths){const col=document.createElement('col');col.style.width=(width/widths.reduce((a,b)=>a+b,0)*100)+'%';colgroup.append(col)}
+ table.append(colgroup);
+ const rows=wns(tbl,'tr'),occupied=new Map();
+ rows.forEach((tr,ri)=>{
+  const row=document.createElement('tr');let column=0;
+  for(const tc of wns(tr,'tc')){
+   const pr=wn(tc,'tcPr'),span=Number(wa(wn(pr,'gridSpan'),'val'))||1;
+   const merge=wn(pr,'vMerge'),isContinuation=merge&&wa(merge,'val')!=='restart';
+   if(isContinuation){column+=span;continue}
+   const cell=document.createElement(ri<2?'th':'td');if(span>1)cell.colSpan=span;
+   if(merge&&wa(merge,'val')==='restart'){
+    let count=1;
+    for(let next=ri+1;next<rows.length;next++){
+     let offset=0,matched=null;
+     for(const candidate of wns(rows[next],'tc')){
+      const candidateSpan=Number(wa(wn(wn(candidate,'tcPr'),'gridSpan'),'val'))||1;
+      if(offset===column){matched=candidate;break}offset+=candidateSpan;
+     }
+     if(!matched||!wn(wn(matched,'tcPr'),'vMerge')||wa(wn(wn(wn(matched,'tcPr'),'vMerge'),'val'))==='restart')break;
+     count++;
+    }
+    if(count>1)cell.rowSpan=count;
+   }
+   for(const child of Array.from(tc.children)){
+    if(child.localName==='p')cell.append(paragraphHTML(child));
+    else if(child.localName==='tbl')cell.append(tableHTML(child));
+   }
+   row.append(cell);column+=span;
+  }
+  table.append(row);
+ });
+ return table;
+}
 function tableHTML(tbl){
  const table=document.createElement('table');table.className='word-table';
  for(const tr of wns(tbl,'tr')){
@@ -143,6 +181,15 @@ function paginateWord(groups){
    const walker=document.createTreeWalker(page,NodeFilter.SHOW_TEXT),nodes=[];
    while(walker.nextNode())nodes.push(walker.currentNode);
    for(const node of nodes)if(/\{\{[\w.-]+\}\}/.test(node.nodeValue||''))node.replaceWith(wordFieldFragments(node.nodeValue));
+   return page;
+  }
+  if(groupIndex===3){
+   const page=buildPage(group);
+   const table=page.querySelector('table.word-table');
+   if(table){
+    const sourceTable=Array.from(document.getElementsByTagNameNS(WORD_NS,'tbl')).find(t=>Array.from(t.getElementsByTagNameNS(WORD_NS,'t')).some(n=>(n.textContent||'').includes('รายละเอียดของวัสดุที่จะซื้อ/จ้าง')));
+    if(sourceTable)table.replaceWith(page4TableHTML(sourceTable));
+   }
    return page;
   }
   return buildPage(group);
