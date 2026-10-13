@@ -64,8 +64,9 @@ function paragraphHTML(p){
 }
 /* Page 4 table only: preserve the original DOCX grid and merged cells. */
 let sourcePage4Table=null;
-function page4TableHTML(tbl){
- const table=document.createElement('table');table.className='word-table word-page4-table';
+const sourceTableForPreview=new WeakMap();
+function page4TableHTML(tbl,tableClass='word-page4-table'){
+ const table=document.createElement('table');table.className='word-table '+tableClass;
  const grid=wn(tbl,'tblGrid'),widths=wns(grid,'gridCol').map(c=>Number(wa(c,'w'))||1);
  const colgroup=document.createElement('colgroup');
  for(const width of widths){const col=document.createElement('col');col.style.width=(width/widths.reduce((a,b)=>a+b,0)*100)+'%';colgroup.append(col)}
@@ -133,6 +134,7 @@ function wordBlocks(body){
   const announcementPageStart=node.localName==='p'&&text==='ประกาศโรงเรียนค่ายบางระจันวิทยาคม';
   if((hasRenderedBreak||hasExplicitBreak||hasPageBreakBefore||announcementPageStart)&&groups[groups.length-1].length)groups.push([]);
   const element=node.localName==='p'?paragraphHTML(node):tableHTML(node);
+  if(node.localName==='tbl')sourceTableForPreview.set(element,node);
   groups[groups.length-1].push(element);
  }
  return groups.filter(group=>group.length>0);
@@ -182,6 +184,14 @@ function paginateWord(groups){
    const walker=document.createTreeWalker(page,NodeFilter.SHOW_TEXT),nodes=[];
    while(walker.nextNode())nodes.push(walker.currentNode);
    for(const node of nodes)if(/\{\{[\w.-]+\}\}/.test(node.nodeValue||''))node.replaceWith(wordFieldFragments(node.nodeValue));
+   return page;
+  }
+  if(groupIndex===5){
+   const page=buildPage(group);
+   for(const table of Array.from(page.querySelectorAll('.word-content > table.word-table'))){
+    const source=sourceTableForPreview.get(table);
+    if(source)table.replaceWith(page4TableHTML(source,'word-page6-table'));
+   }
    return page;
   }
   if(groupIndex===3){
