@@ -155,12 +155,24 @@ async function markPDFParameters(page,viewport,layer,pageNumber){
    if(entered!==undefined&&entered!==''){
      marker.classList.add('has-value');
      marker.style.width='auto';marker.style.minWidth=(right-x)+'px';
-     const text=document.createElement('span');text.className='replacement-text';text.textContent=calendarFieldKeys.has(match[1])?toThaiDocumentDate(entered):entered;
-     text.style.fontSize=(PDF_OVERLAY_FONT_PT*viewport.scale)+'px';text.style.padding='0 '+(2*viewport.scale)+'px';
-     marker.append(text);
+     const text=document.createElement('span');text.className='replacement-text';
+     text.textContent=calendarFieldKeys.has(match[1])?toThaiDocumentDate(entered):entered;
+     text.style.fontSize=(PDF_OVERLAY_FONT_PT*viewport.scale)+'px';
+     text.style.padding='0 '+(2*viewport.scale)+'px';
+     // A zero-height inline box identifies the browser's actual text baseline.
+     const baselineProbe=document.createElement('span');
+     baselineProbe.style.cssText='display:inline-block;width:0;height:0;padding:0;margin:0;border:0;vertical-align:baseline';
+     text.appendChild(baselineProbe);
+     marker.appendChild(text);
+     layer.appendChild(marker);
+     const targetBaseline=layer.getBoundingClientRect().top+row.baseline;
+     const actualBaseline=baselineProbe.getBoundingClientRect().bottom;
+     text.style.transform='translateY('+(targetBaseline-actualBaseline)+'px)';
+   }else{
+     layer.appendChild(marker);
    }
    if(activeField===match[1])marker.classList.add('active');
-   layer.appendChild(marker);count++;
+   count++;
   }
  }
  const status=document.getElementById('state');
