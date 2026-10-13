@@ -137,6 +137,14 @@ function paginateWord(groups){
    for(const node of nodes)if(/\{\{[\w.-]+\}\}/.test(node.nodeValue||''))node.replaceWith(wordFieldFragments(node.nodeValue));
    return page;
   }
+  if(groupIndex===2){
+   const template=document.createElement('template');template.innerHTML=wordThirdPageHTML;
+   const page=template.content.firstElementChild;
+   const walker=document.createTreeWalker(page,NodeFilter.SHOW_TEXT),nodes=[];
+   while(walker.nextNode())nodes.push(walker.currentNode);
+   for(const node of nodes)if(/\{\{[\w.-]+\}\}/.test(node.nodeValue||''))node.replaceWith(wordFieldFragments(node.nodeValue));
+   return page;
+  }
   return buildPage(group);
  });
 }
