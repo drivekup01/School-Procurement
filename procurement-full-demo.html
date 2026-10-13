@@ -1,12 +1,9 @@
 <!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ทดลองฟอร์มชุดจัดซื้อจาก Word</title>
 <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.7/dist/docx-preview.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/pizzip@3.2.0/dist/pizzip.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/docxtemplater@3.67.0/build/docxtemplater.js"></script>
-<style>@font-face{font-family:ths;src:url('./THSarabun.ttf')}*{box-sizing:border-box}body{margin:0;background:#edf2f8;color:#203246;font:15px system-ui,Tahoma,sans-serif}body > header{background:#143857;color:white;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}body > header a{color:#d8efff}h1{font-size:20px;margin:0}main{display:grid;grid-template-columns:minmax(420px,55%) minmax(330px,45%);gap:14px;padding:14px;min-height:calc(100vh - 72px)}.panel{background:white;border-radius:14px;box-shadow:0 2px 12px #1232;overflow:auto;max-height:calc(100vh - 97px)}.pane{padding:19px}h2{font-size:17px;margin:0 0 10px}.note{font-size:13px;color:#567;line-height:1.7}.alert{padding:12px;border-radius:8px;background:#fff4df;color:#734f18;margin:10px 0}.good{background:#e7f8ee;color:#175c33}.tabs{display:flex;flex-wrap:wrap;gap:5px;margin:12px 0}.tabs button{border:1px solid #c9d8e6;background:white;color:#204b69}.tabs button.active{background:#126ca5;color:white}.group{display:none}.group.active{display:block}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field.wide{grid-column:1/-1}label{display:block;font-weight:600;font-size:13px;margin-bottom:5px}input,textarea,select{font:inherit;width:100%;padding:9px;border:1px solid #c3d1df;border-radius:7px;background:#fff}textarea{min-height:64px;resize:vertical}button{cursor:pointer;background:#126ca5;color:white;border:0;border-radius:8px;padding:9px 13px;font-weight:600}.secondary{background:#e5edf5;color:#22516e}.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:15px 0}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #bfccda;padding:6px;vertical-align:top}th{background:#edf3f8}td input{padding:5px;min-width:45px;font-size:13px}.scroll{overflow:auto}#preview{font-family:ths,'TH Sarabun New',serif;font-size:20px;line-height:1.2;border:1px solid #d7e2ed;background:#fff;padding:22px;min-height:520px}#preview h3{text-align:center;font-size:26px;margin:3px 0 16px}#preview table{font-family:inherit}#preview .line{padding:5px 0;border-bottom:1px dotted #e3e8ef}.total{font-size:19px;font-weight:bold}.status{font-size:12px}.muted{color:#718193}.rightsticky{position:sticky;top:0;background:white;padding:16px;border-bottom:1px solid #e7edf3}@media(max-width:900px){main{display:block}.panel{max-height:none;margin-bottom:12px}.fields{grid-template-columns:1fr}}@media print{body > header,.panel:first-child,.rightsticky,.alert{display:none!important}main{display:block;padding:0}.panel{box-shadow:none;max-height:none}#preview{border:none}}#pageSelector{margin:8px 0 14px}#previewPage{width:210mm;min-height:297mm;background:#fff;padding:5mm 13.5mm 10mm 22.5mm;margin:12px auto;box-shadow:0 6px 24px #18334c24;box-sizing:border-box;position:relative}#preview{font-family:ths,serif;font-size:16pt;line-height:1.12;border:0;background:transparent;padding:0;min-height:0}#preview h3{font-size:24pt;line-height:1.12;margin:0 0 1.12em}#preview .line{font-size:16pt}.panel:nth-child(2) .pane{background:#e4eaf0;overflow:auto}#previewPage:after{content:'หน้า A4 · ขอบบน 1.5 ซม. | ซ้าย 2.25 ซม. | ขวา 1.35 ซม. | ล่าง 1 ซม.';position:absolute;top:100%;left:0;width:100%;text-align:center;font:11px system-ui;color:#678}.panel:nth-child(2) .pane>.note{margin-top:27px}@page{size:A4;margin:0}@media print{#previewPage{box-shadow:none;margin:0;width:210mm;min-height:297mm;break-after:page}#previewPage:after{display:none}.panel:nth-child(2) .pane{padding:0;background:#fff;overflow:visible}#preview{font-size:16pt}body{background:#fff}}.panel:first-child .pane{padding:12px 14px}.panel:first-child h2{font-size:15px;margin-bottom:5px}.panel:first-child .note{font-size:11px}.panel:first-child .fields{gap:7px 10px}.panel:first-child .field label{font-size:12px;margin-bottom:3px}.panel:first-child input,.panel:first-child textarea,.panel:first-child select{padding:6px 8px;font-size:13px;min-height:31px}.panel:first-child textarea{min-height:49px}.panel:first-child details{padding:8px!important;margin:7px 0!important}.panel:first-child button{font-size:12px;padding:7px 10px}
-#previewPage{padding:5mm 13.5mm 10mm 22.5mm;outline:1px solid #b4c5d4}#preview{font-family:ths,serif;font-size:16pt;line-height:1.12;color:#111}#preview .memohead{position:relative;margin-bottom:1.12em}#preview .memohead img{position:absolute;left:0;top:0;width:15mm;height:15mm;object-fit:contain}#preview .memohead h3{font-size:24pt;line-height:1.12;margin:0;text-align:center;font-weight:700}#preview .twocol{display:grid;grid-template-columns:1fr 1fr;gap:5mm}#preview .doc-line{padding:2mm 0}#preview .subject{border-bottom:1px solid #111;padding-bottom:2mm}#preview .doc-body p{margin:4mm 0;text-indent:14mm;text-align:justify;overflow-wrap:anywhere}#preview .signatures{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:12mm}#preview .sign-name{padding-left:1.8em}#preview .approve{text-align:center;margin-top:18mm}#preview .source-note{font-size:16pt;margin-top:11mm}#preview .doc-muted{color:#677;font-size:13pt}@media print{#previewPage{outline:none;box-shadow:none}#preview .memohead img{width:15mm;height:15mm}}/* Fit the full A4 sheet in the available right-side viewport without altering print dimensions. */
+<style>@font-face{font-family:ths;src:url('./THSarabun.ttf')}*{box-sizing:border-box}body{margin:0;background:#edf2f8;color:#203246;font:15px system-ui,Tahoma,sans-serif}body > header{background:#143857;color:white;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}body > header a{color:#d8efff}h1{font-size:20px;margin:0}main{display:grid;grid-template-columns:minmax(420px,55%) minmax(330px,45%);gap:14px;padding:14px;min-height:calc(100vh - 72px)}.panel{background:white;border-radius:14px;box-shadow:0 2px 12px #1232;overflow:auto;max-height:calc(100vh - 97px)}.pane{padding:19px}h2{font-size:17px;margin:0 0 10px}.note{font-size:13px;color:#567;line-height:1.7}.alert{padding:12px;border-radius:8px;background:#fff4df;color:#734f18;margin:10px 0}.good{background:#e7f8ee;color:#175c33}.tabs{display:flex;flex-wrap:wrap;gap:5px;margin:12px 0}.tabs button{border:1px solid #c9d8e6;background:white;color:#204b69}.tabs button.active{background:#126ca5;color:white}.group{display:none}.group.active{display:block}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field.wide{grid-column:1/-1}label{display:block;font-weight:600;font-size:13px;margin-bottom:5px}input,textarea,select{font:inherit;width:100%;padding:9px;border:1px solid #c3d1df;border-radius:7px;background:#fff}textarea{min-height:64px;resize:vertical}button{cursor:pointer;background:#126ca5;color:white;border:0;border-radius:8px;padding:9px 13px;font-weight:600}.secondary{background:#e5edf5;color:#22516e}.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:15px 0}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #bfccda;padding:6px;vertical-align:top}th{background:#edf3f8}td input{padding:5px;min-width:45px;font-size:13px}.scroll{overflow:auto}.total{font-size:19px;font-weight:bold}.status{font-size:12px}.muted{color:#718193}.rightsticky{position:sticky;top:0;background:white;padding:16px;border-bottom:1px solid #e7edf3}@media(max-width:900px){main{display:block}.panel{max-height:none;margin-bottom:12px}.fields{grid-template-columns:1fr}}@media print{body > header,.panel:first-child,.rightsticky,.alert{display:none!important}main{display:block;padding:0}.panel{box-shadow:none;max-height:none}}#pageSelector{margin:8px 0 14px}@page{size:A4;margin:0}@media print{body{background:#fff}}.panel:first-child .pane{padding:12px 14px}.panel:first-child h2{font-size:15px;margin-bottom:5px}.panel:first-child .note{font-size:11px}.panel:first-child .fields{gap:7px 10px}.panel:first-child .field label{font-size:12px;margin-bottom:3px}.panel:first-child input,.panel:first-child textarea,.panel:first-child select{padding:6px 8px;font-size:13px;min-height:31px}.panel:first-child textarea{min-height:49px}.panel:first-child details{padding:8px!important;margin:7px 0!important}.panel:first-child button{font-size:12px;padding:7px 10px}@media print{}/* Fit the full A4 sheet in the available right-side viewport without altering print dimensions. */
 .panel:nth-child(2){display:flex;flex-direction:column;overflow:hidden}
 .panel:nth-child(2) .rightsticky{flex:0 0 auto;z-index:2}
-.panel:nth-child(2) .pane{flex:1 1 auto;min-height:0;overflow:auto}
-#previewPage{transform-origin:top left;flex-shrink:0}
-@media print{#previewPage{transform:none!important;margin:0!important}.panel:nth-child(2){display:block;overflow:visible}.panel:nth-child(2) .pane{overflow:visible}}
+@media print{.panel:nth-child(2){display:block;overflow:visible}}
 
 /* Compact the entire application UI, not the printed A4 document. */
 body{font-size:12px}
@@ -29,54 +26,65 @@ main{grid-template-columns:minmax(0,52%) minmax(0,48%);gap:8px;padding:8px;heigh
 button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6px}
 .rightsticky{padding:9px 11px}
 .rightsticky .alert{padding:6px 9px;margin:5px 0;font-size:11px;line-height:1.3}
-.panel:nth-child(2) .pane{padding:6px 8px}
-.panel:nth-child(2) .pane>.note{font-size:10px;margin-top:20px}
 @media(max-width:900px){main{display:block;height:auto}.panel{height:auto;max-height:none;margin-bottom:8px}}
-@media print{body{font-size:initial}main{display:block;height:auto;padding:0}.panel{height:auto;overflow:visible}.panel:nth-child(2) .pane{padding:0}}
-.preview-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.preview-heading h2{margin:0}.preview-expanded main{grid-template-columns:minmax(0,23%) minmax(0,77%)}.preview-expanded .panel:first-child .pane{padding:8px}.preview-expanded #previewPage{transition:none}@media(max-width:900px){.preview-expanded main{display:block}}@media print{.preview-expanded main{display:block}}
-.preview-zoom{display:flex;align-items:center;gap:4px}.preview-zoom button{padding:4px 9px;min-width:25px}.preview-zoom span{font-size:11px;min-width:36px;text-align:center}@media print{.preview-zoom{display:none}#previewPage{transform:none!important;margin-left:0!important;margin-bottom:0!important}}
-/* Preview navigation (paper layout is defined once in the A4 block below) */
-.preview-zoom #pageCount{font-size:11px;white-space:nowrap;min-width:38px;text-align:center}
-.preview-zoom button:disabled{opacity:.35;cursor:default}
-.docx-split-wrapper{display:block!important}
-#docxPages section.docx[style*="display: none"]{display:none!important}
-.viewer-choice{display:flex;gap:5px;flex-wrap:wrap}.viewer-choice button{font-size:12px!important;padding:7px 10px!important}.viewer-choice .mode-active{background:#126ca5!important;color:#fff!important}#googleViewer[hidden]{display:none!important}#googleViewer{padding:0 5px}#googleViewerFrame{width:100%;height:calc(100vh - 340px);min-height:480px;border:0;background:white}#googleViewer .note{margin:10px 0 2px}#googleOpen{font-size:13px;display:inline-block;margin-bottom:8px}
-.docx-edit-field{display:inline-block!important;width:auto;min-width:70px!important;max-width:430px!important;padding:1px 3px!important;margin:0 2px!important;border:1px dashed #3185b9!important;border-radius:3px!important;background:#eaf6ff!important;color:#172c3f!important;font-family:ths,'Sarabun',sans-serif!important;font-size:16pt!important;line-height:1.1!important;vertical-align:baseline!important;box-sizing:border-box!important}.docx-edit-field:focus{outline:2px solid #2178b5!important;background:white!important}@media print{.docx-edit-field{border:none!important;background:none!important}}
+@media print{body{font-size:initial}main{display:block;height:auto;padding:0}.panel{height:auto;overflow:visible}}
+.preview-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.preview-heading h2{margin:0}@media(max-width:900px){}@media print{}@media print{}#googleOpen{font-size:13px;display:inline-block;margin-bottom:8px}@media print{}
 .google-api-test{border:1px solid #bcdacf;background:#f1faf6;padding:12px;border-radius:9px;margin:12px 0;font-size:13px}.google-api-test p{margin:6px 0}.google-api-test a{font-weight:600}
 .apps-script-link{display:inline-block;padding:10px 14px;border-radius:8px;background:#147b55;color:white!important;text-decoration:none;font-size:13px;font-weight:700}.apps-script-link:hover{background:#0b6444}
 
-#docxPages .docx-wrapper{padding:0!important;background:transparent!important;display:block!important}
-#docxPages section.docx{box-shadow:0 3px 12px #22334420!important;border:1px solid #d0d9e3!important}
-#docxPages .word-empty-spacer{
- box-sizing:border-box!important;height:10pt!important;min-height:10pt!important;
- max-height:10pt!important;line-height:10pt!important;
- margin:0!important;padding:0!important;border:0!important;
-}
-#docxPages .word-empty-spacer *{line-height:inherit!important}
-/* Uniform government A4 sheets: explicit approved layout, not implicit DOCX CSS */
 :root{--paper-width:210mm;--paper-height:297mm;--paper-top:5mm;--paper-bottom:10mm;--paper-left:22.5mm;--paper-right:13.5mm}
-#docxPages section.docx{
- width:var(--paper-width)!important;min-width:var(--paper-width)!important;max-width:var(--paper-width)!important;
- height:var(--paper-height)!important;min-height:var(--paper-height)!important;max-height:var(--paper-height)!important;
- padding:var(--paper-top) var(--paper-right) var(--paper-bottom) var(--paper-left)!important;
- background:#fff!important;box-sizing:border-box!important;overflow:visible!important;position:relative!important;
- margin:0!important;
-}
-#docxPages section.docx .docx-page-content{max-width:100%!important}
-#docxPages .docx-wrapper{width:var(--paper-width)!important;min-width:var(--paper-width)!important;margin:0!important}
-#docxPages .docx-edit-field{font-family:ths,'THSarabunPSK',serif!important;font-size:16pt!important}
-#googleViewer{display:none!important}
 @media print{
  @page{size:A4;margin:0}
- #docxPages section.docx{width:210mm!important;height:297mm!important;max-height:none!important;border:0!important;break-after:page!important}
- #docxPages section.docx[style*="display: none"]{display:block!important}
 }
-#docxPages .page-overflow{outline:2px solid #c34f39!important;outline-offset:1px}#pageAudit{font-size:11px;color:#94533f;margin:4px 0}
-.left-exports{position:sticky;bottom:0;background:#fff;padding:9px 4px 3px;z-index:5;border-top:1px solid #dce7ef;box-shadow:0 -4px 12px #fff9}.left-exports button{font-size:12px;padding:8px 10px}#docxPages .docx-edit-field{min-width:28px!important;max-width:350px!important;padding:0 2px!important;margin:0!important;line-height:1!important;height:1.2em!important;border-width:0 0 1px!important;vertical-align:baseline!important}#docxPages .docx-edit-field:placeholder-shown{background:transparent!important;border-bottom:1px dashed #a7c8da!important}#docxPages section.docx p{max-width:100%}#docxPages .page-overflow{outline:2px solid #c43d30!important}
-#status,#pageAudit{display:none!important}
-#docxPages section.docx > header,#docxPages section.docx > footer{display:none!important}
+.left-exports{position:sticky;bottom:0;background:#fff;padding:9px 4px 3px;z-index:5;border-top:1px solid #dce7ef;box-shadow:0 -4px 12px #fff9}.left-exports button{font-size:12px;padding:8px 10px}
  
 
+
+
+/* --- Single source of truth: Preview paper/layout (2026-10-13) --- */
+:root{--preview-paper-w:210mm;--preview-paper-h:297mm;--preview-top:5mm;--preview-bottom:10mm;--preview-left:22.5mm;--preview-right:13.5mm;--preview-blank:10pt}
+.panel:nth-child(2) .pane{background:#e4eaf0;overflow:auto;min-height:0;padding:6px 8px}
+.preview-zoom{display:flex;align-items:center;gap:4px}
+.preview-zoom button{padding:4px 9px;min-width:25px}
+.preview-zoom span{font-size:11px;min-width:36px;text-align:center}
+.preview-zoom button:disabled{opacity:.35;cursor:default}
+#previewPage{width:var(--preview-paper-w);height:var(--preview-paper-h);padding:var(--preview-top) var(--preview-right) var(--preview-bottom) var(--preview-left);box-sizing:border-box;background:white;position:relative;box-shadow:0 3px 12px #22334420;transform-origin:top left}
+#preview{font-family:ths,'THSarabunPSK',serif;font-size:16pt;line-height:1.12;color:#111}
+#preview h3{text-align:center;font-size:24pt;margin:0 0 1em}
+#preview .line{padding:2mm 0}
+#preview .memohead{position:relative;margin-bottom:1em}
+#preview .memohead img{position:absolute;left:0;top:0;width:15mm;height:15mm;object-fit:contain}
+#preview .memohead h3{margin:0;text-align:center;font-weight:700}
+#preview .twocol{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
+#preview .doc-line{padding:2mm 0}
+#preview .subject{border-bottom:1px solid #111;padding-bottom:2mm}
+#preview .doc-body p{margin:4mm 0;text-indent:14mm;text-align:justify;overflow-wrap:anywhere}
+#preview .signatures{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:12mm}
+#preview .approve{text-align:center;margin-top:18mm}
+#preview .source-note{font-size:16pt;margin-top:11mm}
+#docxPages{background:transparent;overflow:visible;padding:0}
+#docxPages .docx-wrapper{width:var(--preview-paper-w)!important;min-width:var(--preview-paper-w)!important;max-width:var(--preview-paper-w)!important;display:block!important;background:transparent!important;padding:0!important}
+#docxPages section.docx{width:var(--preview-paper-w)!important;min-width:var(--preview-paper-w)!important;max-width:var(--preview-paper-w)!important;height:var(--preview-paper-h)!important;min-height:var(--preview-paper-h)!important;max-height:var(--preview-paper-h)!important;box-sizing:border-box!important;padding:var(--preview-top) var(--preview-right) var(--preview-bottom) var(--preview-left)!important;margin:0!important;background:white!important;position:relative!important;overflow:visible!important;box-shadow:0 3px 12px #22334420!important;border:1px solid #d0d9e3!important}
+#docxPages section.docx[style*="display: none"]{display:none!important}
+#docxPages section.docx>header,#docxPages section.docx>footer{display:none!important}
+#docxPages section.docx .docx-page-content{max-width:100%!important}
+#docxPages .word-empty-spacer{height:var(--preview-blank)!important;min-height:var(--preview-blank)!important;max-height:var(--preview-blank)!important;line-height:var(--preview-blank)!important;margin:0!important;padding:0!important;border:0!important;box-sizing:border-box!important}
+#docxPages .word-empty-spacer *{line-height:inherit!important}
+#docxPages .docx-edit-field{display:inline-block!important;font-family:ths,'THSarabunPSK',serif!important;font-size:16pt!important;line-height:1!important;height:1.2em!important;min-width:28px!important;max-width:350px!important;padding:0 2px!important;margin:0!important;border:0!important;border-bottom:1px dashed #3185b9!important;vertical-align:baseline!important;box-sizing:border-box!important;background:#eaf6ff!important;color:#172c3f!important}
+#docxPages .docx-edit-field:focus{outline:2px solid #2178b5!important;background:#fff!important}
+#docxPages .page-overflow{outline:2px solid #c43d30!important}
+#googleViewer{display:none!important}
+#status,#pageAudit{display:none!important}
+@media print{
+ @page{size:A4;margin:0}
+ .preview-zoom{display:none!important}
+ #previewPage{transform:none!important;box-shadow:none!important;margin:0!important}
+ #docxPages .docx-wrapper{transform:none!important;margin:0!important}
+ #docxPages section.docx{border:0!important;box-shadow:none!important;break-after:page!important}
+ #docxPages section.docx[style*="display: none"]{display:block!important}
+ #docxPages .docx-edit-field{background:transparent!important;border:0!important}
+ .panel:nth-child(2) .pane{background:white;overflow:visible;padding:0}
+}
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
 <main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar left-exports"><button id="export">ส่งออก Word (.docx)</button><button id="print" class="secondary">พิมพ์ / PDF</button><button id="save" class="secondary">บันทึกข้อมูล</button><button id="reset" class="secondary">ล้างข้อมูล</button></div></div></section>
