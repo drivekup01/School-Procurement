@@ -116,7 +116,7 @@ function paginateWord(groups){
  document.body.append(staging);
  try{
   for(let groupIndex=0;groupIndex<groups.length;groupIndex++){
-   if(groupIndex===0){const first=document.createElement('template');first.innerHTML=wordFirstPageHTML;pages.push(first.content.firstElementChild);continue}
+   if(groupIndex===0){const first=document.createElement('template');first.innerHTML=wordFirstPageHTML;const page=first.content.firstElementChild;const walker=document.createTreeWalker(page,NodeFilter.SHOW_TEXT),nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);for(const node of nodes){if(/\{\{[\w.-]+\}\}/.test(node.nodeValue||''))node.replaceWith(wordFieldFragments(node.nodeValue))}pages.push(page);continue}
    let page=buildPage([]);staging.append(page);
    let inner=page.firstElementChild;
    for(const element of groups[groupIndex]){
