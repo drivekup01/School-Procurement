@@ -62,7 +62,7 @@ function paragraphHTML(p){
  const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
  const textNodes=[];while(walker.nextNode())textNodes.push(walker.currentNode);
  const full=textNodes.map(n=>n.nodeValue||'').join('');
- const matches=Array.from(full.matchAll(/\\{\\{\\s*([\\w.-]+)\\s*\\}\\}/g)).reverse();
+ const matches=Array.from(full.matchAll(/\{\{\s*([\w.-]+)\s*\}\}/g)).reverse();
  for(const match of matches){
   const begin=match.index,end=begin+match[0].length;
   let pos=0,first=null,last=null,firstOffset=0,lastOffset=0;
@@ -75,7 +75,9 @@ function paragraphHTML(p){
   if(!first||!last)continue;
   if(first.parentElement?.closest('[data-field]')||last.parentElement?.closest('[data-field]'))continue;
   const marker=document.createElement('span');marker.dataset.field=match[1];marker.className='word-parameter word-overlay-field';
-  marker.textContent=match[0];
+  const value=formValues[match[1]];
+  marker.textContent=value!==undefined&&value!==''?String(value):match[0];
+  marker.classList.toggle('word-filled',value!==undefined&&value!=='');
   if(first===last){const original=first.nodeValue||'';first.nodeValue=original.slice(0,firstOffset);first.after(marker,document.createTextNode(original.slice(lastOffset)))}
   else{
    const prefix=(first.nodeValue||'').slice(0,firstOffset),suffix=(last.nodeValue||'').slice(lastOffset);
