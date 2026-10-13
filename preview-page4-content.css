@@ -1,0 +1,5 @@
+/* Page 4 surrounding content only. The table and its stylesheet are untouched. */
+.word-generated .word-content.p4-layout{display:flex;flex-direction:column;gap:12pt}
+.word-generated .p4-before-table,.word-generated .p4-after-table{display:flex;flex-direction:column;gap:0}
+.word-generated .p4-before-table .word-paragraph,.word-generated .p4-after-table .word-paragraph{margin-bottom:0}
+.word-generated .p4-table-group{flex:0 0 auto;min-width:0}
