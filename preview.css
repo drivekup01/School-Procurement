@@ -1,0 +1,5 @@
+/* PDF preview overlay styling */
+.parameter-marker{position:absolute;box-sizing:border-box;border:1px solid #1677ed;background:rgba(40,133,255,.09);border-radius:2px;pointer-events:none}
+.parameter-marker.active{outline:2px solid #1677ed;background:rgba(40,133,255,.17)}
+.parameter-marker.has-value{background:#fff;border:1px solid #3b82f6;overflow:visible}
+.parameter-marker .replacement-text{display:block;white-space:nowrap;color:#111;font-family:"THSarabunPSK","TH Sarabun PSK",serif;line-height:1;overflow:visible;padding:0 2px}
