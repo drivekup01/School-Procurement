@@ -193,7 +193,7 @@ async function markPDFParameters(page,viewport,layer,pageNumber){
      marker.classList.add('has-value');marker.replaceChildren();
      marker.style.width='auto';marker.style.minWidth=(right-x)+'px';
      const text=document.createElement('span');text.className='replacement-text';text.textContent=calendarFieldKeys.has(match[1])?toThaiDocumentDate(entered):entered;
-     text.style.fontSize=(16*viewport.scale)+'pt';text.style.top='0';text.style.padding='0 '+(2*viewport.scale)+'px';
+     text.style.fontSize=(12*viewport.scale)+'pt';text.style.top='0';text.style.padding='0 '+(2*viewport.scale)+'px';
      marker.append(text);
    }
    if(activeField===match[1])marker.classList.add('active');
