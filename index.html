@@ -2,7 +2,7 @@
 <html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ระบบจัดทำเอกสารราชการ</title>
 <style>
 :root{font-family:system-ui,"Noto Sans Thai",sans-serif;color:#192b43;background:#eef3fa}*{box-sizing:border-box}body{margin:0}header{height:72px;background:white;border-bottom:1px solid #dce4ee;display:flex;align-items:center;justify-content:space-between;padding:0 28px}h1{font-size:19px;margin:0}small{color:#728198}main{display:grid;grid-template-columns:minmax(320px,390px) minmax(400px,1fr);gap:18px;padding:18px;min-height:calc(100vh - 72px)}section{background:#fff;border:1px solid #dee5ef;border-radius:15px;min-width:0}.fields{padding:18px;overflow:auto;max-height:calc(100vh - 108px)}h2{font-size:16px;margin:4px 0 14px}.group{padding:15px 0;border-top:1px solid #e6ebf3}.group h3{font-size:14px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}select,input{display:block;width:100%;padding:11px;border:1px solid #cad6e4;border-radius:9px;background:#fff;font-size:14px}select:disabled,input:disabled{background:#f4f6f9;color:#788597}.preview{display:flex;flex-direction:column;overflow:hidden}.toolbar{padding:14px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid #e6ebf3}.toolbar strong{font-size:15px}.document-frame{position:relative;flex:1;min-height:680px;background:#eff2f8}iframe{width:100%;height:100%;min-height:680px;border:0;background:#eff2f8}.overlay-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden}.parameter-marker{position:absolute;box-sizing:border-box;border:1px solid #1677ed;background:rgba(40,133,255,.09);border-radius:2px;pointer-events:none}.parameter-marker.active{outline:2px solid #1677ed;background:rgba(40,133,255,.17)}.parameter-marker .field-tag{position:absolute;bottom:100%;left:-1px;background:#1677ed;color:white;white-space:nowrap;font-size:11px;padding:2px 5px;border-radius:3px 3px 0 0}.note{padding:10px 18px;background:#fff9ed;color:#70501d;font-size:12px;border-top:1px solid #f4e6c4}.muted{color:#6a7c94;font-size:13px;line-height:1.7}.ref{color:#315b96;font-size:12px;text-decoration:none}button{border:1px solid #d2dae5;border-radius:9px;padding:10px 12px;background:#fff;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}@media(max-width:900px){main{grid-template-columns:1fr}.fields{max-height:none}iframe{min-height:580px}}
-.renderer-scroll{height:680px;overflow:auto;background:#dce3ed;padding:18px}.renderer-scroll .docx-wrapper{background:transparent!important;padding:0!important}.renderer-scroll .docx{margin:0 auto 18px!important;box-shadow:0 2px 8px #0002}.renderer-message{padding:28px;text-align:center;color:#576b87}.toolbar-controls{display:flex;gap:8px;align-items:center}.toolbar select{width:auto;max-width:250px;padding:9px}.document-frame{min-height:680px}#word[hidden],#docxRender[hidden]{display:none!important}@media(max-width:900px){.toolbar{flex-wrap:wrap}.renderer-scroll{height:580px}}</style></head><body>
+.renderer-scroll{height:680px;overflow:auto;background:#dce3ed;padding:18px}.renderer-scroll .docx-wrapper{background:transparent!important;padding:0!important}.renderer-scroll .docx{margin:0 auto 18px!important;box-shadow:0 2px 8px #0002}.renderer-message{padding:28px;text-align:center;color:#576b87}.toolbar-controls{display:flex;gap:8px;align-items:center}.toolbar select{width:auto;max-width:250px;padding:9px}.document-frame{min-height:680px}#word[hidden],#docxRender[hidden]{display:none!important}@media(max-width:900px){.toolbar{flex-wrap:wrap}.renderer-scroll{height:580px}}.input-wrap{margin-bottom:12px}.input-wrap label{display:flex;justify-content:space-between;gap:5px;align-items:center}.input-wrap small{font-weight:400;font-size:11px}.input-wrap input:focus{outline:2px solid #7eb3ff}.parameter-marker.has-value{background:#fff;border:1px solid #3b82f6;overflow:visible}.parameter-marker .replacement-text{display:block;white-space:nowrap;color:#111;font-family:"TH Sarabun New","THSarabunPSK",serif;font-size:16px;line-height:1.2;overflow:visible;padding:0 2px}.page-field-count{font-size:12px;color:#64748b;margin:4px 0 10px}</style></head><body>
 <header><div><h1>ระบบจัดทำเอกสารราชการ</h1><small>School Procurement · ต้นฉบับ Word จาก GitHub</small></div><span id="state"><small>ขั้นตอนเริ่มต้น</small></span></header>
 <main><section class="fields">
 <h2>ข้อมูลเอกสาร</h2><label for="page">หน้าเอกสาร</label><select id="page" disabled><option>รอตรวจสอบจำนวนหน้าจริงจาก Word</option></select>
@@ -17,7 +17,7 @@ const raw='https://raw.githubusercontent.com/drivekup01/School-Procurement/main/
 const viewer='https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(raw);
 const office=document.getElementById('word');office.src=viewer;
 const stage=document.getElementById('docxRender'),mode=document.getElementById('viewerMode'),pageSelect=document.getElementById('page');
-let rendered=false,pdfDocument=null;const pdfStage=document.getElementById("pdfRender");
+let rendered=false,pdfDocument=null,parameterIndex=new Map(),detectedPages=new Set(),currentPDFPage=1,activeField=null;const formValues=(()=>{try{return JSON.parse(localStorage.getItem("school-procurement-preview-values-v1")||"{}")}catch{return {}}})();const pdfStage=document.getElementById("pdfRender");
 function setMode(value){
  mode.value=value;office.hidden=value!=='office';stage.hidden=value!=='docx';pdfStage.style.display=value==='pdf'?'block':'none';
  document.getElementById('parameterOverlay').replaceChildren();
@@ -65,6 +65,7 @@ async function loadPDF(){
   pageSelect.replaceChildren();
   for(let p=1;p<=pdfDocument.numPages;p++)pageSelect.add(new Option('หน้า '+p,String(p)));
   pageSelect.disabled=false;pageSelect.onchange=()=>renderPDFPage(Number(pageSelect.value));
+  await scanPDFParameters();
   await renderPDFPage(Number(pageSelect.value)||1);
   document.getElementById('state').textContent='PDF ต้นฉบับ · '+pdfDocument.numPages+' หน้า';
  }catch(error){
@@ -73,7 +74,7 @@ async function loadPDF(){
  }
 }
 async function renderPDFPage(number){
- if(!pdfDocument||mode.value!=='pdf')return;
+ if(!pdfDocument||mode.value!=='pdf')return;currentPDFPage=number;
  const p=await pdfDocument.getPage(number);const native=p.getViewport({scale:1});
  const maxWidth=Math.max(270,pdfStage.clientWidth-44);
  const ratio=Math.min(1.6,maxWidth/native.width);
@@ -92,7 +93,7 @@ async function renderPDFPage(number){
  await p.render({canvasContext:ctx,viewport,transform:scale===1?null:[scale,0,0,scale,0,0]}).promise;
  pdfStage.scrollTop=0;
  document.getElementById('parameterOverlay').replaceChildren();
- try { await markPDFParameters(p,viewport,layer,number); }
+ try { await markPDFParameters(p,viewport,layer,number); renderFormFields(); }
  catch(e){console.warn('Parameter overlay unavailable:',e);}
 
 }
@@ -138,7 +139,16 @@ async function markPDFParameters(page,viewport,layer,pageNumber){
    marker.style.cssText='left:'+x+'px;top:'+y+'px;width:'+(right-x)+'px;height:'+(bottom-y)+'px;';
    marker.setAttribute('title',match[1]);
    const tag=document.createElement('span');tag.className='field-tag';tag.textContent=match[1];
-   marker.appendChild(tag);layer.appendChild(marker);count++;
+   marker.appendChild(tag);
+   const entered=formValues[match[1]];
+   if(entered!==undefined&&entered!==''){
+     marker.classList.add('has-value');marker.replaceChildren();
+     marker.style.width='auto';marker.style.minWidth=(right-x)+'px';
+     const text=document.createElement('span');text.className='replacement-text';text.textContent=entered;
+     marker.append(text);
+   }
+   if(activeField===match[1])marker.classList.add('active');
+   layer.appendChild(marker);count++;
   }
  }
  const status=document.getElementById('state');
@@ -148,6 +158,68 @@ async function markPDFParameters(page,viewport,layer,pageNumber){
   msg.style.cssText='position:absolute;right:10px;bottom:10px;background:#fff9ee;color:#715223;border:1px solid #e9d4ac;border-radius:6px;padding:7px 9px;font-size:12px;pointer-events:none';
   msg.textContent='หน้านี้ไม่พบพารามิเตอร์ {{...}} ในชั้นข้อความ PDF';
   layer.append(msg);
+ }
+}
+
+
+async function scanPDFParameters(){
+ parameterIndex=new Map();detectedPages=new Set();
+ for(let pageNumber=1;pageNumber<=pdfDocument.numPages;pageNumber++){
+  const page=await pdfDocument.getPage(pageNumber),data=await page.getTextContent();
+  const rows=[];
+  for(const it of data.items){
+   if(!it.str||!it.transform)continue;
+   const y=it.transform[5];
+   let row=rows.find(r=>Math.abs(r.y-y)<2.5);
+   if(!row){row={y,parts:[]};rows.push(row);}
+   row.parts.push({x:it.transform[4],str:it.str});
+  }
+  for(const row of rows){
+   row.parts.sort((a,b)=>a.x-b.x);
+   const joined=row.parts.map(x=>x.str).join('');
+   for(const m of joined.matchAll(/\{\{\s*([\w.-]+)\s*\}\}/g)){
+    const key=m[1];if(!parameterIndex.has(key))parameterIndex.set(key,new Set());
+    parameterIndex.get(key).add(pageNumber);
+    detectedPages.add(pageNumber);
+   }
+  }
+ }
+ renderFormFields();
+}
+function renderFormFields(){
+ const shared=document.getElementById('sharedFields'),specific=document.getElementById('pageFields');
+ if(!pdfDocument)return;
+ shared.replaceChildren();specific.replaceChildren();
+ const common=[],unique=[];
+ for(const [key,pages] of parameterIndex){
+  if(pages.size>1)common.push(key);
+  else if(pages.has(currentPDFPage))unique.push(key);
+ }
+ function addField(parent,key){
+  const wrap=document.createElement('div');wrap.className='input-wrap';
+  const label=document.createElement('label');label.textContent=key;label.htmlFor='field-'+key;
+  const input=document.createElement('input');input.id='field-'+key;input.type='text';input.autocomplete='off';
+  input.placeholder='กรอก '+key;input.value=formValues[key]??'';
+  input.addEventListener('focus',()=>{activeField=key;highlightField(key)});
+  input.addEventListener('input',()=>{
+   formValues[key]=input.value;
+   try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}
+   activeField=key;
+   renderPDFPage(currentPDFPage);
+  });
+  wrap.append(label,input);parent.appendChild(wrap);
+ }
+ if(!common.length)shared.innerHTML='<p class="muted">ยังไม่พบพารามิเตอร์ที่ซ้ำข้ามหน้า</p>';
+ else common.forEach(k=>addField(shared,k));
+ const summary=document.createElement('p');summary.className='page-field-count';
+ summary.textContent='หน้า '+currentPDFPage+' · '+unique.length+' ช่องเฉพาะหน้า · '+common.length+' ช่องใช้ร่วมกัน';
+ specific.appendChild(summary);
+ if(!unique.length){const info=document.createElement('p');info.className='muted';info.textContent='หน้านี้ไม่พบพารามิเตอร์เฉพาะหน้า';specific.appendChild(info);}
+ else unique.forEach(k=>addField(specific,k));
+}
+function highlightField(key){
+ for(const marker of document.querySelectorAll('.pdf-parameter-overlay .parameter-marker')){
+  marker.classList.toggle('active',marker.getAttribute('title')===key);
  }
 }
 
