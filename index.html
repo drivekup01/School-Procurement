@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ระบบจัดทำเอกสารราชการ</title>
 <style>
-:root{font-family:system-ui,"Noto Sans Thai",sans-serif;color:#192b43;background:#eef3fa}*{box-sizing:border-box}body{margin:0}header{height:72px;background:white;border-bottom:1px solid #dce4ee;display:flex;align-items:center;justify-content:space-between;padding:0 28px}h1{font-size:19px;margin:0}small{color:#728198}main{display:grid;grid-template-columns:minmax(320px,390px) minmax(400px,1fr);gap:18px;padding:18px;min-height:calc(100vh - 72px)}section{background:#fff;border:1px solid #dee5ef;border-radius:15px;min-width:0}.fields{padding:18px;overflow:auto;max-height:calc(100vh - 108px)}h2{font-size:16px;margin:4px 0 14px}.group{padding:15px 0;border-top:1px solid #e6ebf3}.group h3{font-size:14px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}select,input{display:block;width:100%;padding:11px;border:1px solid #cad6e4;border-radius:9px;background:#fff;font-size:14px}select:disabled,input:disabled{background:#f4f6f9;color:#788597}.preview{display:flex;flex-direction:column;overflow:hidden}.toolbar{padding:14px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid #e6ebf3}.toolbar strong{font-size:15px}.document-frame{position:relative;flex:1;min-height:680px;background:#eff2f8}iframe{width:100%;height:100%;min-height:680px;border:0;background:#eff2f8}.overlay-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden}.parameter-marker{position:absolute;box-sizing:border-box;border:1px solid #1677ed;background:rgba(40,133,255,.09);border-radius:2px;pointer-events:none}.parameter-marker.active{outline:2px solid #1677ed;background:rgba(40,133,255,.17)}.parameter-marker .field-tag{position:absolute;bottom:100%;left:-1px;background:#1677ed;color:white;white-space:nowrap;font-size:11px;padding:2px 5px;border-radius:3px 3px 0 0}.note{padding:10px 18px;background:#fff9ed;color:#70501d;font-size:12px;border-top:1px solid #f4e6c4}.muted{color:#6a7c94;font-size:13px;line-height:1.7}.ref{color:#315b96;font-size:12px;text-decoration:none}button{border:1px solid #d2dae5;border-radius:9px;padding:10px 12px;background:#fff;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}@media(max-width:900px){main{grid-template-columns:1fr}.fields{max-height:none}iframe{min-height:580px}}
-.renderer-scroll{height:680px;overflow:auto;background:#dce3ed;padding:18px}.renderer-scroll .docx-wrapper{background:transparent!important;padding:0!important}.renderer-scroll .docx{margin:0 auto 18px!important;box-shadow:0 2px 8px #0002}.renderer-message{padding:28px;text-align:center;color:#576b87}.toolbar-controls{display:flex;gap:8px;align-items:center}.toolbar select{width:auto;max-width:250px;padding:9px}.document-frame{min-height:680px}#word[hidden],#docxRender[hidden]{display:none!important}@media(max-width:900px){.toolbar{flex-wrap:wrap}.renderer-scroll{height:580px}}.input-wrap{margin-bottom:12px}.input-wrap label{display:flex;justify-content:space-between;gap:5px;align-items:center}.input-wrap small{font-weight:400;font-size:11px}.input-wrap input:focus{outline:2px solid #7eb3ff}.parameter-marker.has-value{background:#fff;border:1px solid #3b82f6;overflow:visible}.parameter-marker .replacement-text{display:block;white-space:nowrap;color:#111;font-family:"THSarabunPSK","TH Sarabun PSK",serif;font-size:16pt;line-height:1;overflow:visible;padding:0 2px;position:relative;top:2px}.page-field-count{font-size:12px;color:#64748b;margin:4px 0 10px}.shared-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:2px 0 12px;text-align:left;border:0;border-radius:0;background:transparent;font-size:14px;font-weight:700;color:inherit}.shared-toggle:hover{color:#245ca1}.shared-toggle:focus-visible{outline:2px solid #2675df;outline-offset:3px}.shared-toggle span:last-child{font-size:18px;line-height:1}#sharedBody[hidden]{display:none!important}
+:root{font-family:system-ui,"Noto Sans Thai",sans-serif;color:#192b43;background:#eef3fa}*{box-sizing:border-box}body{margin:0}header{height:72px;background:white;border-bottom:1px solid #dce4ee;display:flex;align-items:center;justify-content:space-between;padding:0 28px}h1{font-size:19px;margin:0}small{color:#728198}main{display:grid;grid-template-columns:minmax(320px,390px) minmax(400px,1fr);gap:18px;padding:18px;min-height:calc(100vh - 72px)}section{background:#fff;border:1px solid #dee5ef;border-radius:15px;min-width:0}.fields{padding:18px;overflow:auto;max-height:calc(100vh - 108px)}h2{font-size:16px;margin:4px 0 14px}.group{padding:15px 0;border-top:1px solid #e6ebf3}.group h3{font-size:14px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}select,input{display:block;width:100%;padding:11px;border:1px solid #cad6e4;border-radius:9px;background:#fff;font-size:14px}select:disabled,input:disabled{background:#f4f6f9;color:#788597}.preview{display:flex;flex-direction:column;overflow:hidden}.toolbar{padding:14px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid #e6ebf3}.toolbar strong{font-size:15px}.document-frame{position:relative;flex:1;min-height:680px;background:#eff2f8}iframe{width:100%;height:100%;min-height:680px;border:0;background:#eff2f8}.parameter-marker{position:absolute;box-sizing:border-box;border:1px solid #1677ed;background:rgba(40,133,255,.09);border-radius:2px;pointer-events:none}.parameter-marker.active{outline:2px solid #1677ed;background:rgba(40,133,255,.17)}.parameter-marker .field-tag{position:absolute;bottom:100%;left:-1px;background:#1677ed;color:white;white-space:nowrap;font-size:11px;padding:2px 5px;border-radius:3px 3px 0 0}.note{padding:10px 18px;background:#fff9ed;color:#70501d;font-size:12px;border-top:1px solid #f4e6c4}.muted{color:#6a7c94;font-size:13px;line-height:1.7}.ref{color:#315b96;font-size:12px;text-decoration:none}button{border:1px solid #d2dae5;border-radius:9px;padding:10px 12px;background:#fff;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}@media(max-width:900px){main{grid-template-columns:1fr}.fields{max-height:none}iframe{min-height:580px}}
+.renderer-scroll{height:680px;overflow:auto;background:#dce3ed;padding:18px}.renderer-message{padding:28px;text-align:center;color:#576b87}.toolbar-controls{display:flex;gap:8px;align-items:center}.toolbar select{width:auto;max-width:250px;padding:9px}.document-frame{min-height:680px}@media(max-width:900px){.toolbar{flex-wrap:wrap}.renderer-scroll{height:580px}}.input-wrap{margin-bottom:12px}.input-wrap label{display:flex;justify-content:space-between;gap:5px;align-items:center}.input-wrap small{font-weight:400;font-size:11px}.input-wrap input:focus{outline:2px solid #7eb3ff}.parameter-marker.has-value{background:#fff;border:1px solid #3b82f6;overflow:visible}.parameter-marker .replacement-text{display:block;white-space:nowrap;color:#111;font-family:"THSarabunPSK","TH Sarabun PSK",serif;line-height:1;overflow:visible;padding:0 2px}.page-field-count{font-size:12px;color:#64748b;margin:4px 0 10px}.shared-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:2px 0 12px;text-align:left;border:0;border-radius:0;background:transparent;font-size:14px;font-weight:700;color:inherit}.shared-toggle:hover{color:#245ca1}.shared-toggle:focus-visible{outline:2px solid #2675df;outline-offset:3px}.shared-toggle span:last-child{font-size:18px;line-height:1}#sharedBody[hidden]{display:none!important}
 /* School-OS inspired school identity: visual-only overrides */
 :root{font-family:"Noto Sans Thai",Tahoma,system-ui,sans-serif;color:#102e56;background:#f4f8fe}
 body{background:linear-gradient(180deg,#ecf3fc,#f8fbff 420px);min-height:100vh}
@@ -52,8 +52,8 @@ button{font-weight:650;border-color:#dbe6f5;color:#163f75}
 <p class="muted" id="saveNote">ข้อมูลทดลองเก็บเฉพาะในเบราว์เซอร์นี้ ยังไม่บันทึกออนไลน์</p>
 <p><a class="ref" href="procurement-template13.docx">เปิดไฟล์ต้นฉบับ Word</a></p>
 <p><a class="ref" href="%E0%B8%AA%E0%B8%A3%E0%B8%B8%E0%B8%9B%E0%B8%87%E0%B8%9A%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%A1%E0%B8%B2%E0%B8%93%E0%B9%83%E0%B8%99%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%94%E0%B8%B3%E0%B9%80%E0%B8%99%E0%B8%B4%E0%B8%99%E0%B9%82%E0%B8%84%E0%B8%A3%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%88%E0%B8%B3%E0%B8%9B%E0%B8%B5%202570.docx">เปิดไฟล์ข้อมูลกลาง</a></p>
-</section><section class="preview"><div class="toolbar"><strong>ตัวอย่างเอกสาร PDF ต้นฉบับ</strong><span id="zoomIndicator" title="หมุนล้อเมาส์บน Preview เพื่อย่อหรือขยาย" style="font-size:12px;color:#486080;white-space:nowrap">ขยาย 100%</span><div class="toolbar-controls"><button id="exportWord" type="button">⬇ Export Word</button></div></div><div class="document-frame"><div id="pdfRender" class="renderer-scroll" style="display:none"><p class="renderer-message">กำลังโหลด PDF...</p></div><div id="docxRender" class="renderer-scroll"><p class="renderer-message">กำลังอ่านไฟล์ต้นฉบับ Word...</p></div><iframe id="word" hidden title="ต้นฉบับ Word ผ่าน Microsoft Office viewer" referrerpolicy="no-referrer" loading="lazy"></iframe><div id="parameterOverlay" class="overlay-layer" aria-label="ตำแหน่งพารามิเตอร์ที่แก้ไข" aria-live="polite"></div></div><div class="note">โหมดหลักแสดง PDF ต้นฉบับแต่ละหน้าโดยตรง ไม่เปลี่ยนขอบกระดาษหรือการเว้นบรรทัด พารามิเตอร์ Overlay จะเพิ่มเมื่อยืนยันพิกัดจริงแล้ว ยังสามารถเปลี่ยนกลับเป็น Word Preview เดิมได้</div></section></main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.6/dist/docx-preview.min.js"></script>
+</section><section class="preview"><div class="toolbar"><strong>ตัวอย่างเอกสาร PDF ต้นฉบับ</strong><span id="zoomIndicator" title="หมุนล้อเมาส์บน Preview เพื่อย่อหรือขยาย" style="font-size:12px;color:#486080;white-space:nowrap">ขยาย 100%</span><div class="toolbar-controls"><button id="exportWord" type="button">⬇ Export Word</button></div></div><div class="document-frame"><div id="pdfRender" class="renderer-scroll"><p class="renderer-message">กำลังโหลด PDF...</p></div></div></section></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 (function updateHeaderDate(){
  const el=document.getElementById('headerDate');
@@ -62,46 +62,13 @@ button{font-weight:650;border-color:#dbe6f5;color:#163f75}
  el.dateTime=now.toISOString().slice(0,10);
  el.textContent=new Intl.DateTimeFormat('th-TH-u-ca-buddhist',{timeZone:'Asia/Bangkok',day:'numeric',month:'long',year:'numeric'}).format(now);
 })();
-const raw='https://raw.githubusercontent.com/drivekup01/School-Procurement/main/procurement-template13.docx';
-const viewer='https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(raw);
-const office=document.getElementById('word');office.src=viewer;
-const stage=document.getElementById('docxRender'),mode={value:'pdf'},pageSelect={disabled:true,value:'1',replaceChildren(){},add(){},onchange:null};const prevPage=document.getElementById('prevPage'),nextPage=document.getElementById('nextPage'),pageCounter=document.getElementById('pageCounter');function updatePageControls(){const total=pdfDocument?.numPages||0;pageCounter.textContent=total?currentPDFPage+' / '+total:'– / –';prevPage.disabled=!total||currentPDFPage<=1;nextPage.disabled=!total||currentPDFPage>=total;}prevPage.addEventListener('click',()=>{if(pdfDocument&&currentPDFPage>1)renderPDFPage(currentPDFPage-1)});nextPage.addEventListener('click',()=>{if(pdfDocument&&currentPDFPage<pdfDocument.numPages)renderPDFPage(currentPDFPage+1)});
-let pdfZoom=1,zoomTimer=null,pdfRenderSerial=0;let rendered=false,pdfDocument=null,parameterIndex=new Map(),detectedPages=new Set(),currentPDFPage=1,activeField=null,lastFormPage=0;const formValues=(()=>{try{return JSON.parse(localStorage.getItem("school-procurement-preview-values-v1")||"{}")}catch{return {}}})();const pdfStage=document.getElementById("pdfRender");
-function setMode(value){
- mode.value=value;office.hidden=value!=='office';stage.hidden=value!=='docx';pdfStage.style.display=value==='pdf'?'block':'none';
- document.getElementById('parameterOverlay').replaceChildren();
- if(value==='docx'&&!rendered)renderDocx();
- if(value==='pdf')loadPDF();
- if(value==='docx'&&rendered)setupDocxPages();
- if(value==='office'){pageSelect.disabled=true;pageSelect.replaceChildren(new Option('เลือกหน้าไม่ได้ใน Office Viewer',''));}
-}
-
-async function renderDocx(){
- stage.innerHTML='<p class="renderer-message">กำลังอ่านไฟล์ต้นฉบับ Word...</p>';
- try {
-  if(!window.docx?.renderAsync)throw new Error('ไม่สามารถโหลดตัวแสดง DOCX');
-  const response=await fetch('procurement-template13.docx',{cache:'no-store'});
-  if(!response.ok)throw new Error('อ่านต้นฉบับไม่ได้: '+response.status);
-  const bytes=await response.arrayBuffer();
-  stage.replaceChildren();
-  await window.docx.renderAsync(bytes,stage,null,{breakPages:true,ignoreLastRenderedPageBreak:false,renderHeaders:true,renderFooters:true,useBase64URL:true});
-  rendered=true;
-  setupDocxPages();
-  document.getElementById('state').textContent='อ่าน DOCX ในเบราว์เซอร์แล้ว · ตรวจการแบ่งหน้ากับ Word จริง';
- } catch(err){
-  const p=document.createElement('p');p.className='renderer-message';p.textContent='แสดงผลแบบทดลองไม่ได้: '+err.message;
-  stage.replaceChildren(p);document.getElementById('state').textContent='Preview ทดลองไม่สำเร็จ';
- }
-}
-function setupDocxPages(){
-  const pages=[...stage.querySelectorAll('section.docx')];
-  pageSelect.replaceChildren();
-  if(pages.length>0){
-   pages.forEach((_,i)=>pageSelect.add(new Option('หน้า '+(i+1),' '+i)));
-   pageSelect.disabled=false;
-   pageSelect.onchange=()=>pages[Number(pageSelect.value)]?.scrollIntoView({behavior:'smooth',block:'start'});
-  }else{pageSelect.disabled=true;pageSelect.add(new Option('ยังแยกหน้าไม่ได้',''));}
-}
+const prevPage=document.getElementById('prevPage'),nextPage=document.getElementById('nextPage'),pageCounter=document.getElementById('pageCounter'),pdfStage=document.getElementById('pdfRender');
+let pdfZoom=1,zoomTimer=null,pdfRenderSerial=0,pdfDocument=null,parameterIndex=new Map(),detectedPages=new Set(),currentPDFPage=1,activeField=null,lastFormPage=0,activePageRender=0;
+const PDF_OVERLAY_FONT_PT=12;
+const formValues=(()=>{try{return JSON.parse(localStorage.getItem("school-procurement-preview-values-v1")||"{}")}catch{return {}}})();
+function updatePageControls(){const total=pdfDocument?.numPages||0;pageCounter.textContent=total?currentPDFPage+' / '+total:'– / –';prevPage.disabled=!total||currentPDFPage<=1;nextPage.disabled=!total||currentPDFPage>=total;}
+prevPage.addEventListener('click',()=>{if(pdfDocument&&currentPDFPage>1)renderPDFPage(currentPDFPage-1)});
+nextPage.addEventListener('click',()=>{if(pdfDocument&&currentPDFPage<pdfDocument.numPages)renderPDFPage(currentPDFPage+1)});
 async function loadPDF(){
  try{
   if(!window.pdfjsLib)throw new Error('ไม่สามารถโหลด PDF.js ได้');
@@ -120,7 +87,7 @@ async function loadPDF(){
  }
 }
 async function renderPDFPage(number,preserveScroll=false){
- if(!pdfDocument||mode.value!=='pdf')return;currentPDFPage=number;updatePageControls();
+ if(!pdfDocument)return;const renderId=++activePageRender;currentPDFPage=number;updatePageControls();
  const p=await pdfDocument.getPage(number);const native=p.getViewport({scale:1});
  const maxWidth=Math.max(270,pdfStage.clientWidth-44);
  const ratio=Math.min(1.6,maxWidth/native.width)*pdfZoom;
@@ -138,8 +105,8 @@ async function renderPDFPage(number,preserveScroll=false){
  layer.style.cssText='position:absolute;inset:0;pointer-events:none';
  sheet.appendChild(layer);pdfStage.replaceChildren(sheet);
  await p.render({canvasContext:ctx,viewport,transform:scale===1?null:[scale,0,0,scale,0,0]}).promise;
+ if(renderId!==activePageRender)return;
  if(preserveScroll){pdfStage.scrollLeft=oldX;pdfStage.scrollTop=oldY;}else{pdfStage.scrollLeft=0;pdfStage.scrollTop=0;}
- document.getElementById('parameterOverlay').replaceChildren();
  try { await markPDFParameters(p,viewport,layer,number); if(lastFormPage!==number)renderFormFields(); }
  catch(e){console.warn('Parameter overlay unavailable:',e);}
 
@@ -193,7 +160,7 @@ async function markPDFParameters(page,viewport,layer,pageNumber){
      marker.classList.add('has-value');marker.replaceChildren();
      marker.style.width='auto';marker.style.minWidth=(right-x)+'px';
      const text=document.createElement('span');text.className='replacement-text';text.textContent=calendarFieldKeys.has(match[1])?toThaiDocumentDate(entered):entered;
-     text.style.fontSize=(12*viewport.scale)+'pt';text.style.top='0';text.style.padding='0 '+(2*viewport.scale)+'px';
+     text.style.fontSize=(PDF_OVERLAY_FONT_PT*viewport.scale)+'pt';text.style.padding='0 '+(2*viewport.scale)+'px';
      marker.append(text);
    }
    if(activeField===match[1])marker.classList.add('active');
@@ -376,7 +343,7 @@ function saveFieldValue(key,value){
  formValues[key]=value;
  try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}
  activeField=key;
- if(mode.value==='pdf')renderPDFPage(currentPDFPage);
+ renderPDFPage(currentPDFPage);
 }
 function addRelatedSelect(parent,key){
  const wrap=document.createElement('div');wrap.className='input-wrap';
@@ -459,7 +426,7 @@ function highlightField(key){
 }
 
 pdfStage.addEventListener('wheel',event=>{
- if(mode.value!=='pdf'||!pdfDocument)return;
+ if(!pdfDocument)return;
  event.preventDefault();
  const direction=event.deltaY<0?1:-1;
  const next=Math.max(0.3,Math.min(1,Math.round((pdfZoom+direction*0.1)*10)/10));
@@ -485,7 +452,7 @@ sharedToggle.addEventListener('click',()=>{
  sharedBody.hidden=expanded;
  document.getElementById('sharedChevron').textContent=expanded?'▸':'▾';
 });
-setMode('pdf');
+loadPDF();
 document.getElementById('exportWord').addEventListener('click',exportFilledWord);
 async function exportFilledWord(){
  const button=document.getElementById('exportWord');button.disabled=true;button.textContent='กำลังสร้าง Word...';
@@ -540,19 +507,4 @@ async function exportFilledWord(){
  finally{button.disabled=false;button.textContent='⬇ Export Word';}
 }
 
-/* Overlay registry: require verified rendered-page coordinates.
-   Never infer a position from field order or from an Office iframe's viewport.
-   A future page-renderer may call renderParameterOverlay(page, fields, activeKey). */
-function renderParameterOverlay(page, fields, activeKey) {
- const layer=document.getElementById('parameterOverlay');layer.replaceChildren();
- if (!page || !Array.isArray(fields)) return;
- for(const f of fields){
-   if(f.page!==page || f.verified!==true || ![f.x,f.y,f.width,f.height].every(n=>typeof n==='number' && Number.isFinite(n)))continue;
-   const el=document.createElement('div');el.className='parameter-marker'+(f.key===activeKey?' active':'');
-   for(const k of ['x','y','width','height'])if(f[k]<0||f[k]>100)return;
-   Object.assign(el.style,{left:f.x+'%',top:f.y+'%',width:f.width+'%',height:f.height+'%'});
-   const tag=document.createElement('span');tag.className='field-tag';tag.textContent=f.label||f.key;el.append(tag);layer.append(el);
- }
-}
-window.renderParameterOverlay=renderParameterOverlay;
 </script></body></html>
