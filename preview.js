@@ -164,6 +164,12 @@ async function renderPDFPage(number,preserveScroll=false){
  const oldX=pdfStage.scrollLeft,oldY=pdfStage.scrollTop;
  const shell=document.createElement('div');shell.className='word-page-shell';
  const page=wordPages[currentPDFPage-1].cloneNode(true);
+ for(const field of page.querySelectorAll('[data-field]')){
+  const key=field.dataset.field,value=formValues[key];
+  field.textContent=value===undefined||value===''?'{{'+key+'}}':calendarFieldKeys.has(key)?toThaiDocumentDate(value):String(value);
+  field.classList.toggle('word-filled',value!==undefined&&value!=='');
+  field.addEventListener('click',()=>{const input=document.getElementById('field-'+key);if(input){input.focus();input.scrollIntoView({block:'nearest'})}});
+ }
  shell.append(page);pdfStage.replaceChildren(shell);
  const base=210*96/25.4,available=Math.max(270,pdfStage.clientWidth-44);
  const zoom=Math.min(1.6,available/base)*pdfZoom;
