@@ -1,0 +1,9 @@
+/* Page 3 uses the same A4 and THSarabun foundation as pages 1–2. */
+.word-page3{height:297mm;min-height:297mm;overflow:hidden}
+.word-page3 .p3-layout{display:flex;flex-direction:column;gap:12pt}
+.word-page3 .p3-layout p{margin:0;line-height:1.12}
+.word-page3 .p3-title{text-align:center;font-weight:bold}
+.word-page3 .p3-choice{padding-left:12mm}
+.word-page3 .p3-rule{text-align:center;white-space:nowrap;overflow:hidden}
+.word-page3 .p3-main{text-align:justify}
+.word-page3 .p3-sub{padding-left:9mm;text-indent:-9mm;text-align:justify}
