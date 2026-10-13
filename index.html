@@ -2,7 +2,7 @@
 <html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ระบบจัดทำเอกสารราชการ</title>
 <style>
 :root{font-family:system-ui,"Noto Sans Thai",sans-serif;color:#192b43;background:#eef3fa}*{box-sizing:border-box}body{margin:0}header{height:72px;background:white;border-bottom:1px solid #dce4ee;display:flex;align-items:center;justify-content:space-between;padding:0 28px}h1{font-size:19px;margin:0}small{color:#728198}main{display:grid;grid-template-columns:minmax(320px,390px) minmax(400px,1fr);gap:18px;padding:18px;min-height:calc(100vh - 72px)}section{background:#fff;border:1px solid #dee5ef;border-radius:15px;min-width:0}.fields{padding:18px;overflow:auto;max-height:calc(100vh - 108px)}h2{font-size:16px;margin:4px 0 14px}.group{padding:15px 0;border-top:1px solid #e6ebf3}.group h3{font-size:14px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}select,input{display:block;width:100%;padding:11px;border:1px solid #cad6e4;border-radius:9px;background:#fff;font-size:14px}select:disabled,input:disabled{background:#f4f6f9;color:#788597}.preview{display:flex;flex-direction:column;overflow:hidden}.toolbar{padding:14px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid #e6ebf3}.toolbar strong{font-size:15px}.document-frame{position:relative;flex:1;min-height:680px;background:#eff2f8}iframe{width:100%;height:100%;min-height:680px;border:0;background:#eff2f8}.overlay-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden}.parameter-marker{position:absolute;box-sizing:border-box;border:1px solid #1677ed;background:rgba(40,133,255,.09);border-radius:2px;pointer-events:none}.parameter-marker.active{outline:2px solid #1677ed;background:rgba(40,133,255,.17)}.parameter-marker .field-tag{position:absolute;bottom:100%;left:-1px;background:#1677ed;color:white;white-space:nowrap;font-size:11px;padding:2px 5px;border-radius:3px 3px 0 0}.note{padding:10px 18px;background:#fff9ed;color:#70501d;font-size:12px;border-top:1px solid #f4e6c4}.muted{color:#6a7c94;font-size:13px;line-height:1.7}.ref{color:#315b96;font-size:12px;text-decoration:none}button{border:1px solid #d2dae5;border-radius:9px;padding:10px 12px;background:#fff;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}@media(max-width:900px){main{grid-template-columns:1fr}.fields{max-height:none}iframe{min-height:580px}}
-</style></head><body>
+.renderer-scroll{height:680px;overflow:auto;background:#dce3ed;padding:18px}.renderer-scroll .docx-wrapper{background:transparent!important;padding:0!important}.renderer-scroll .docx{margin:0 auto 18px!important;box-shadow:0 2px 8px #0002}.renderer-message{padding:28px;text-align:center;color:#576b87}.toolbar-controls{display:flex;gap:8px;align-items:center}.toolbar select{width:auto;max-width:250px;padding:9px}.document-frame{min-height:680px}#word[hidden],#docxRender[hidden]{display:none!important}@media(max-width:900px){.toolbar{flex-wrap:wrap}.renderer-scroll{height:580px}}</style></head><body>
 <header><div><h1>ระบบจัดทำเอกสารราชการ</h1><small>School Procurement · ต้นฉบับ Word จาก GitHub</small></div><span id="state"><small>ขั้นตอนเริ่มต้น</small></span></header>
 <main><section class="fields">
 <h2>ข้อมูลเอกสาร</h2><label for="page">หน้าเอกสาร</label><select id="page" disabled><option>รอตรวจสอบจำนวนหน้าจริงจาก Word</option></select>
@@ -10,11 +10,45 @@
 <div class="group"><h3>ข้อมูลกรอกเพิ่มเติมตามหน้า</h3><p class="muted">ระบบจะแสดงช่องกรอกจากพารามิเตอร์ที่มีอยู่ใน Word จริง หลังตรวจสอบชื่อพารามิเตอร์และเลขหน้าได้ครบแล้ว</p></div>
 <p><a class="ref" href="procurement-template13.docx">เปิดไฟล์ต้นฉบับ Word</a></p>
 <p><a class="ref" href="%E0%B8%AA%E0%B8%A3%E0%B8%B8%E0%B8%9B%E0%B8%87%E0%B8%9A%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%A1%E0%B8%B2%E0%B8%93%E0%B9%83%E0%B8%99%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%94%E0%B8%B3%E0%B9%80%E0%B8%99%E0%B8%B4%E0%B8%99%E0%B9%82%E0%B8%84%E0%B8%A3%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%88%E0%B8%B3%E0%B8%9B%E0%B8%B5%202570.docx">เปิดไฟล์ข้อมูลกลาง</a></p>
-</section><section class="preview"><div class="toolbar"><strong>ตัวอย่างเอกสารต้นฉบับ</strong><button id="openWord">เปิดเอกสารในหน้าต่างใหม่ ↗</button></div><div class="document-frame"><iframe id="word" title="ต้นฉบับ Word ผ่าน Microsoft Office viewer" referrerpolicy="no-referrer" loading="lazy"></iframe><div id="parameterOverlay" class="overlay-layer" aria-label="ตำแหน่งพารามิเตอร์ที่แก้ไข" aria-live="polite"></div></div><div class="note">Overlay จะแสดงเฉพาะตำแหน่งที่ตรวจยืนยันจากเอกสารจริงแล้ว ขณะนี้ยังไม่มีผังพิกัดที่ตรวจยืนยัน จึงไม่วางช่องทับเอกสารโดยคาดเดา และ Office Viewer ยังไม่รองรับการติดตามตำแหน่งขณะเลื่อนหน้าภายในอย่างแม่นยำ</div></section></main>
+</section><section class="preview"><div class="toolbar"><strong>ตัวอย่างเอกสารต้นฉบับ</strong><div class="toolbar-controls"><label for="viewerMode" style="margin:0">วิธีแสดง</label><select id="viewerMode"><option value="docx">แสดง Word ในเว็บ (ทดลอง)</option><option value="office">Office Viewer (เดิม)</option></select><button id="openWord">เปิดเอกสารในหน้าต่างใหม่ ↗</button></div></div><div class="document-frame"><div id="docxRender" class="renderer-scroll"><p class="renderer-message">กำลังอ่านไฟล์ต้นฉบับ Word...</p></div><iframe id="word" hidden title="ต้นฉบับ Word ผ่าน Microsoft Office viewer" referrerpolicy="no-referrer" loading="lazy"></iframe><div id="parameterOverlay" class="overlay-layer" aria-label="ตำแหน่งพารามิเตอร์ที่แก้ไข" aria-live="polite"></div></div><div class="note">โหมดทดลองแสดง Word ผ่าน docx-preview ในเบราว์เซอร์ ไม่แก้ต้นฉบับและยังไม่รับรองว่าการแบ่งหน้าเหมือน Microsoft Word ทุกจุด หากแสดงผิด ให้สลับกลับ Office Viewer (เดิม) ได้ทันที</div></section></main>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.6/dist/docx-preview.min.js"></script>
 <script>
 const raw='https://raw.githubusercontent.com/drivekup01/School-Procurement/main/procurement-template13.docx';
 const viewer='https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(raw);
-document.getElementById('word').src=viewer;
+const office=document.getElementById('word');office.src=viewer;
+const stage=document.getElementById('docxRender'),mode=document.getElementById('viewerMode'),pageSelect=document.getElementById('page');
+let rendered=false;
+function setMode(value){
+ mode.value=value;office.hidden=value!=='office';stage.hidden=value!=='docx';
+ document.getElementById('parameterOverlay').replaceChildren();
+ if(value==='docx'&&!rendered)renderDocx();
+ if(value==='office'){pageSelect.disabled=true;pageSelect.replaceChildren(new Option('เลือกหน้าไม่ได้ใน Office Viewer',''));}
+}
+mode.addEventListener('change',()=>setMode(mode.value));
+async function renderDocx(){
+ stage.innerHTML='<p class="renderer-message">กำลังอ่านไฟล์ต้นฉบับ Word...</p>';
+ try {
+  if(!window.docx?.renderAsync)throw new Error('ไม่สามารถโหลดตัวแสดง DOCX');
+  const response=await fetch('procurement-template13.docx',{cache:'no-store'});
+  if(!response.ok)throw new Error('อ่านต้นฉบับไม่ได้: '+response.status);
+  const bytes=await response.arrayBuffer();
+  stage.replaceChildren();
+  await window.docx.renderAsync(bytes,stage,null,{breakPages:true,ignoreLastRenderedPageBreak:false,renderHeaders:true,renderFooters:true,useBase64URL:true});
+  rendered=true;
+  const pages=[...stage.querySelectorAll('section.docx')];
+  pageSelect.replaceChildren();
+  if(pages.length>0){
+   pages.forEach((_,i)=>pageSelect.add(new Option('หน้า '+(i+1),' '+i)));
+   pageSelect.disabled=false;
+   pageSelect.onchange=()=>pages[Number(pageSelect.value)]?.scrollIntoView({behavior:'smooth',block:'start'});
+  }else{pageSelect.disabled=true;pageSelect.add(new Option('ยังแยกหน้าไม่ได้',''));}
+  document.getElementById('state').textContent='อ่าน DOCX ในเบราว์เซอร์แล้ว · ตรวจการแบ่งหน้ากับ Word จริง';
+ } catch(err){
+  const p=document.createElement('p');p.className='renderer-message';p.textContent='แสดงผลแบบทดลองไม่ได้: '+err.message+' — เลือก Office Viewer (เดิม) เพื่อดูเอกสาร';
+  stage.replaceChildren(p);document.getElementById('state').textContent='Preview ทดลองไม่สำเร็จ';
+ }
+}
+setMode('docx');
 document.getElementById('openWord').addEventListener('click',()=>window.open(viewer,'_blank','noopener,noreferrer'));
 
 /* Overlay registry: require verified rendered-page coordinates.
