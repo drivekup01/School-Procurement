@@ -1,176 +1,186 @@
-/* PDF preview controller */
+/* Word HTML preview controller. Every displayed page comes from the DOCX source. */
 const prevPage=document.getElementById('prevPage'),nextPage=document.getElementById('nextPage'),pageCounter=document.getElementById('pageCounter'),pdfStage=document.getElementById('pdfRender');
 let pdfZoom=1,zoomTimer=null,pdfRenderSerial=0,pdfDocument=null,parameterIndex=new Map(),detectedPages=new Set(),currentPDFPage=1,activeField=null,lastFormPage=0,activePageRender=0;
-const PDF_OVERLAY_FONT_PT=12;
-const formValues=(()=>{try{return JSON.parse(localStorage.getItem("school-procurement-preview-values-v1")||"{}")}catch{return {}}})();
-function updatePageControls(){const total=pdfDocument?.numPages||0;pageCounter.textContent=total?currentPDFPage+' / '+total:'– / –';prevPage.disabled=!total||currentPDFPage<=1;nextPage.disabled=!total||currentPDFPage>=total;const title=document.getElementById('previewTitle');if(title)title.textContent=currentPDFPage===1?'ตัวอย่างเอกสาร · HTML + CSS หน้าแรก':'ตัวอย่างเอกสาร PDF ต้นฉบับ';}
-prevPage.addEventListener('click',()=>{if(pdfDocument&&currentPDFPage>1)renderPDFPage(currentPDFPage-1)});
+let wordPages=[],wordPageNodes=[];
+const formValues=(()=>{try{return JSON.parse(localStorage.getItem('school-procurement-preview-values-v1')||'{}')}catch{return {}}})();
+const WORD_NS='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+const wn=(node,name)=>Array.from(node?.children||[]).find(n=>n.localName===name&&n.namespaceURI===WORD_NS);
+const wns=(node,name)=>Array.from(node?.children||[]).filter(n=>n.localName===name&&n.namespaceURI===WORD_NS);
+const wa=(node,name)=>node?.getAttributeNS(WORD_NS,name)||'';
+function updatePageControls(){
+ const total=pdfDocument?.numPages||0;
+ pageCounter.textContent=total?currentPDFPage+' / '+total:'– / –';
+ prevPage.disabled=!total||currentPDFPage<=1;
+ nextPage.disabled=!total||currentPDFPage>=total;
+ const title=document.getElementById('previewTitle');
+ if(title)title.textContent='ตัวอย่างเอกสาร · HTML + CSS ทุกหน้า';
+}
+prevPage.addEventListener('click',()=>{if(currentPDFPage>1)renderPDFPage(currentPDFPage-1)});
 nextPage.addEventListener('click',()=>{if(pdfDocument&&currentPDFPage<pdfDocument.numPages)renderPDFPage(currentPDFPage+1)});
-async function loadPDF(){
- try{
-  if(!window.pdfjsLib)throw new Error('ไม่สามารถโหลด PDF.js ได้');
-  if(!pdfDocument){
-   window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-   pdfStage.innerHTML='<p class="renderer-message">กำลังโหลด PDF ต้นฉบับ...</p>';
-   const task=window.pdfjsLib.getDocument({url:'procurement-template13.pdf?version=20261013',cMapUrl:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',cMapPacked:true});
-   pdfDocument=await task.promise;
+function wordFieldFragments(text){
+ const f=document.createDocumentFragment();
+ for(const part of text.split(/(\{\{\s*[\w.-]+\s*\}\})/g)){
+  const m=part.match(/^\{\{\s*([\w.-]+)\s*\}\}$/);
+  if(!m){f.append(document.createTextNode(part));continue}
+  const span=document.createElement('span'),key=m[1],value=formValues[key];
+  span.dataset.field=key;span.className='word-parameter'+(value!==undefined&&value!==''?' word-filled':'');
+  span.textContent=value!==undefined&&value!==''?(calendarFieldKeys.has(key)?toThaiDocumentDate(value):String(value)):part;
+  span.addEventListener('click',()=>{const el=document.getElementById('field-'+key);if(el){el.focus();el.scrollIntoView({block:'nearest'})}});
+  f.append(span);
+ }
+ return f;
+}
+function paragraphHTML(p){
+ const el=document.createElement('p');el.className='word-paragraph';
+ const pr=wn(p,'pPr'),jc=wn(pr,'jc'),spacing=wn(pr,'spacing'),ind=wn(pr,'ind');
+ const alignment=wa(jc,'val');
+ if(['center','right','both','justify'].includes(alignment))el.style.textAlign=alignment==='both'?'justify':alignment;
+ const left=Number(wa(ind,'left')),first=Number(wa(ind,'firstLine')),hanging=Number(wa(ind,'hanging'));
+ if(left)el.style.marginLeft=(left/20)+'pt';
+ if(first)el.style.textIndent=(first/20)+'pt';
+ if(hanging)el.style.textIndent=(-hanging/20)+'pt';
+ const before=Number(wa(spacing,'before')),after=Number(wa(spacing,'after'));
+ if(before)el.style.marginTop=(before/20)+'pt';
+ el.style.marginBottom=(after?after/20:12)+'pt';
+ const line=Number(wa(spacing,'line')),lineRule=wa(spacing,'lineRule');
+ if(line){if(lineRule==='exact')el.style.lineHeight=(line/20)+'pt';else if(lineRule==='atLeast')el.style.lineHeight='max(1.12em,'+(line/20)+'pt)';else el.style.lineHeight=String(line/240)}
+ for(const run of Array.from(p.getElementsByTagNameNS(WORD_NS,'r'))){
+  const span=document.createElement('span'),rpr=wn(run,'rPr');
+  if(wn(rpr,'b'))span.style.fontWeight='bold';
+  if(wn(rpr,'i'))span.style.fontStyle='italic';
+  if(wn(rpr,'u'))span.style.textDecoration='underline';
+  const size=Number(wa(wn(rpr,'sz'),'val'));
+  if(size)span.style.fontSize=(size/2)+'pt';
+  for(const part of Array.from(run.children)){
+   if(part.localName==='t')span.append(wordFieldFragments(part.textContent||''));
+   else if(part.localName==='tab')span.append(document.createTextNode('　　'));
+   else if(part.localName==='br'||part.localName==='cr')span.append(document.createElement('br'));
   }
-  await scanPDFParameters();
-  await renderPDFPage(currentPDFPage);
-  document.getElementById('state').textContent='PDF ต้นฉบับ · '+pdfDocument.numPages+' หน้า';
- }catch(error){
-  pdfStage.replaceChildren();const el=document.createElement('p');el.className='renderer-message';el.textContent='ไม่สามารถแสดง PDF ได้: '+error.message;pdfStage.append(el);
-  document.getElementById('state').textContent='PDF โหลดไม่สำเร็จ';
+  el.append(span);
  }
+ if(!el.textContent.trim()&&!el.querySelector('br'))el.classList.add('word-empty');
+ if(el.textContent.trim()==='บันทึกข้อความ')el.classList.add('word-memo-title');
+ return el;
 }
-async function renderPDFPage(number,preserveScroll=false){
- if(!pdfDocument)return;const renderId=++activePageRender;currentPDFPage=number;updatePageControls();
- if(number===1){renderHTMLFirstPage(preserveScroll);return;}
- const p=await pdfDocument.getPage(number);const native=p.getViewport({scale:1});
- const maxWidth=Math.max(270,pdfStage.clientWidth-44);
- const ratio=Math.min(1.6,maxWidth/native.width)*pdfZoom;
- const viewport=p.getViewport({scale:ratio});
- const canvas=document.createElement('canvas');const scale=window.devicePixelRatio||1;
- canvas.width=Math.round(viewport.width*scale);canvas.height=Math.round(viewport.height*scale);
- canvas.style.cssText='display:block;margin:0 auto;background:white;box-shadow:0 2px 9px #0002;max-width:100%;width:'+viewport.width+'px;height:'+viewport.height+'px';
- const oldX=pdfStage.scrollLeft,oldY=pdfStage.scrollTop;
- const ctx=canvas.getContext('2d');
- const sheet=document.createElement('div');
- sheet.style.cssText='position:relative;margin:0 auto;width:'+viewport.width+'px;height:'+viewport.height+'px;';
- canvas.style.margin='0';canvas.style.maxWidth='none';sheet.appendChild(canvas);
- const layer=document.createElement('div');
- layer.className='pdf-parameter-overlay';
- layer.style.cssText='position:absolute;inset:0;pointer-events:none';
- sheet.appendChild(layer);pdfStage.replaceChildren(sheet);
- await p.render({canvasContext:ctx,viewport,transform:scale===1?null:[scale,0,0,scale,0,0]}).promise;
- if(renderId!==activePageRender)return;
- if(preserveScroll){pdfStage.scrollLeft=oldX;pdfStage.scrollTop=oldY;}else{pdfStage.scrollLeft=0;pdfStage.scrollTop=0;}
- try { await markPDFParameters(p,viewport,layer,number); if(lastFormPage!==number)renderFormFields(); }
- catch(e){console.warn('Parameter overlay unavailable:',e);}
-
-}
-
-/* Read parameters from the actual PDF text layer; never estimate using page order.
-   Each rectangle follows PDF.js text-item coordinates on the matching canvas. */
-async function markPDFParameters(page,viewport,layer,pageNumber){
- const content=await page.getTextContent();
- const rows=[];
- for(const it of content.items){
-  if(!it.str||!it.transform||!it.width)continue;
-  const tr=pdfjsLib.Util.transform(viewport.transform,it.transform);
-  const x=tr[4],baseline=tr[5],height=Math.max(6,Math.hypot(tr[2],tr[3]));
-  const width=it.width*viewport.scale;
-  let row=rows.find(r=>Math.abs(r.baseline-baseline)<Math.max(3,height*.32));
-  if(!row){row={baseline,items:[]};rows.push(row);}
-  row.items.push({str:it.str,x,width,height,baseline});
- }
- let count=0;
- for(const row of rows){
-  row.items.sort((a,b)=>a.x-b.x);
-  let joined='',charBoxes=[];
-  for(const it of row.items){
-   // PDF text fragments may split a single parameter into several items.
-   const chars=Array.from(it.str);
-   for(let j=0;j<chars.length;j++){
-    joined+=chars[j];
-    charBoxes.push({x:it.x+it.width*j/chars.length,w:it.width/chars.length,h:it.height,y:it.baseline-it.height});
+function tableHTML(tbl){
+ const table=document.createElement('table');table.className='word-table';
+ for(const tr of wns(tbl,'tr')){
+  const row=document.createElement('tr');
+  for(const tc of wns(tr,'tc')){
+   const cell=document.createElement('td'),gridSpan=Number(wa(wn(wn(tc,'tcPr'),'gridSpan'),'val'));
+   if(gridSpan>1)cell.colSpan=gridSpan;
+   for(const child of Array.from(tc.children)){
+    if(child.localName==='p')cell.append(paragraphHTML(child));
+    else if(child.localName==='tbl')cell.append(tableHTML(child));
    }
+   row.append(cell);
   }
-  // Supports {{parameter_name}}. Do not draw on ordinary text.
-  const matches=[...joined.matchAll(/\{\{\s*([\w.-]+)\s*\}\}/g)];
-  for(const match of matches){
-   const start=match.index,end=start+Array.from(match[0]).length;
-   const relevant=charBoxes.slice(start,end);
-   if(!relevant.length)continue;
-   const x=Math.max(0,Math.min(...relevant.map(v=>v.x))-2);
-   const y=Math.max(0,Math.min(...relevant.map(v=>v.y))-2);
-   const right=Math.min(viewport.width,Math.max(...relevant.map(v=>v.x+v.w))+2);
-   const bottom=Math.min(viewport.height,Math.max(...relevant.map(v=>v.y+v.h))+2);
-   if(right<=x||bottom<=y)continue;
-   const marker=document.createElement('div');marker.className='parameter-marker';
-   marker.style.cssText='left:'+x+'px;top:'+y+'px;width:'+(right-x)+'px;height:'+(bottom-y)+'px;';
-   const entered=formValues[match[1]];
-   if(entered!==undefined&&entered!==''){
-     marker.classList.add('has-value');
-     marker.style.width='auto';marker.style.minWidth=(right-x)+'px';
-     const text=document.createElement('span');text.className='replacement-text';
-     text.textContent=calendarFieldKeys.has(match[1])?toThaiDocumentDate(entered):entered;
-     text.style.fontSize=(PDF_OVERLAY_FONT_PT*viewport.scale)+'px';
-     text.style.padding='0 '+(2*viewport.scale)+'px';
-     // A zero-height inline box identifies the browser's actual text baseline.
-     const baselineProbe=document.createElement('span');
-     baselineProbe.style.cssText='display:inline-block;width:0;height:0;padding:0;margin:0;border:0;vertical-align:baseline';
-     text.appendChild(baselineProbe);
-     marker.appendChild(text);
-     layer.appendChild(marker);
-     const targetBaseline=layer.getBoundingClientRect().top+row.baseline;
-     const actualBaseline=baselineProbe.getBoundingClientRect().bottom;
-     text.style.transform='translateY('+(targetBaseline-actualBaseline)+'px)';
-   }else{
-     layer.appendChild(marker);
-   }
-   if(activeField===match[1])marker.classList.add('active');
-   count++;
-  }
+  table.append(row);
  }
- const status=document.getElementById('state');
- status.textContent='PDF หน้า '+pageNumber+' · พารามิเตอร์ที่พบ '+count+' ตำแหน่ง';
- if(count===0){
-  const msg=document.createElement('div');
-  msg.style.cssText='position:absolute;right:10px;bottom:10px;background:#fff9ee;color:#715223;border:1px solid #e9d4ac;border-radius:6px;padding:7px 9px;font-size:12px;pointer-events:none';
-  msg.textContent='หน้านี้ไม่พบพารามิเตอร์ {{...}} ในชั้นข้อความ PDF';
-  layer.append(msg);
- }
+ return table;
 }
-
-
-async function scanPDFParameters(){
+function wordBlocks(body){
+ const blocks=[],groups=[[]];
+ for(const node of Array.from(body.children)){
+  if(!['p','tbl'].includes(node.localName))continue;
+  const hasBreak=node.getElementsByTagNameNS(WORD_NS,'lastRenderedPageBreak').length>0;
+  if(hasBreak&&groups[groups.length-1].length)groups.push([]);
+  const element=node.localName==='p'?paragraphHTML(node):tableHTML(node);
+  groups[groups.length-1].push(element);
+ }
+ return groups;
+}
+function refreshIndex(){
  parameterIndex=new Map();detectedPages=new Set();
- for(let pageNumber=1;pageNumber<=pdfDocument.numPages;pageNumber++){
-  const page=await pdfDocument.getPage(pageNumber),data=await page.getTextContent();
-  const rows=[];
-  for(const it of data.items){
-   if(!it.str||!it.transform)continue;
-   const y=it.transform[5];
-   let row=rows.find(r=>Math.abs(r.y-y)<2.5);
-   if(!row){row={y,parts:[]};rows.push(row);}
-   row.parts.push({x:it.transform[4],str:it.str});
-  }
-  for(const row of rows){
-   row.parts.sort((a,b)=>a.x-b.x);
-   const joined=row.parts.map(x=>x.str).join('');
-   for(const m of joined.matchAll(/\{\{\s*([\w.-]+)\s*\}\}/g)){
-    const key=m[1];if(!parameterIndex.has(key))parameterIndex.set(key,new Set());
-    parameterIndex.get(key).add(pageNumber);
-    detectedPages.add(pageNumber);
-   }
+ for(let i=0;i<wordPages.length;i++){
+  const page=i+1;
+  const keys=new Set(Array.from(wordPages[i].querySelectorAll('[data-field]')).map(el=>el.dataset.field));
+  for(const key of keys){
+   if(!parameterIndex.has(key))parameterIndex.set(key,new Set());
+   parameterIndex.get(key).add(page);detectedPages.add(page);
   }
  }
  renderFormFields();
 }
-
-function highlightField(key){
- for(const marker of document.querySelectorAll('.pdf-parameter-overlay .parameter-marker')){
-  marker.classList.toggle('active',marker.getAttribute('title')===key);
+function buildPage(content){
+ const page=document.createElement('article');page.className='word-a4 word-generated';
+ const inner=document.createElement('div');inner.className='word-content';
+ for(const child of content)inner.append(child);
+ page.append(inner);
+ return page;
+}
+function paginateWord(groups){
+ const pages=[];
+ const staging=document.createElement('div');
+ staging.style.cssText='position:absolute;left:-20000px;top:0;visibility:hidden;width:210mm;pointer-events:none';
+ document.body.append(staging);
+ try{
+  for(let groupIndex=0;groupIndex<groups.length;groupIndex++){
+   if(groupIndex===0){const first=document.createElement('template');first.innerHTML=wordFirstPageHTML;pages.push(first.content.firstElementChild);continue}
+   let page=buildPage([]);staging.append(page);
+   let inner=page.firstElementChild;
+   for(const element of groups[groupIndex]){
+    inner.append(element);
+    const maxHeight=page.clientHeight-parseFloat(getComputedStyle(page).paddingTop)-parseFloat(getComputedStyle(page).paddingBottom);
+    if(inner.scrollHeight>maxHeight+2&&inner.children.length>1){
+     inner.removeChild(element);pages.push(page);page=buildPage([element]);staging.append(page);inner=page.firstElementChild;
+    }
+   }
+   pages.push(page);
+  }
+ }finally{staging.remove()}
+ return pages;
+}
+async function loadPDF(){
+ try{
+  if(!window.JSZip)throw Error('ไม่สามารถโหลด JSZip เพื่ออ่าน Word');
+  pdfStage.innerHTML='<p class="renderer-message">กำลังอ่านเอกสาร Word ต้นฉบับ...</p>';
+  const response=await fetch('procurement-template13.docx',{cache:'no-store'});
+  if(!response.ok)throw Error('ไม่สามารถอ่าน Word ต้นฉบับ ('+response.status+')');
+  const zip=await JSZip.loadAsync(await response.arrayBuffer());
+  const file=zip.file('word/document.xml');
+  if(!file)throw Error('ไม่พบ word/document.xml');
+  const doc=new DOMParser().parseFromString(await file.async('string'),'application/xml');
+  if(doc.querySelector('parsererror'))throw Error('อ่าน XML ของ Word ไม่สำเร็จ');
+  const body=doc.getElementsByTagNameNS(WORD_NS,'body')[0];
+  const groups=wordBlocks(body);
+  await document.fonts?.load('16pt ProcurementSarabun');
+  wordPages=paginateWord(groups);
+  if(!wordPages.length)throw Error('ไม่พบหน้าเอกสาร');
+  pdfDocument={numPages:wordPages.length};
+  currentPDFPage=Math.min(currentPDFPage,wordPages.length);
+  updatePageControls();refreshIndex();await renderPDFPage(currentPDFPage);
+  document.getElementById('state').textContent='HTML + CSS จาก Word · '+wordPages.length+' หน้า';
+ }catch(error){
+  console.error('Word preview:',error);
+  pdfStage.replaceChildren();const message=document.createElement('p');message.className='renderer-message';message.textContent='ไม่สามารถแสดง Word Preview: '+error.message;pdfStage.append(message);
+  document.getElementById('state').textContent='Word Preview โหลดไม่สำเร็จ';
  }
 }
-
+async function renderPDFPage(number,preserveScroll=false){
+ if(!pdfDocument)return;
+ currentPDFPage=Math.max(1,Math.min(number,pdfDocument.numPages));updatePageControls();
+ if(number===1){renderHTMLFirstPage(preserveScroll);return}
+ const oldX=pdfStage.scrollLeft,oldY=pdfStage.scrollTop;
+ const shell=document.createElement('div');shell.className='word-page-shell';
+ const page=wordPages[currentPDFPage-1].cloneNode(true);
+ shell.append(page);pdfStage.replaceChildren(shell);
+ const base=210*96/25.4,available=Math.max(270,pdfStage.clientWidth-44);
+ const zoom=Math.min(1.6,available/base)*pdfZoom;
+ page.style.transform='scale('+zoom+')';
+ const measure=()=>{shell.style.width=(base*zoom)+'px';shell.style.height=(page.offsetHeight*zoom)+'px'};
+ measure();
+ if(preserveScroll){pdfStage.scrollLeft=oldX;pdfStage.scrollTop=oldY}else{pdfStage.scrollLeft=0;pdfStage.scrollTop=0}
+ if(lastFormPage!==currentPDFPage)renderFormFields();
+}
+function highlightField(key){
+ for(const marker of pdfStage.querySelectorAll('[data-field]'))marker.classList.toggle('word-active',marker.dataset.field===key);
+}
 pdfStage.addEventListener('wheel',event=>{
  if(!pdfDocument)return;
  event.preventDefault();
- const direction=event.deltaY<0?1:-1;
- const next=Math.max(0.3,Math.min(1,Math.round((pdfZoom+direction*0.1)*10)/10));
+ const next=Math.max(.3,Math.min(1,Math.round((pdfZoom+(event.deltaY<0?.1:-.1))*10)/10));
  if(next===pdfZoom)return;
- const factor=next/pdfZoom;pdfZoom=next;
- document.getElementById('zoomIndicator').textContent='ขยาย '+Math.round(pdfZoom*100)+'%';
- const previousX=pdfStage.scrollLeft,previousY=pdfStage.scrollTop;
- clearTimeout(zoomTimer);
- zoomTimer=setTimeout(async()=>{
-  const serial=++pdfRenderSerial;
-  await renderPDFPage(currentPDFPage,true);
-  if(serial===pdfRenderSerial){
-   pdfStage.scrollLeft=Math.round(previousX*factor);
-   pdfStage.scrollTop=Math.round(previousY*factor);
-  }
- },130);
+ pdfZoom=next;document.getElementById('zoomIndicator').textContent='ขยาย '+Math.round(pdfZoom*100)+'%';
+ clearTimeout(zoomTimer);zoomTimer=setTimeout(()=>renderPDFPage(currentPDFPage,true),130);
 },{passive:false});
