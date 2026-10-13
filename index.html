@@ -230,6 +230,8 @@ async function scanPDFParameters(){
  renderFormFields();
 }
 const thaiParameterLabels={
+ main_date:'วันที่หลักของเอกสาร',
+ procurement_type:'ประเภทการจัดซื้อ/จัดจ้าง',
  procurement_description:'รายละเอียดการจัดซื้อ/จัดจ้าง',
  requesting_unit:'หน่วยงานที่ขอจัดซื้อ/จัดจ้าง',
  activity_name:'ชื่อกิจกรรม',
@@ -258,7 +260,7 @@ function thaiFieldLabel(key){
  const words=k.split(/[_ .-]+/);
  const dict={project:'โครงการ',activity:'กิจกรรม',name:'ชื่อ',date:'วันที่',description:'รายละเอียด',price:'ราคา',amount:'จำนวนเงิน',total:'รวม',number:'เลขที่',vendor:'ผู้ขาย',department:'ฝ่าย',unit:'หน่วย',quantity:'จำนวน',budget:'งบประมาณ',year:'ปี',school:'โรงเรียน',director:'ผู้อำนวยการ',announcement:'ประกาศ',document:'เอกสาร',requesting:'ผู้ขอ',agreed:'ตกลง',text:'ตัวอักษร',address:'ที่อยู่',phone:'โทรศัพท์',position:'ตำแหน่ง',committee:'กรรมการ',sign:'ลงนาม',approve:'อนุมัติ',approval:'การอนุมัติ',note:'หมายเหตุ',subject:'เรื่อง',reference:'อ้างอิง',item:'รายการ',procurement:'การจัดซื้อจัดจ้าง',prepared:'ผู้จัดทำ',by:'โดย',day:'วัน',month:'เดือน'};
  if(words.every(w=>dict[w]))return words.map(w=>dict[w]).join(' ');
- return 'ข้อมูลเพิ่มเติม ('+key+')';
+ return 'ข้อมูลเพิ่มเติม';
 }
 function renderFormFields(){
  lastFormPage=currentPDFPage;
@@ -272,7 +274,7 @@ function renderFormFields(){
  }
  function addField(parent,key){
   const wrap=document.createElement('div');wrap.className='input-wrap';
-  const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.title=key;label.htmlFor='field-'+key;
+  const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;
   const input=document.createElement('input');input.id='field-'+key;input.type='text';input.autocomplete='off';
   input.placeholder='กรอก'+thaiFieldLabel(key);input.value=formValues[key]??'';
   input.addEventListener('focus',()=>{activeField=key;highlightField(key)});
