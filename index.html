@@ -17,7 +17,7 @@ const raw='https://raw.githubusercontent.com/drivekup01/School-Procurement/main/
 const viewer='https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(raw);
 const office=document.getElementById('word');office.src=viewer;
 const stage=document.getElementById('docxRender'),mode=document.getElementById('viewerMode'),pageSelect=document.getElementById('page');
-let rendered=false,pdfDocument=null,parameterIndex=new Map(),detectedPages=new Set(),currentPDFPage=1,activeField=null;const formValues=(()=>{try{return JSON.parse(localStorage.getItem("school-procurement-preview-values-v1")||"{}")}catch{return {}}})();const pdfStage=document.getElementById("pdfRender");
+let rendered=false,pdfDocument=null,parameterIndex=new Map(),detectedPages=new Set(),currentPDFPage=1,activeField=null,lastFormPage=0;const formValues=(()=>{try{return JSON.parse(localStorage.getItem("school-procurement-preview-values-v1")||"{}")}catch{return {}}})();const pdfStage=document.getElementById("pdfRender");
 function setMode(value){
  mode.value=value;office.hidden=value!=='office';stage.hidden=value!=='docx';pdfStage.style.display=value==='pdf'?'block':'none';
  document.getElementById('parameterOverlay').replaceChildren();
@@ -93,7 +93,7 @@ async function renderPDFPage(number){
  await p.render({canvasContext:ctx,viewport,transform:scale===1?null:[scale,0,0,scale,0,0]}).promise;
  pdfStage.scrollTop=0;
  document.getElementById('parameterOverlay').replaceChildren();
- try { await markPDFParameters(p,viewport,layer,number); renderFormFields(); }
+ try { await markPDFParameters(p,viewport,layer,number); if(lastFormPage!==number)renderFormFields(); }
  catch(e){console.warn('Parameter overlay unavailable:',e);}
 
 }
@@ -187,6 +187,7 @@ async function scanPDFParameters(){
  renderFormFields();
 }
 function renderFormFields(){
+ lastFormPage=currentPDFPage;
  const shared=document.getElementById('sharedFields'),specific=document.getElementById('pageFields');
  if(!pdfDocument)return;
  shared.replaceChildren();specific.replaceChildren();
