@@ -21,3 +21,14 @@
 .word-parameter{border-bottom:1px dotted #8aa2c2;color:#365a80;cursor:pointer;white-space:normal;overflow-wrap:anywhere}
 .word-parameter.word-filled{color:#111;border-bottom:0}
 @media print{.word-a4{box-shadow:none;transform:none!important;break-after:page}}
+
+/* Shared layout rules for all DOCX-derived pages, including Word tables. */
+.word-a4.word-generated{height:297mm;min-height:297mm;overflow:hidden}
+.word-generated .word-content{width:100%;height:100%;overflow:visible}
+.word-generated .word-paragraph{margin:0 0 12pt;white-space:pre-wrap;overflow-wrap:anywhere}
+.word-generated .word-paragraph.word-empty{min-height:0.6em}
+.word-generated .word-paragraph.word-memo-title{font-size:22pt;font-weight:bold;text-align:center}
+.word-generated .word-table{width:100%;border-collapse:collapse;table-layout:fixed;margin:0 0 12pt}
+.word-generated .word-table td{border:1px solid #222;padding:1mm 1.5mm;vertical-align:top;overflow-wrap:anywhere}
+.word-generated .word-table .word-paragraph{margin:0}
+.word-generated .word-parameter.word-active{outline:1px solid #2563eb;background:#dbeafe}
