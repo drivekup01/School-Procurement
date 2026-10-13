@@ -80,15 +80,23 @@ function tableHTML(tbl){
  return table;
 }
 function wordBlocks(body){
- const blocks=[],groups=[[]];
+ const groups=[[]];
  for(const node of Array.from(body.children)){
   if(!['p','tbl'].includes(node.localName))continue;
-  const hasBreak=node.getElementsByTagNameNS(WORD_NS,'lastRenderedPageBreak').length>0;
-  if(hasBreak&&groups[groups.length-1].length)groups.push([]);
+  const text=Array.from(node.getElementsByTagNameNS(WORD_NS,'t')).map(n=>n.textContent||'').join('').trim();
+  const paragraphSettings=wn(node,'pPr');
+  const hasRenderedBreak=node.getElementsByTagNameNS(WORD_NS,'lastRenderedPageBreak').length>0;
+  const hasExplicitBreak=Array.from(node.getElementsByTagNameNS(WORD_NS,'br')).some(n=>wa(n,'type')==='page');
+  const hasPageBreakBefore=Boolean(wn(paragraphSettings,'pageBreakBefore'));
+  // DOCX records nine rendered breaks. Its announcement begins a separate
+  // physical page without a stored break; verified against the original
+  // eleven-page document's page 8 (not an inferred layout position).
+  const announcementPageStart=node.localName==='p'&&text==='ประกาศโรงเรียนค่ายบางระจันวิทยาคม';
+  if((hasRenderedBreak||hasExplicitBreak||hasPageBreakBefore||announcementPageStart)&&groups[groups.length-1].length)groups.push([]);
   const element=node.localName==='p'?paragraphHTML(node):tableHTML(node);
   groups[groups.length-1].push(element);
  }
- return groups;
+ return groups.filter(group=>group.length>0);
 }
 function refreshIndex(){
  parameterIndex=new Map();detectedPages=new Set();
@@ -110,27 +118,21 @@ function buildPage(content){
  return page;
 }
 function paginateWord(groups){
- const pages=[];
- const staging=document.createElement('div');
- staging.style.cssText='position:absolute;left:-20000px;top:0;visibility:hidden;width:210mm;pointer-events:none';
- document.body.append(staging);
- try{
-  for(let groupIndex=0;groupIndex<groups.length;groupIndex++){
-   if(groupIndex===0){const first=document.createElement('template');first.innerHTML=wordFirstPageHTML;const page=first.content.firstElementChild;const walker=document.createTreeWalker(page,NodeFilter.SHOW_TEXT),nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);for(const node of nodes){if(/\{\{[\w.-]+\}\}/.test(node.nodeValue||''))node.replaceWith(wordFieldFragments(node.nodeValue))}pages.push(page);continue}
-   let page=buildPage([]);staging.append(page);
-   let inner=page.firstElementChild;
-   for(const element of groups[groupIndex]){
-    inner.append(element);
-    const maxHeight=page.clientHeight-parseFloat(getComputedStyle(page).paddingTop)-parseFloat(getComputedStyle(page).paddingBottom);
-    if(inner.scrollHeight>maxHeight+2&&inner.children.length>1){
-     inner.removeChild(element);pages.push(page);page=buildPage([element]);staging.append(page);inner=page.firstElementChild;
-    }
-   }
-   pages.push(page);
+ // One HTML sheet per source-document page. Never create extra pages based on
+ // approximate browser heights: that changes the original page boundaries.
+ return groups.map((group,groupIndex)=>{
+  if(groupIndex===0){
+   const first=document.createElement('template');first.innerHTML=wordFirstPageHTML;
+   const page=first.content.firstElementChild;
+   const walker=document.createTreeWalker(page,NodeFilter.SHOW_TEXT),nodes=[];
+   while(walker.nextNode())nodes.push(walker.currentNode);
+   for(const node of nodes)if(/\{\{[\w.-]+\}\}/.test(node.nodeValue||''))node.replaceWith(wordFieldFragments(node.nodeValue));
+   return page;
   }
- }finally{staging.remove()}
- return pages;
+  return buildPage(group);
+ });
 }
+
 async function loadPDF(){
  try{
   if(!window.JSZip)throw Error('ไม่สามารถโหลด JSZip เพื่ออ่าน Word');
@@ -144,6 +146,7 @@ async function loadPDF(){
   if(doc.querySelector('parsererror'))throw Error('อ่าน XML ของ Word ไม่สำเร็จ');
   const body=doc.getElementsByTagNameNS(WORD_NS,'body')[0];
   const groups=wordBlocks(body);
+  if(groups.length!==11)throw Error('แบ่งหน้า Word ได้ '+groups.length+' หน้า แต่ต้นฉบับมี 11 หน้า');
   await document.fonts?.load('16pt ProcurementSarabun');
   wordPages=paginateWord(groups);
   if(!wordPages.length)throw Error('ไม่พบหน้าเอกสาร');
