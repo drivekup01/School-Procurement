@@ -25,6 +25,7 @@ async function loadPDF(){
 }
 async function renderPDFPage(number,preserveScroll=false){
  if(!pdfDocument)return;const renderId=++activePageRender;currentPDFPage=number;updatePageControls();
+ if(number===1){renderHTMLFirstPage(preserveScroll);return;}
  const p=await pdfDocument.getPage(number);const native=p.getViewport({scale:1});
  const maxWidth=Math.max(270,pdfStage.clientWidth-44);
  const ratio=Math.min(1.6,maxWidth/native.width)*pdfZoom;
