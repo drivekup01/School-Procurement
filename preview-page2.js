@@ -15,6 +15,26 @@ function buildSecondPageFromWord(group){
   // when Word split a {{field}} across runs.
   const text=p.textContent;
   if(text.includes('{{')){p.replaceChildren(wordFieldFragments(text))}
+  const full=p.textContent;
+  const makeParts=(items)=>{p.replaceChildren();for(const item of items){const span=document.createElement('span');span.append(wordFieldFragments(item));p.append(span)}};
+  if(i===1){
+   const school='โรงเรียนค่ายบางระจันวิทยาคม',office='สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาสิงห์บุรี อ่างทอง';
+   if(full.includes(school)&&full.includes(office))makeParts(['ส่วนราชการ',school,office]);
+  }else if(i===2){
+   const k=full.indexOf('วันที่');
+   if(k>=0)makeParts([full.slice(0,k),full.slice(k)]);
+  }else if(i===3&&full.startsWith('เรื่อง'))makeParts(['เรื่อง',full.slice(5)]);
+  else if(i===5&&full.startsWith('เรียน'))makeParts(['เรียน',full.slice(5)]);
+  else if(i===6&&full.startsWith('เอกสารแนบ')){
+   const tail=full.lastIndexOf('จำนวน 1 ชุด');
+   if(tail>=0)makeParts(['เอกสารแนบ',full.slice('เอกสารแนบ'.length,tail),'จำนวน 1 ชุด']);
+  }else if(i===17){
+   const second=full.indexOf('ลงชื่อ',full.indexOf('ลงชื่อ')+5);
+   if(second>=0)makeParts([full.slice(0,second).trim(),full.slice(second).trim()]);
+  }else if(i===18){
+   const match=full.match(/\(\{\{officer_signer_name\}\}\)[\s\u3000]*\(\{\{chief_officer_signer_name\}\}\)/);
+   if(match)makeParts(['({{officer_signer_name}})','({{chief_officer_signer_name}})']);
+  }
   page.append(p);
  }
  return page;
