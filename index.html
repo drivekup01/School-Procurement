@@ -186,14 +186,14 @@ async function markPDFParameters(page,viewport,layer,pageNumber){
    marker.style.cssText='left:'+x+'px;top:'+y+'px;width:'+(right-x)+'px;height:'+(bottom-y)+'px;';
    marker.setAttribute('title',match[1]);
    const tag=document.createElement('span');tag.className='field-tag';tag.textContent=match[1];
-   tag.style.fontSize=(11*pdfZoom)+'px';tag.style.padding=(2*pdfZoom)+'px '+(5*pdfZoom)+'px';
+   tag.style.fontSize=(11*viewport.scale)+'px';tag.style.padding=(2*viewport.scale)+'px '+(5*viewport.scale)+'px';
    marker.appendChild(tag);
    const entered=formValues[match[1]];
    if(entered!==undefined&&entered!==''){
      marker.classList.add('has-value');marker.replaceChildren();
      marker.style.width='auto';marker.style.minWidth=(right-x)+'px';
      const text=document.createElement('span');text.className='replacement-text';text.textContent=calendarFieldKeys.has(match[1])?toThaiDocumentDate(entered):entered;
-     text.style.fontSize=(16*pdfZoom)+'pt';text.style.top=(2*pdfZoom)+'px';text.style.padding='0 '+(2*pdfZoom)+'px';
+     text.style.fontSize=(16*viewport.scale)+'pt';text.style.top='0';text.style.padding='0 '+(2*viewport.scale)+'px';
      marker.append(text);
    }
    if(activeField===match[1])marker.classList.add('active');
