@@ -3,7 +3,7 @@ const prevPage=document.getElementById('prevPage'),nextPage=document.getElementB
 let pdfZoom=1,zoomTimer=null,pdfRenderSerial=0,pdfDocument=null,parameterIndex=new Map(),detectedPages=new Set(),currentPDFPage=1,activeField=null,lastFormPage=0,activePageRender=0;
 const PDF_OVERLAY_FONT_PT=12;
 const formValues=(()=>{try{return JSON.parse(localStorage.getItem("school-procurement-preview-values-v1")||"{}")}catch{return {}}})();
-function updatePageControls(){const total=pdfDocument?.numPages||0;pageCounter.textContent=total?currentPDFPage+' / '+total:'– / –';prevPage.disabled=!total||currentPDFPage<=1;nextPage.disabled=!total||currentPDFPage>=total;}
+function updatePageControls(){const total=pdfDocument?.numPages||0;pageCounter.textContent=total?currentPDFPage+' / '+total:'– / –';prevPage.disabled=!total||currentPDFPage<=1;nextPage.disabled=!total||currentPDFPage>=total;const title=document.getElementById('previewTitle');if(title)title.textContent=currentPDFPage===1?'ตัวอย่างเอกสาร · HTML + CSS หน้าแรก':'ตัวอย่างเอกสาร PDF ต้นฉบับ';}
 prevPage.addEventListener('click',()=>{if(pdfDocument&&currentPDFPage>1)renderPDFPage(currentPDFPage-1)});
 nextPage.addEventListener('click',()=>{if(pdfDocument&&currentPDFPage<pdfDocument.numPages)renderPDFPage(currentPDFPage+1)});
 async function loadPDF(){
