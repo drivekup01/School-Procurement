@@ -37,50 +37,27 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
 
 
 
-/* --- Single source of truth: Preview paper/layout (2026-10-13) --- */
-:root{--preview-paper-w:210mm;--preview-paper-h:297mm;--preview-top:10mm;--preview-bottom:10mm;--preview-left:22.5mm;--preview-right:13.5mm;--preview-blank:10pt}
+/* Preview: one A4 layout, original Word paragraph spacing */
+:root{--paper-w:210mm;--paper-h:297mm;--paper-t:10mm;--paper-b:10mm;--paper-l:22.5mm;--paper-r:13.5mm}
 .panel:nth-child(2) .pane{background:#e4eaf0;overflow:auto;min-height:0;padding:6px 8px}
 .preview-zoom{display:flex;align-items:center;gap:4px}
 .preview-zoom button{padding:4px 9px;min-width:25px}
-.preview-zoom span{font-size:11px;min-width:36px;text-align:center}
-.preview-zoom button:disabled{opacity:.35;cursor:default}
-#previewPage{width:var(--preview-paper-w);height:var(--preview-paper-h);padding:var(--preview-top) var(--preview-right) var(--preview-bottom) var(--preview-left);box-sizing:border-box;background:white;position:relative;box-shadow:0 3px 12px #22334420;transform-origin:top left}
-#preview{font-family:'THSarabunPSK',ths,serif;font-size:16pt;color:#111}
-#preview h3,#docxPages section.docx .memo-title,#docxPages section.docx .memo-title *{text-align:center;font-family:'THSarabunPSK',ths,serif!important;font-size:22pt!important;margin:0 0 1em}
-
-#preview .memohead{position:relative;margin-bottom:1em}
-#preview .memohead img{position:absolute;left:0;top:0;width:15mm;height:15mm;object-fit:contain}
-#preview .memohead h3{margin:0;text-align:center;font-weight:700}
-#preview .twocol{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
-#preview .doc-line{padding:2mm 0}
-#preview .subject{border-bottom:1px solid #111;padding-bottom:2mm}
-
-
-
-#preview .source-note{font-size:16pt;margin-top:11mm}
-#docxPages{background:transparent;overflow:visible;padding:0}
-#docxPages .docx-wrapper{width:var(--preview-paper-w)!important;min-width:var(--preview-paper-w)!important;max-width:var(--preview-paper-w)!important;display:block!important;background:transparent!important;padding:0!important}
-#docxPages section.docx{width:var(--preview-paper-w)!important;min-width:var(--preview-paper-w)!important;max-width:var(--preview-paper-w)!important;height:var(--preview-paper-h)!important;min-height:var(--preview-paper-h)!important;max-height:var(--preview-paper-h)!important;box-sizing:border-box!important;padding:var(--preview-top) var(--preview-right) var(--preview-bottom) var(--preview-left)!important;margin:0!important;background:white!important;position:relative!important;overflow:visible!important;box-shadow:0 3px 12px #22334420!important;border:1px solid #d0d9e3!important}
+.preview-zoom span{font-size:11px;text-align:center}
+#previewPage{width:var(--paper-w);min-height:var(--paper-h);padding:var(--paper-t) var(--paper-r) var(--paper-b) var(--paper-l);background:white;box-shadow:0 3px 12px #22334420;transform-origin:top left}
+#preview{font-family:ths,'THSarabunPSK',serif;font-size:16pt}
+#preview h3{font-size:22pt;text-align:center}
+#docxPages{padding:0;background:transparent}
+#docxPages .docx-wrapper{width:var(--paper-w)!important;padding:0!important;background:transparent!important}
+#docxPages section.docx{box-sizing:border-box!important;width:var(--paper-w)!important;min-width:var(--paper-w)!important;max-width:var(--paper-w)!important;height:var(--paper-h)!important;min-height:var(--paper-h)!important;max-height:var(--paper-h)!important;padding:var(--paper-t) var(--paper-r) var(--paper-b) var(--paper-l)!important;background:white!important;margin:0!important;overflow:visible!important;box-shadow:0 3px 12px #22334420!important}
 #docxPages section.docx[style*="display: none"]{display:none!important}
 #docxPages section.docx>header,#docxPages section.docx>footer{display:none!important}
-#docxPages section.docx .docx-page-content{max-width:100%!important}#docxPages section.docx p,#docxPages section.docx td,#docxPages section.docx span{font-family:'THSarabunPSK',ths,serif!important;font-size:16pt!important}
-#docxPages .word-empty-spacer{box-sizing:border-box!important}
-
-#docxPages .docx-edit-field{display:inline-block!important;font-family:'THSarabunPSK',ths,serif!important;font-size:16pt!important;height:1.2em!important;min-width:28px!important;max-width:350px!important;padding:0 2px!important;margin:0!important;border:0!important;border-bottom:1px dashed #3185b9!important;vertical-align:baseline!important;box-sizing:border-box!important;background:#eaf6ff!important;color:#172c3f!important}
-#docxPages .docx-edit-field:focus{outline:2px solid #2178b5!important;background:#fff!important}
+#docxPages section.docx p,#docxPages section.docx td,#docxPages section.docx span{font-family:ths,'THSarabunPSK',serif!important;font-size:16pt!important}
+#docxPages section.docx .memo-title,#docxPages section.docx .memo-title *{font-size:22pt!important}
+#docxPages .docx-edit-field{display:inline-block!important;font:16pt ths,'THSarabunPSK',serif!important;min-width:28px!important;max-width:350px!important;height:1.2em!important;padding:0 2px!important;margin:0!important;border:0!important;border-bottom:1px dashed #3185b9!important;vertical-align:baseline!important;background:#eaf6ff!important;color:#172c3f!important}
+#docxPages .docx-edit-field:focus{outline:2px solid #2178b5!important;background:white!important}
 #docxPages .page-overflow{outline:2px solid #c43d30!important}
-#googleViewer{display:none!important}
-#status,#pageAudit{display:none!important}
-@media print{
- @page{size:A4;margin:0}
- .preview-zoom{display:none!important}
- #previewPage{transform:none!important;box-shadow:none!important;margin:0!important}
- #docxPages .docx-wrapper{transform:none!important;margin:0!important}
- #docxPages section.docx{border:0!important;box-shadow:none!important;break-after:page!important}
- #docxPages section.docx[style*="display: none"]{display:block!important}
- #docxPages .docx-edit-field{background:transparent!important;border:0!important}
- .panel:nth-child(2) .pane{background:white;overflow:visible;padding:0}
-}
+#status,#pageAudit,#googleViewer{display:none!important}
+@media print{@page{size:A4;margin:0}.preview-zoom{display:none!important}#previewPage,#docxPages .docx-wrapper{transform:none!important;box-shadow:none!important;margin:0!important}#docxPages section.docx{box-shadow:none!important;break-after:page!important}#docxPages section.docx[style*="display: none"]{display:block!important}#docxPages .docx-edit-field{background:transparent!important;border:0!important}.panel:nth-child(2) .pane{padding:0;overflow:visible;background:white}}
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
 <main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar left-exports"><button id="export">ส่งออก Word (.docx)</button><button id="print" class="secondary">พิมพ์ / PDF</button><button id="save" class="secondary">บันทึกข้อมูล</button><button id="reset" class="secondary">ล้างข้อมูล</button></div></div></section>
