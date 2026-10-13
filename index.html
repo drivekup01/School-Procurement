@@ -102,7 +102,7 @@ function setupDocxPages(){
    pageSelect.onchange=()=>pages[Number(pageSelect.value)]?.scrollIntoView({behavior:'smooth',block:'start'});
   }else{pageSelect.disabled=true;pageSelect.add(new Option('ยังแยกหน้าไม่ได้',''));}
 }
-async async function loadPDF(){
+async function loadPDF(){
  try{
   if(!window.pdfjsLib)throw new Error('ไม่สามารถโหลด PDF.js ได้');
   if(!pdfDocument){
