@@ -10,18 +10,20 @@
 <div class="group"><h3>ข้อมูลกรอกเพิ่มเติมตามหน้า</h3><p class="muted">ระบบจะแสดงช่องกรอกจากพารามิเตอร์ที่มีอยู่ใน Word จริง หลังตรวจสอบชื่อพารามิเตอร์และเลขหน้าได้ครบแล้ว</p></div>
 <p><a class="ref" href="procurement-template13.docx">เปิดไฟล์ต้นฉบับ Word</a></p>
 <p><a class="ref" href="%E0%B8%AA%E0%B8%A3%E0%B8%B8%E0%B8%9B%E0%B8%87%E0%B8%9A%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%A1%E0%B8%B2%E0%B8%93%E0%B9%83%E0%B8%99%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%94%E0%B8%B3%E0%B9%80%E0%B8%99%E0%B8%B4%E0%B8%99%E0%B9%82%E0%B8%84%E0%B8%A3%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%88%E0%B8%B3%E0%B8%9B%E0%B8%B5%202570.docx">เปิดไฟล์ข้อมูลกลาง</a></p>
-</section><section class="preview"><div class="toolbar"><strong>ตัวอย่างเอกสารต้นฉบับ</strong><div class="toolbar-controls"><label for="viewerMode" style="margin:0">วิธีแสดง</label><select id="viewerMode"><option value="docx">แสดง Word ในเว็บ (ทดลอง)</option><option value="office">Office Viewer (เดิม)</option></select><button id="openWord">เปิดเอกสารในหน้าต่างใหม่ ↗</button></div></div><div class="document-frame"><div id="docxRender" class="renderer-scroll"><p class="renderer-message">กำลังอ่านไฟล์ต้นฉบับ Word...</p></div><iframe id="word" hidden title="ต้นฉบับ Word ผ่าน Microsoft Office viewer" referrerpolicy="no-referrer" loading="lazy"></iframe><div id="parameterOverlay" class="overlay-layer" aria-label="ตำแหน่งพารามิเตอร์ที่แก้ไข" aria-live="polite"></div></div><div class="note">โหมดทดลองแสดง Word ผ่าน docx-preview ในเบราว์เซอร์ ไม่แก้ต้นฉบับและยังไม่รับรองว่าการแบ่งหน้าเหมือน Microsoft Word ทุกจุด หากแสดงผิด ให้สลับกลับ Office Viewer (เดิม) ได้ทันที</div></section></main>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.6/dist/docx-preview.min.js"></script>
+</section><section class="preview"><div class="toolbar"><strong>ตัวอย่างเอกสาร PDF ต้นฉบับ</strong><div class="toolbar-controls"><label for="viewerMode" style="margin:0">วิธีแสดง</label><select id="viewerMode"><option value="pdf">PDF ต้นฉบับ (หลัก)</option><option value="docx">แสดง Word ในเว็บ (ทดลอง)</option><option value="office">Office Viewer (เดิม)</option></select><button id="openWord">เปิดเอกสารในหน้าต่างใหม่ ↗</button></div></div><div class="document-frame"><div id="pdfRender" class="renderer-scroll" style="display:none"><p class="renderer-message">กำลังโหลด PDF...</p></div><div id="docxRender" class="renderer-scroll"><p class="renderer-message">กำลังอ่านไฟล์ต้นฉบับ Word...</p></div><iframe id="word" hidden title="ต้นฉบับ Word ผ่าน Microsoft Office viewer" referrerpolicy="no-referrer" loading="lazy"></iframe><div id="parameterOverlay" class="overlay-layer" aria-label="ตำแหน่งพารามิเตอร์ที่แก้ไข" aria-live="polite"></div></div><div class="note">โหมดหลักแสดง PDF ต้นฉบับแต่ละหน้าโดยตรง ไม่เปลี่ยนขอบกระดาษหรือการเว้นบรรทัด พารามิเตอร์ Overlay จะเพิ่มเมื่อยืนยันพิกัดจริงแล้ว ยังสามารถเปลี่ยนกลับเป็น Word Preview เดิมได้</div></section></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.6/dist/docx-preview.min.js"></script>
 <script>
 const raw='https://raw.githubusercontent.com/drivekup01/School-Procurement/main/procurement-template13.docx';
 const viewer='https://view.officeapps.live.com/op/embed.aspx?src='+encodeURIComponent(raw);
 const office=document.getElementById('word');office.src=viewer;
 const stage=document.getElementById('docxRender'),mode=document.getElementById('viewerMode'),pageSelect=document.getElementById('page');
-let rendered=false;
+let rendered=false,pdfDocument=null;const pdfStage=document.getElementById("pdfRender");
 function setMode(value){
- mode.value=value;office.hidden=value!=='office';stage.hidden=value!=='docx';
+ mode.value=value;office.hidden=value!=='office';stage.hidden=value!=='docx';pdfStage.style.display=value==='pdf'?'block':'none';
  document.getElementById('parameterOverlay').replaceChildren();
  if(value==='docx'&&!rendered)renderDocx();
+ if(value==='pdf')loadPDF();
+ if(value==='docx'&&rendered)setupDocxPages();
  if(value==='office'){pageSelect.disabled=true;pageSelect.replaceChildren(new Option('เลือกหน้าไม่ได้ใน Office Viewer',''));}
 }
 mode.addEventListener('change',()=>setMode(mode.value));
@@ -35,6 +37,14 @@ async function renderDocx(){
   stage.replaceChildren();
   await window.docx.renderAsync(bytes,stage,null,{breakPages:true,ignoreLastRenderedPageBreak:false,renderHeaders:true,renderFooters:true,useBase64URL:true});
   rendered=true;
+  setupDocxPages();
+  document.getElementById('state').textContent='อ่าน DOCX ในเบราว์เซอร์แล้ว · ตรวจการแบ่งหน้ากับ Word จริง';
+ } catch(err){
+  const p=document.createElement('p');p.className='renderer-message';p.textContent='แสดงผลแบบทดลองไม่ได้: '+err.message;
+  stage.replaceChildren(p);document.getElementById('state').textContent='Preview ทดลองไม่สำเร็จ';
+ }
+}
+function setupDocxPages(){
   const pages=[...stage.querySelectorAll('section.docx')];
   pageSelect.replaceChildren();
   if(pages.length>0){
@@ -42,13 +52,41 @@ async function renderDocx(){
    pageSelect.disabled=false;
    pageSelect.onchange=()=>pages[Number(pageSelect.value)]?.scrollIntoView({behavior:'smooth',block:'start'});
   }else{pageSelect.disabled=true;pageSelect.add(new Option('ยังแยกหน้าไม่ได้',''));}
-  document.getElementById('state').textContent='อ่าน DOCX ในเบราว์เซอร์แล้ว · ตรวจการแบ่งหน้ากับ Word จริง';
- } catch(err){
-  const p=document.createElement('p');p.className='renderer-message';p.textContent='แสดงผลแบบทดลองไม่ได้: '+err.message+' — เลือก Office Viewer (เดิม) เพื่อดูเอกสาร';
-  stage.replaceChildren(p);document.getElementById('state').textContent='Preview ทดลองไม่สำเร็จ';
+}
+async function loadPDF(){
+ try{
+  if(!window.pdfjsLib)throw new Error('ไม่สามารถโหลด PDF.js ได้');
+  if(!pdfDocument){
+   window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+   pdfStage.innerHTML='<p class="renderer-message">กำลังโหลด PDF ต้นฉบับ...</p>';
+   const task=window.pdfjsLib.getDocument({url:'procurement-template13.pdf?version=20261013',cMapUrl:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',cMapPacked:true});
+   pdfDocument=await task.promise;
+  }
+  pageSelect.replaceChildren();
+  for(let p=1;p<=pdfDocument.numPages;p++)pageSelect.add(new Option('หน้า '+p,String(p)));
+  pageSelect.disabled=false;pageSelect.onchange=()=>renderPDFPage(Number(pageSelect.value));
+  await renderPDFPage(Number(pageSelect.value)||1);
+  document.getElementById('state').textContent='PDF ต้นฉบับ · '+pdfDocument.numPages+' หน้า';
+ }catch(error){
+  pdfStage.replaceChildren();const el=document.createElement('p');el.className='renderer-message';el.textContent='ไม่สามารถแสดง PDF ได้: '+error.message;pdfStage.append(el);
+  document.getElementById('state').textContent='PDF โหลดไม่สำเร็จ';
  }
 }
-setMode('docx');
+async function renderPDFPage(number){
+ if(!pdfDocument||mode.value!=='pdf')return;
+ const p=await pdfDocument.getPage(number);const native=p.getViewport({scale:1});
+ const maxWidth=Math.max(270,pdfStage.clientWidth-44);
+ const ratio=Math.min(1.6,maxWidth/native.width);
+ const viewport=p.getViewport({scale:ratio});
+ const canvas=document.createElement('canvas');const scale=window.devicePixelRatio||1;
+ canvas.width=Math.round(viewport.width*scale);canvas.height=Math.round(viewport.height*scale);
+ canvas.style.cssText='display:block;margin:0 auto;background:white;box-shadow:0 2px 9px #0002;max-width:100%;width:'+viewport.width+'px;height:'+viewport.height+'px';
+ const ctx=canvas.getContext('2d');pdfStage.replaceChildren(canvas);
+ await p.render({canvasContext:ctx,viewport,transform:scale===1?null:[scale,0,0,scale,0,0]}).promise;
+ pdfStage.scrollTop=0;
+ document.getElementById('parameterOverlay').replaceChildren();
+}
+setMode('pdf');
 document.getElementById('openWord').addEventListener('click',()=>window.open(viewer,'_blank','noopener,noreferrer'));
 
 /* Overlay registry: require verified rendered-page coordinates.
