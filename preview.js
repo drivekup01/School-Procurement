@@ -186,6 +186,14 @@ function paginateWord(groups){
    for(const node of nodes)if(/\{\{[\w.-]+\}\}/.test(node.nodeValue||''))node.replaceWith(wordFieldFragments(node.nodeValue));
    return page;
   }
+  if(groupIndex===4){
+   const page=buildPage(group);
+   page.classList.add('word-page5');
+   const paragraphs=Array.from(page.querySelectorAll('.word-content > .word-paragraph'));
+   const subject=paragraphs.find(p=>/^เรื่อง\s/.test(p.textContent.trim()));
+   if(subject)subject.classList.add('p5-subject-rule');
+   return page;
+  }
   if(groupIndex===5){
    const page=buildPage(group);
    for(const table of Array.from(page.querySelectorAll('.word-content > table.word-table'))){
