@@ -1,5 +1,6 @@
-/* Page 4 surrounding content only. The table and its stylesheet are untouched. */
+/* Page 4 non-table layout only; preserve the approved table as-is. */
 .word-generated .word-content.p4-layout{display:flex;flex-direction:column;gap:12pt}
 .word-generated .p4-before-table,.word-generated .p4-after-table{display:flex;flex-direction:column;gap:0}
-.word-generated .p4-before-table .word-paragraph,.word-generated .p4-after-table .word-paragraph{margin-bottom:0}
-.word-generated .p4-table-group{flex:0 0 auto;min-width:0}
+/* Source page-4 paragraphs use Word's No Spacing style (0pt after).
+   Inline paragraph overrides from Word remain in effect. */
+.word-generated .p4-before-table>.word-paragraph,.word-generated .p4-after-table>.word-paragraph{margin-bottom:0}
