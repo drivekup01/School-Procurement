@@ -204,8 +204,8 @@ async function renderWordPages(blob,host,job){
  const wrapper=document.createElement('div');wrapper.className='docx-wrapper docx-split-wrapper';wrapper.appendChild(fragment);host.appendChild(wrapper);
  attachPreviewInputs(host);
  requestAnimationFrame(()=>{if(job===renderToken){showDocumentPage();auditPageSpacing(host)}});
- $('previewPage').style.display='none';host.style.display=previewMode==='google'?'none':'block';
- currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));if(previewMode==='word')showDocumentPage();
+ $('previewPage').style.display='none';host.style.display='block';
+ currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));showDocumentPage();
  $('status').textContent='คลิกช่องพารามิเตอร์ในหน้า Word เพื่อแก้ค่าได้ (บันทึกเข้าฟอร์มและใช้ในการ Export) • แบ่งส่วนแสดง '+host.querySelectorAll('section.docx').length+' หน้า';
  $('status').className='alert good';
 }
@@ -241,30 +241,7 @@ $('export').onclick=async()=>{const b=$('export');b.disabled=true;try{if(!templa
 for(let j=1;j<=5;j++){vals['a'+j]=d['b'+j]?String(j):'';vals['b'+j]=d['b'+j]||'';vals['c'+j]=d['c'+j]||'';vals['d'+j]=baht(d['r'+j]||'');vals['e'+j]=satang(d['r'+j]||'');vals['f'+j]=baht(d['u'+j]||'');vals['g'+j]=satang(d['u'+j]||'');vals['h'+j]=baht(d['z'+j]||'');vals['i'+j]=satang(d['z'+j]||'')}
 const doc=new docxtemplater(new PizZip(templateBuffer.slice(0)),{delimiters:{start:'{{',end:'}}'},nullGetter:()=>''});doc.render(vals);const blob=doc.getZip().generate({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});let u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='ชุดเอกสารจัดซื้อ_'+(d.main_date||'ทดลอง')+'.docx';a.click();setTimeout(()=>URL.revokeObjectURL(u),3000)}catch(e){alert('ส่งออก Word ไม่สำเร็จ: '+e.message)}finally{b.disabled=false}};
 let previewMode='word';
-const googleDocURL='https://docs.google.com/document/d/1eUoINJHesLdb-7m39BJwbel3ppN5ey99H93TKAtwahc/edit?tab=t.0';
-const googleViewerURL='https://docs.google.com/document/d/1eUoINJHesLdb-7m39BJwbel3ppN5ey99H93TKAtwahc/preview';
-function setPreviewMode(mode){
- previewMode=mode;
- const google=mode==='google';
- $('googleViewer').hidden=!google;
- $('googleViewer').style.display=google?'block':'none';
- $('docxPages').style.display=google?'none':'block';
- $('previewPage').style.display='none';
- if($('googleMode'))$('googleMode').classList.toggle('mode-active',google);
- if($('wordMode'))$('wordMode').classList.toggle('mode-active',!google);
- if(google){
-   if(!$('googleViewerFrame').src)$('googleViewerFrame').src=googleViewerURL;
-   $('googleOpen').href=googleDocURL;
-   $('zoomOut').disabled=true;$('zoomIn').disabled=true;$('zoomFit').disabled=true;
-   $('prevPage').disabled=true;$('nextPage').disabled=true;
-   $('zoomLevel').textContent='Google';$('pageCount').textContent='เลื่อนหน้าในกรอบ';
- }else{
-   $('zoomOut').disabled=false;$('zoomIn').disabled=false;$('zoomFit').disabled=false;
-   showDocumentPage();
- }
-}
-if($('googleMode'))$('googleMode').onclick=()=>setPreviewMode('google');
-if($('wordMode'))$('wordMode').onclick=()=>setPreviewMode('word');
+function setPreviewMode(){previewMode='word';$('docxPages').style.display='block';$('previewPage').style.display='none';showDocumentPage()}
 let zoomFactor=1,zoomAuto=true,currentPage=0;
 function showDocumentPage(){
  const host=$('docxPages'),pages=[...host.querySelectorAll('section.docx')];
