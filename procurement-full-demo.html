@@ -65,10 +65,11 @@ button,.panel:first-child button{font-size:11px;padding:6px 9px;border-radius:6p
  #docxPages section.docx[style*="display: none"]{display:block!important}
 }
 #docxPages .page-overflow{outline:2px solid #c34f39!important;outline-offset:1px}#pageAudit{font-size:11px;color:#94533f;margin:4px 0}#docxPages section.docx p:empty{min-height:0}
+.left-exports{position:sticky;bottom:0;background:#fff;padding:9px 4px 3px;z-index:5;border-top:1px solid #dce7ef;box-shadow:0 -4px 12px #fff9}.left-exports button{font-size:12px;padding:8px 10px}#docxPages .docx-edit-field{min-width:28px!important;max-width:350px!important;padding:0 2px!important;margin:0!important;line-height:1!important;height:1.2em!important;border-width:0 0 1px!important;vertical-align:baseline!important}#docxPages .docx-edit-field:placeholder-shown{background:transparent!important;border-bottom:1px dashed #a7c8da!important}#docxPages section.docx p{max-width:100%}#docxPages .page-overflow{outline:2px solid #c43d30!important}
 </style></head><body>
 <header><h1>ฟอร์มชุดจัดซื้อจาก Word · ทดลอง</h1><a href="./html-a4-demo.html">กลับหน้าทดลอง A4</a></header>
-<main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><div class="note">ชื่อพารามิเตอร์เชื่อมกับ Word ต้นฉบับที่คุณกำหนดไว้ ไม่ต้องกรอกชื่อซ้ำทุกหน้า</div><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar"><button id="save" class="secondary">บันทึกข้อมูลในเครื่อง</button><button id="reset" class="secondary">ล้างข้อมูลทดลอง</button></div></div></section>
-<section class="panel"><div class="rightsticky"><div class="preview-heading"><h2>ตรวจข้อมูลก่อนส่งออก</h2><div class="preview-zoom"><button id="zoomOut" type="button" class="secondary" title="ย่อกระดาษ">−</button><span id="zoomLevel" aria-live="polite">พอดีหน้า</span><button id="zoomIn" type="button" class="secondary" title="ขยายกระดาษ">+</button><button id="zoomFit" type="button" class="secondary">พอดีหน้า</button><button id="prevPage" type="button" class="secondary">◀</button><span id="pageCount">1 / 1</span><button id="nextPage" type="button" class="secondary">▶</button></div></div><div class="toolbar"><button id="export">ส่งออก Word ต้นฉบับ (.docx)</button><button id="print" class="secondary">พิมพ์ / บันทึก PDF (A4)</button></div><div id="status" class="alert">กำลังตรวจแม่แบบ Word…</div><div id="pageAudit" class="note" role="status"></div></div><div class="pane"><div id="previewPage"><div id="preview"></div></div><div id="docxPages" hidden></div><div id="googleViewer" hidden><iframe id="googleViewerFrame" title="ตัวอย่างไฟล์ Word ผ่าน Google Docs Viewer" loading="lazy" referrerpolicy="no-referrer"></iframe><p class="note">ทดลองแสดง Google Docs ตามลิงก์ใหม่ หากเห็นแจ้งไม่มีสิทธิ์หรือไม่สามารถฝังได้ ให้เปิดเอกสารในแท็บใหม่ด้วยบัญชีที่มีสิทธิ์ การกรอกฟอร์มด้านซ้ายยังไม่เปลี่ยนเอกสาร Google Docs</p><a id="googleOpen" href="#" target="_blank" rel="noopener noreferrer">เปิดเอกสาร Google Docs ฉบับนี้ในแท็บใหม่</a><div class="google-api-test"><strong>ทดสอบการแก้ข้อมูลผ่าน Google Docs API สำเร็จ</strong><p>สำเนาทดสอบเปลี่ยนพารามิเตอร์ project_name จำนวน 2 จุด โดยไม่แก้ต้นฉบับ</p><a href="https://docs.google.com/document/d/1qNaEkgtvEPkoqoGSa5UfE2yVVGufMWpQSWjs0vnEfJE/edit" target="_blank" rel="noopener noreferrer">เปิดสำเนา Google Docs ที่ทดลองแก้แล้ว ↗</a><p>การพิมพ์ในฟอร์มแล้วส่งไป Google Docs อัตโนมัติ ยังไม่ได้เปิดใช้งาน ต้องมีการยืนยันตัวตนและตัวเชื่อม API เพื่อไม่ให้เว็บสาธารณะแก้เอกสารได้</p></div></div><p class="note">Preview ใช้ขนาดหน้าและระยะขอบตาม Word ต้นฉบับ แสดงทีละหน้า และอัปเดตตามฟอร์ม</p></div></section></main>
+<main><section class="panel"><div class="pane"><h2>กรอกข้อมูลกลางครั้งเดียว</h2><label for="pageSelector">เลือกส่วนของเอกสาร</label><select id="pageSelector"></select><details open style="margin:12px 0;padding:12px;background:#eef6fc;border-radius:8px"><summary style="cursor:pointer;font-weight:700">ข้อมูลที่ใช้ร่วมกันทุกหน้า</summary><div id="sharedFields" class="fields" style="margin-top:12px"></div></details><div id="groups"></div><div class="toolbar left-exports"><button id="export">ส่งออก Word (.docx)</button><button id="print" class="secondary">พิมพ์ / PDF</button><button id="save" class="secondary">บันทึกข้อมูล</button><button id="reset" class="secondary">ล้างข้อมูล</button></div></div></section>
+<section class="panel"><div class="rightsticky"><div class="preview-heading"><h2>ตรวจข้อมูลก่อนส่งออก</h2><div class="preview-zoom"><button id="zoomOut" type="button" class="secondary" title="ย่อกระดาษ">−</button><span id="zoomLevel" aria-live="polite">พอดีหน้า</span><button id="zoomIn" type="button" class="secondary" title="ขยายกระดาษ">+</button><button id="zoomFit" type="button" class="secondary">พอดีหน้า</button><button id="prevPage" type="button" class="secondary">◀</button><span id="pageCount">1 / 1</span><button id="nextPage" type="button" class="secondary">▶</button></div></div><div id="status" class="alert">กำลังตรวจแม่แบบ Word…</div><div id="pageAudit" class="note" role="status"></div></div><div class="pane"><div id="previewPage"><div id="preview"></div></div><div id="docxPages" hidden></div></div></section></main>
 <script>
 const definitions=[
 {title:'ข้อมูลเอกสาร',fields:[['document_date','เลขที่หนังสือ'],['main_date','วันที่หลัก','date'],['requesting_unit','ฝ่ายงาน / กลุ่มสาระ'],['procurement_type','ประเภทจัดซื้อ/จัดจ้าง'],['budget_year','ปีงบประมาณ'],['project_name','ชื่อโครงการ','textarea'],['activity_name','ชื่อกิจกรรม','textarea'],['expense_description','รายการค่าใช้จ่าย'],['budget_amount','วงเงินงบประมาณ','number'],['budget_amount_text','วงเงินเป็นตัวอักษร'],['assigned_officer_name','ชื่อผู้ได้รับมอบหมาย'],['assigned_officer_position','ตำแหน่งผู้ได้รับมอบหมาย'],['officer_signer_name','ชื่อเจ้าหน้าที่'],['chief_officer_signer_name','ชื่อหัวหน้าเจ้าหน้าที่']]},
@@ -141,7 +142,7 @@ function attachPreviewInputs(host){
    input.title='แก้ไข '+key;input.setAttribute('aria-label','แก้ไข '+key);
    input.value=String(values[key]??'');
    input.placeholder=key;
-   const resize=()=>{input.style.width=Math.max(70,Math.min(430,(input.value||input.placeholder).length*9+28))+'px'};
+   const resize=()=>{const raw=input.value||input.placeholder;const measure=document.createElement('canvas').getContext('2d');measure.font='16pt ths, serif';input.style.width=Math.max(28,Math.min(350,Math.ceil(measure.measureText(raw).width)+14))+'px'};
    resize();
    input.addEventListener('input',()=>{
     resize();
@@ -157,34 +158,36 @@ function attachPreviewInputs(host){
  }
 }
 function auditPageSpacing(host){
- const sheets=[...host.querySelectorAll('section.docx')],problems=[];
+ const sheets=[...host.querySelectorAll('section.docx')],issues=[];
+ const yBottom=el=>{const r=el.getBoundingClientRect();return r.bottom};
  sheets.forEach((page,index)=>{
   const content=page.querySelector('article')||page.querySelector('.docx-page-content')||page;
-  const limit=page.clientHeight-parseFloat(getComputedStyle(page).paddingBottom||0);
-  const paragraphs=[...content.querySelectorAll('p')];
-  // Only collapse browser-added blank paragraph spacing when the content exceeds A4.
-  // Never remove source text, tables, manual line breaks, or signatures.
-  function bottom(){let end=0;for(const el of [...content.querySelectorAll('p,table')]){const r=el.getBoundingClientRect(),pr=page.getBoundingClientRect();if(r.height)end=Math.max(end,(r.bottom-pr.top)/(parseFloat(page.style.zoom)||1))}return end}
-  let excess=bottom()-limit;
-  let count=0;
-  if(excess>1){
-   const blanks=paragraphs.filter(p=>!p.textContent.trim()&&!p.querySelector('img,svg,table,br,input'));
-   // Reduce CSS-only margins first; do not delete blank paragraphs from Word.
+  const elements=[...content.querySelectorAll('p,table')];
+  const allowed=()=>{const p=page.getBoundingClientRect();const style=getComputedStyle(page);return p.bottom-parseFloat(style.paddingBottom||0)};
+  const extent=()=>Math.max(0,...elements.filter(e=>e.getClientRects().length).map(yBottom));
+  // Preserve content and font sizes. Only reduce empty-line spacing if a page overflows.
+  let over=extent()-allowed();
+  if(over>2){
+   const blanks=elements.filter(p=>p.tagName==='P'&&!p.textContent.trim()&&!p.querySelector('img,svg,table,input'));
+   // The blank paragraphs are already present in Word; reduce their display height only as necessary.
    for(const p of blanks){
-    if(excess<=1)break;
-    const cs=getComputedStyle(p),mb=parseFloat(cs.marginBottom)||0,mt=parseFloat(cs.marginTop)||0;
-    if(mb>0||mt>0){p.style.marginTop='0px';p.style.marginBottom='0px';count++;excess=bottom()-limit}
+    if(over<=2)break;
+    const before=p.getBoundingClientRect().height;
+    const style=getComputedStyle(p);
+    p.style.marginTop='0';p.style.marginBottom='0';
+    p.style.paddingTop='0';p.style.paddingBottom='0';
+    const lh=parseFloat(style.lineHeight);
+    if(Number.isFinite(lh)&&lh>0)p.style.lineHeight=Math.max(4,Math.min(lh,Math.max(4,lh-over)))+'px';
+    over=extent()-allowed();
+    if(before-p.getBoundingClientRect().height<.5)continue;
    }
   }
-  if(excess>1){
-   page.classList.add('page-overflow');
-   problems.push('หน้า '+(index+1)+' เนื้อหาล้นประมาณ '+Math.ceil(excess)+'px');
-  }else page.classList.remove('page-overflow');
-  page.dataset.trimmedBlankSpacing=String(count);
+  // Report remaining overflow visibly; do not crop or silently shrink text.
+  if(over>2){page.classList.add('page-overflow');issues.push('หน้า '+(index+1)+' เกิน '+Math.ceil(over)+'px')}else page.classList.remove('page-overflow');
  });
- const status=$('pageAudit');
- if(status)status.textContent=problems.length?'พบเนื้อหาล้นขอบหลังตรวจระยะห่าง: '+problems.join(' • ')+' (ไม่ซ่อนเนื้อหา)':'ตรวจพื้นที่หน้ากระดาษแล้ว ไม่พบเนื้อหาล้นจากส่วนที่แสดง';
+ const status=$('pageAudit');if(status)status.textContent=issues.length?'ตรวจพบเนื้อหาล้น: '+issues.join(' • '):'';
 }
+
 async function renderWordPages(blob,host,job){
  const bytes=await blob.arrayBuffer(),parts=splitWordIntoPages(bytes);
  if(job!==renderToken)return;
@@ -200,7 +203,7 @@ async function renderWordPages(blob,host,job){
  host.replaceChildren();
  const wrapper=document.createElement('div');wrapper.className='docx-wrapper docx-split-wrapper';wrapper.appendChild(fragment);host.appendChild(wrapper);
  attachPreviewInputs(host);
- requestAnimationFrame(()=>{if(job===renderToken)auditPageSpacing(host)});
+ requestAnimationFrame(()=>{if(job===renderToken){showDocumentPage();auditPageSpacing(host)}});
  $('previewPage').style.display='none';host.style.display=previewMode==='google'?'none':'block';
  currentPage=Math.min(currentPage,Math.max(0,host.querySelectorAll('section.docx').length-1));if(previewMode==='word')showDocumentPage();
  $('status').textContent='คลิกช่องพารามิเตอร์ในหน้า Word เพื่อแก้ค่าได้ (บันทึกเข้าฟอร์มและใช้ในการ Export) • แบ่งส่วนแสดง '+host.querySelectorAll('section.docx').length+' หน้า';
@@ -294,6 +297,8 @@ function fitA4(){if(previewMode==='google')return;
 $('zoomOut').onclick=()=>{zoomAuto=false;zoomFactor=Math.max(.4,zoomFactor-.15);fitA4()};
 $('zoomIn').onclick=()=>{zoomAuto=false;zoomFactor=Math.min(3,zoomFactor+.15);fitA4()};
 $('zoomFit').onclick=()=>{zoomAuto=true;zoomFactor=1;fitA4()};
+const previewPane=document.querySelector('.panel:nth-child(2) .pane');
+previewPane.addEventListener('wheel',e=>{if(!e.ctrlKey)return;e.preventDefault();zoomAuto=false;zoomFactor=Math.max(.4,Math.min(3,zoomFactor+(e.deltaY<0?.12:-.12)));fitA4()},{passive:false});
 window.addEventListener('resize',fitA4);window.addEventListener('load',fitA4);
 const sheetWatcher=new ResizeObserver(()=>fitA4());sheetWatcher.observe(document.querySelector('.panel:nth-child(2) .pane'));
 refresh();setPreviewMode('word');
