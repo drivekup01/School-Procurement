@@ -129,6 +129,7 @@ function paginateWord(groups){
    for(const node of nodes)if(/\{\{[\w.-]+\}\}/.test(node.nodeValue||''))node.replaceWith(wordFieldFragments(node.nodeValue));
    return page;
   }
+  if(groupIndex===1)return buildSecondPageFromWord(group);
   return buildPage(group);
  });
 }
