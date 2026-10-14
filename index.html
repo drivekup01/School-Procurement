@@ -254,7 +254,7 @@ loadProjectActivities();
 
 function budgetAmountInThaiWords(value){
  const raw=String(value??'').replace(/,/g,'').trim();
- if(!/^\\d+(?:\\.\\d{1,2})?$/.test(raw))return '';
+ if(!/^\d+(?:\.\d{1,2})?$/.test(raw))return '';
  const [whole,decimal='']=raw.split('.');
  const digits=['ศูนย์','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
  const units=['','สิบ','ร้อย','พัน','หมื่น','แสน'];
