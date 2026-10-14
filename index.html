@@ -303,6 +303,7 @@ function renderFormFields(){
   input.addEventListener('input',()=>{formValues[key]=input.value;if(key==='budget_amount')syncBudgetAmountText();try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}activeField=key;renderPDFPage(currentPDFPage)});
   wrap.append(label,input);parent.appendChild(wrap);
  }
+ // Left input panel only. Keep document preview/export logic unchanged.
  const sharedKeys=[
   'project_name','activity_name','requesting_unit','budget_amount','budget_year',
   'assigned_officer_name','assigned_officer_position','chief_officer_signer_name',
@@ -317,11 +318,11 @@ function renderFormFields(){
   ['ผู้ขาย / ผู้รับจ้าง',['vendor_name']],
   ['รายละเอียดจัดซื้อ / จ้าง',['procurement_description','purchase_item','hire_item']]
  ];
+ const compactHeadings=new Set(['ผู้ขาย / ผู้รับจ้าง','รายละเอียดจัดซื้อ / จ้าง']);
  for(const [heading,keys] of groups){
   const box=document.createElement('div');box.className='shared-data-group';
   const title=document.createElement('h3');title.textContent=heading;box.append(title);
   for(const key of keys){
-   // Preserve existing values; show shared fields even if only used on another page.
    if(key==='assigned_officer_position'){
     const wrap=document.createElement('div');wrap.className='input-wrap';
     const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;
@@ -333,7 +334,15 @@ function renderFormFields(){
     select.value=formValues[key]||'';
     select.addEventListener('change',()=>saveFieldValue(key,select.value));
     wrap.append(label,select);box.append(wrap);
-   }else addField(box,key);
+   }else{
+    const before=box.children.length;
+    addField(box,key);
+    if(compactHeadings.has(heading)&&key===keys[0]&&box.children.length>before){
+     const field=box.lastElementChild;
+     const label=field?.querySelector('label');
+     if(label)label.remove(); // Heading already names this one field.
+    }
+   }
   }
   shared.append(box);
  }
