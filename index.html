@@ -468,6 +468,10 @@ async function exportFilledWord(){
     const tableWrites=window.exportPage6TableToWord(doc);
     if(tableWrites){replacements+=tableWrites;changed=true;}
    }
+   if(filename==='word/document.xml'&&typeof window.exportPage11TableToWord==='function'){
+    const tableWrites=window.exportPage11TableToWord(doc);
+    if(tableWrites){replacements+=tableWrites;changed=true;}
+   }
    if(changed)zip.file(filename,new XMLSerializer().serializeToString(doc));
   }
   if(replacements===0)throw new Error('ยังไม่มีค่าพารามิเตอร์ที่ตรงกับข้อความใน Word ให้ส่งออก');
@@ -477,4 +481,4 @@ async function exportFilledWord(){
  finally{button.disabled=false;button.textContent='⬇ Export Word';}
 }
 
-</script><script src="preview-page3-choices.js?v=20261014-1"></script><script src="preview-page4-inputs.js?v=20261014-4"></script><script src="preview-page6-inputs.js?v=20261014-1"></script></body></html>
+</script><script src="preview-page3-choices.js?v=20261014-1"></script><script src="preview-page4-inputs.js?v=20261014-4"></script><script src="preview-page6-inputs.js?v=20261014-1"></script><script src="preview-page11-inputs.js?v=20261014-1"></script></body></html>
