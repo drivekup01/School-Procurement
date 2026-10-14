@@ -281,7 +281,7 @@ function renderFormFields(){
   else unique.push(key);
  }
  function addField(parent,key){
-  if(key==='budget_amount_text')syncBudgetAmountText();
+  if(key==='budget_amount_text')return; // Derived automatically; no input field.
   if(key==='project_name'||key==='activity_name'||key==='requesting_unit'){addRelatedSelect(parent,key);return;}
   const wrap=document.createElement('div');wrap.className='input-wrap';
   const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;
