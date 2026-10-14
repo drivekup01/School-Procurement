@@ -200,6 +200,10 @@ function tableHTML(tbl){
 }
 function wordBlocks(body){
  const groups=[[]];
+ // Verified source-page paragraph IDs survive Word saves that remove cached
+ // rendered breaks. Use them only when that pagination metadata is missing.
+ const sourcePageStarts=new Set(['5DB60E57','0DBFFFC7','1EF677F8','543D6E79','4167D585','35A32B33','33AC75F2','4B2D7EED','07C7A332','300606A2']);
+ const recoverSourcePages=body.getElementsByTagNameNS(WORD_NS,'lastRenderedPageBreak').length<9;
  for(const node of Array.from(body.children)){
   if(!['p','tbl'].includes(node.localName))continue;
   const text=Array.from(node.getElementsByTagNameNS(WORD_NS,'t')).map(n=>n.textContent||'').join('').trim();
@@ -211,7 +215,8 @@ function wordBlocks(body){
   // physical page without a stored break; verified against the original
   // eleven-page document's page 8 (not an inferred layout position).
   const announcementPageStart=node.localName==='p'&&text==='ประกาศโรงเรียนค่ายบางระจันวิทยาคม';
-  if((hasRenderedBreak||hasExplicitBreak||hasPageBreakBefore||announcementPageStart)&&groups[groups.length-1].length)groups.push([]);
+  const recoveredStart=recoverSourcePages&&sourcePageStarts.has(node.getAttributeNS('http://schemas.microsoft.com/office/word/2010/wordml','paraId'));
+  if((recoveredStart||hasRenderedBreak||hasExplicitBreak||hasPageBreakBefore||announcementPageStart)&&groups[groups.length-1].length)groups.push([]);
   const element=node.localName==='p'?paragraphHTML(node):tableHTML(node);
   if(node.localName==='tbl')sourceTableForPreview.set(element,node);
   groups[groups.length-1].push(element);
@@ -293,6 +298,22 @@ function paginateWord(groups){
    const paragraphs=Array.from(page.querySelectorAll('.word-content > .word-paragraph'));
    const subject=paragraphs.find(p=>/^เรื่อง\s/.test(p.textContent.trim()));
    if(subject)subject.classList.add('p5-subject-rule');
+   return applyPageSections(page);
+  }
+  if(groupIndex===10){
+   const page=buildPage(group);page.classList.add('word-page11');
+   const content=page.querySelector('.word-content');
+   for(const table of Array.from(content.querySelectorAll(':scope > table.word-table'))){
+    const source=sourceTableForPreview.get(table);
+    if(!source)continue;
+    const replacement=page10TableHTML(source);replacement.className='word-table word-page11-table';
+    for(const cell of Array.from(replacement.rows[0].cells)){
+     const header=document.createElement('th');header.scope='col';
+     while(cell.firstChild)header.append(cell.firstChild);
+     cell.replaceWith(header);
+    }
+    table.replaceWith(replacement);
+   }
    return applyPageSections(page);
   }
   if(groupIndex===9){

@@ -1,0 +1,7 @@
+/* Page 11 only: original requisition grid, 1 header and 22 blank item rows. */
+.word-generated .word-page11-table{width:100%;table-layout:fixed;border-collapse:collapse;margin:0}
+.word-generated .word-page11-table th,.word-generated .word-page11-table td{border:1px solid #111;padding:2px 5px;vertical-align:top;overflow-wrap:break-word;font:16pt/1 ProcurementSarabun,"TH Sarabun New",serif}
+.word-generated .word-page11-table th{font-weight:normal;text-align:center}
+.word-generated .word-page11-table .word-paragraph{margin:0;white-space:pre-wrap;line-height:1}
+.word-generated .word-page11-table td:first-child,.word-generated .word-page11-table td:nth-of-type(3){text-align:center}
+.word-page11 .word-content>.word-flex-section:first-child>.word-paragraph:first-child{text-align:center;margin-left:0 !important;text-indent:0 !important;font-size:20pt;font-weight:bold}
