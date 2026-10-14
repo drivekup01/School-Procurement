@@ -94,6 +94,53 @@
   }
   host.append(panel);
  }
+
+ // Export mapping targets only the original 9-column procurement table.
+ window.exportPage4TableToWord=function(doc){
+  const ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const children=(node,tag)=>Array.from(node?.children||[]).filter(x=>x.localName===tag&&x.namespaceURI===ns);
+  const tables=Array.from(doc.getElementsByTagNameNS(ns,'tbl'));
+  const table=tables.find(t=>Array.from(t.getElementsByTagNameNS(ns,'t')).some(n=>(n.textContent||'').includes('รายละเอียดของวัสดุที่จะซื้อ/จ้าง')));
+  if(!table)return 0;
+  const rows=children(table,'tr');
+  if(rows.length<8)return 0;
+  function write(cell,value){
+   if(!cell)return false;
+   const texts=Array.from(cell.getElementsByTagNameNS(ns,'t'));
+   if(!texts.length)return false;
+   texts[0].textContent=String(value??'');
+   texts[0].setAttribute('xml:space','preserve');
+   texts.slice(1).forEach(n=>n.textContent='');
+   return true;
+  }
+  let writes=0;
+  for(let i=0;i<5;i++){
+   const cells=children(rows[i+2],'tc');
+   if(cells.length!==9)continue;
+   const item=i<visibleCount?(data[i]||{}):{};
+   const ref=splitMoney(item.reference),price=splitMoney(item.unitPrice),amount=splitMoney(item.amount);
+   const values=[item.description?String(i+1):'',item.description||'',item.quantity||'',...ref,...price,...amount];
+   values.forEach((value,j)=>{if(write(cells[j],value))writes++});
+  }
+  const amounts=Array.from({length:visibleCount},(_,i)=>data[i]?.amount).filter(v=>String(v??'').trim()!=='');
+  const valid=amounts.every(v=>Number.isFinite(Number(String(v).replace(/,/g,'')))&&Number(String(v).replace(/,/g,''))>=0);
+  if(valid&&amounts.length){
+   const total=amounts.reduce((sum,v)=>sum+Math.round(Number(String(v).replace(/,/g,''))*100),0)/100;
+   const cells=children(rows[7],'tc'),parts=splitMoney(total);
+   if(cells.length===3){
+    const summary=cells[0],texts=Array.from(summary.getElementsByTagNameNS(ns,'t'));
+    const original=texts.map(n=>n.textContent||'').join('');
+    if(texts.length){
+     const label='รวมเป็นเงินทั้งสิ้น ('+bahtText(total)+')';
+     // Keep Word paragraph/cell structure; replace text only.
+     if(write(summary,label))writes++;
+    }
+    if(write(cells[1],parts[0]))writes++;
+    if(write(cells[2],parts[1]))writes++;
+   }
+  }
+  return writes;
+ };
  const oldRender=renderPDFPage;
  renderPDFPage=async function(...args){const result=await oldRender.apply(this,args);controls();paint();return result};
  const oldFields=renderFormFields;
