@@ -6,6 +6,7 @@
  let data={};
  try{data=JSON.parse(localStorage.getItem(storageKey)||'{}')||{}}catch{}
  let visibleCount=Math.max(1,Math.min(5,Number(data.visibleCount)||1));
+ window.resetPage4Draft=()=>{data=JSON.parse(localStorage.getItem(storageKey)||'{}')||{};visibleCount=Math.max(1,Math.min(5,Number(data.visibleCount)||1))};
  const save=()=>{try{localStorage.setItem(storageKey,JSON.stringify(data))}catch{}};
  const thaiNumber=n=>{
   const digits=['ศูนย์','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];

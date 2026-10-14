@@ -26,7 +26,7 @@
  create.addEventListener('click',()=>{
   if(Object.values(formValues).some(value=>String(value??'').trim())&&!confirm('เริ่มเอกสารใหม่? กรุณาบันทึกรายละเอียดปัจจุบันก่อนหากต้องการเก็บไว้'))return;
   for(const key of [...keys,activeKey,draftKey])localStorage.removeItem(key);
-  setViewHash('#editor');location.reload();
+  refreshDraft().then(()=>show(false)).catch(error=>managerStatus.textContent='เปิดไม่สำเร็จ: '+error.message);
  });editTab.addEventListener('click',()=>show(false));manageTab.addEventListener('click',()=>show(true));
  function busy(value){saveButton.disabled=finish.disabled=value;list.querySelectorAll('button').forEach(button=>button.disabled=value)}
  function documentName(){return [formValues.document_date,formValues.procurement_description||formValues.project_name||formValues.requesting_unit].filter(Boolean).join(' · ').slice(0,120)||'เอกสารจัดซื้อจัดจ้าง'}
@@ -52,7 +52,7 @@
    const row=document.createElement('tr');row.className='document-manager-row-history';
    const cells=labels.map(label=>{const cell=document.createElement('td');cell.dataset.label=label;row.append(cell);return cell});
    cells[0].textContent=String(index+1);const title=document.createElement('button');title.type='button';title.className='history-name';title.textContent=file.name;
-   const edit=async()=>{busy(true);try{const data=cloud?(await rpc('openProcurementDocument',file.id)).data:file.data;validate(data);restore(data,file.id)}catch(error){managerStatus.textContent='เปิดไม่สำเร็จ: '+error.message}finally{busy(false)}};
+   const edit=async()=>{busy(true);try{const data=cloud?(await rpc('openProcurementDocument',file.id)).data:file.data;validate(data);await restore(data,file.id)}catch(error){managerStatus.textContent='เปิดไม่สำเร็จ: '+error.message}finally{busy(false)}};
    title.addEventListener('click',edit);cells[1].append(title);const number=metadata(file).number;if(number){const line=document.createElement('small');line.style.display='block';line.textContent='เลขที่ '+number;cells[1].append(line)}
    cells[2].textContent=metadata(file).department||'—';cells[3].textContent=new Date(file.savedAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'});
    const actions=document.createElement('div');actions.className='document-manager-actions';const downloadButton=document.createElement('button');downloadButton.type='button';downloadButton.textContent='ดาวน์โหลด';downloadButton.addEventListener('click',async()=>{busy(true);try{const data=cloud?(await rpc('openProcurementDocument',file.id)).data:file.data;download(validate(data))}catch(error){managerStatus.textContent='ดาวน์โหลดไม่สำเร็จ: '+error.message}finally{busy(false)}});
@@ -83,10 +83,10 @@
    const data=snapshot();
    if(cloud){active=await rpc('saveProcurementDocument',data,active.id||'')}
    else{const history=localHistory(),index=history.findIndex(file=>file.id===active.id);active={id:index<0?crypto.randomUUID():active.id,name:data.name,savedAt:data.savedAt};const entry={...active,data};if(index<0)history.unshift(entry);else history[index]=entry;localStorage.setItem(historyKey,JSON.stringify(history))}
-   clearCompletedDraft();
+   await clearCompletedDraft();
   }catch(error){status.textContent='บันทึกไม่สำเร็จ: '+error.message}finally{busy(false)}
  }
- function clearCompletedDraft(){
+ async function clearCompletedDraft(){
   const viewKey='school-procurement-next-view-v1';
   const draftKeys=[...keys,activeKey,draftKey];
   const previous=new Map(draftKeys.map(key=>[key,localStorage.getItem(key)]));
@@ -99,16 +99,22 @@
    status.textContent='บันทึกไฟล์งานแล้ว แต่ล้างช่องกรอกไม่สำเร็จ: '+error.message;
    return;
   }
-  // Reload also resets table and checkbox values held inside page controllers.
-  location.reload();
+  await refreshDraft();sessionStorage.removeItem(viewKey);show(true);
  }
- function restore(data,id){
+ async function refreshDraft(){
+  const values=JSON.parse(localStorage.getItem(keys[0])||'{}');
+  Object.keys(formValues).forEach(key=>delete formValues[key]);Object.assign(formValues,values);
+  active=JSON.parse(localStorage.getItem(activeKey)||'{}');
+  for(const page of [3,4,6,11])window['resetPage'+page+'Draft']?.();
+  currentPDFPage=1;lastFormPage=0;activeField=null;await loadPDF();
+ }
+ async function restore(data,id){
   validate(data);
   if(!confirm('เปิดเอกสารนี้แทนข้อมูลที่กำลังกรอกอยู่? กรุณาบันทึกข้อมูลปัจจุบันก่อนหากต้องการเก็บไว้'))return;
   const old=new Map([...keys,activeKey].map(key=>[key,localStorage.getItem(key)]));
   try{for(const key of keys)localStorage.setItem(key,JSON.stringify(data.stores[key]));localStorage.setItem(activeKey,JSON.stringify({id:id||'',name:data.name||''}))}
   catch(error){for(const [key,value]of old){try{value===null?localStorage.removeItem(key):localStorage.setItem(key,value)}catch{}}throw error}
-  setViewHash('#editor');location.reload();
+  await refreshDraft();show(false);
  }
   saveButton.addEventListener('click',saveDraft);finish.addEventListener('click',complete);
  const nextView=sessionStorage.getItem('school-procurement-next-view-v1');

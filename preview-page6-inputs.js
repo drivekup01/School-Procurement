@@ -5,6 +5,7 @@
  const labels=['รายละเอียดพัสดุที่จัดซื้อ/จัดจ้าง','จำนวนหน่วย','ราคาอ้างอิง (บาท.สตางค์)','ราคาต่อหน่วย (บาท.สตางค์)','จำนวนเงิน (บาท.สตางค์)'];
  const cellKeys=['no','description','quantity','referenceBaht','referenceSat','unitBaht','unitSat','amountBaht','amountSat'];
  let data={};
+ window.resetPage6Draft=()=>{data=JSON.parse(localStorage.getItem(storageKey)||'{}')||{}};
  try{const saved=JSON.parse(localStorage.getItem(storageKey)||'{}');if(saved&&typeof saved==='object'&&!Array.isArray(saved))data=saved}catch{}
  const save=()=>{try{localStorage.setItem(storageKey,JSON.stringify(data))}catch{}};
  function splitMoney(value){

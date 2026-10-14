@@ -4,6 +4,7 @@
  const labels=['รายการพัสดุ','จำนวน','หมายเหตุ'];
  const field=(index,key)=>'page11_item_'+(index+1)+'_'+key;
  let count=Math.max(1,Math.min(limit,Math.floor(Number(formValues.page11_item_count)||1)));
+ window.resetPage11Draft=()=>{count=Math.max(1,Math.min(limit,Math.floor(Number(formValues.page11_item_count)||1)))};
  const save=()=>{formValues.page11_item_count=count;try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}};
  function values(index){
   const item=keys.map(key=>index<count?String(formValues[field(index,key)]??''):'');

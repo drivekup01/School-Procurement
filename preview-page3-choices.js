@@ -2,6 +2,7 @@
 (function(){
  const storageKey='school-procurement-page3-choices-v1';
  let choices={purchase:false,hire:false};
+ window.resetPage3Draft=()=>{choices={purchase:false,hire:false,...JSON.parse(localStorage.getItem(storageKey)||'{}')}};
  try{choices={...choices,...JSON.parse(localStorage.getItem(storageKey)||'{}')}}catch{}
  function save(){try{localStorage.setItem(storageKey,JSON.stringify(choices))}catch{}}
  function paint(){
