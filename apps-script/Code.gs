@@ -29,7 +29,8 @@ function ownedFile_(id) {
   return file;
 }
 
-function saveProcurementDocument(data, fileId) {
+function saveProcurementDocument(data, fileId, token) {
+  requireDocumentSession_(token);
   validate_(data);
   const name = String(data.name || 'เอกสารจัดซื้อจัดจ้าง').replace(/[\\/\r\n]/g, ' ').trim().slice(0, 120);
   if (!name) throw new Error('กรุณากรอกชื่อเอกสาร');
@@ -43,7 +44,8 @@ function saveProcurementDocument(data, fileId) {
   } finally { lock.releaseLock(); }
 }
 
-function listProcurementDocuments() {
+function listProcurementDocuments(token) {
+  requireDocumentSession_(token);
   const files = DriveApp.getFolderById(FOLDER_ID).getFilesByType('application/json');const result = [];
   while (files.hasNext()) {
     const file = files.next();
@@ -57,7 +59,10 @@ function listProcurementDocuments() {
   return result.sort((a, b) => b.savedAt.localeCompare(a.savedAt));
 }
 
-function openProcurementDocument(fileId) {
+function openProcurementDocument(fileId, token) {
+  requireDocumentSession_(token);
   const file = ownedFile_(fileId);
   return { id: file.getId(), data: validate_(JSON.parse(file.getBlob().getDataAsString('UTF-8'))) };
 }
+
+function requireDocumentSession_(token){const response=UrlFetchApp.fetch('https://script.google.com/macros/s/AKfycbwrzdF3tfWbHDy32IeknlDDvEiIAGA-ZsB7D9BR7FzATjk68pbFxLI_4oDg-xBnGsrS2g/exec',{method:'post',contentType:'application/json',payload:JSON.stringify({action:'document-session',token:token}),muteHttpExceptions:true});const result=JSON.parse(response.getContentText());if(result.error||!result.user||!['admin','editor'].includes(result.user.role))throw Error('กรุณาเข้าสู่ระบบก่อนใช้งานเอกสาร');return result.user;}

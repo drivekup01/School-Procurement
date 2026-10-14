@@ -58,7 +58,7 @@
    const editButton=document.createElement('button');editButton.type='button';editButton.textContent='แก้ไข';editButton.addEventListener('click',edit);actions.append(downloadButton,editButton);cells[4].append(actions);body.append(row);
   });list.append(table);
  }
- function rpc(method,...args){return new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[method](...args))}
+ function rpc(method,...args){return new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[method](...args,sessionStorage.getItem('school-auth-token')))}
  function validate(data){
   if(!data||data.format!==format||data.version!==1||!data.stores||Object.keys(data.stores).length!==keys.length||!keys.every(key=>data.stores[key]&&typeof data.stores[key]==='object'&&!Array.isArray(data.stores[key])))throw Error('ไฟล์นี้ไม่ใช่ข้อมูลเอกสารที่ระบบรองรับ');
   return data;
