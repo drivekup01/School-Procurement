@@ -1,0 +1,9 @@
+#systemHome{max-width:1060px;margin:40px auto 64px;padding:0 26px;background:transparent;border:0;box-shadow:none}
+#systemHome[hidden],#systemNav[hidden]{display:none!important}
+.home-intro{padding:16px 0 28px}.home-eyebrow{color:#587293;font-size:13px;font-weight:650}.home-intro h2{font-size:32px;color:#12396c;margin:12px 0}.home-intro p{font-size:15px;color:#6b7f9b;margin:0;line-height:1.7}
+.system-cards{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.system-card{display:flex;flex-direction:column;align-items:flex-start;padding:32px;border:1px solid #dbe5f3;border-radius:22px;box-shadow:0 8px 28px #183d640b;background:#fff;text-align:left;text-decoration:none;color:#143a69;min-width:0;transition:transform .15s,box-shadow .15s,border-color .15s;font:inherit;cursor:pointer}
+.system-card:hover{transform:translateY(-3px);box-shadow:0 12px 34px #183d6417;border-color:#a6bfdc}.system-card:focus-visible{outline:3px solid #5b9fec;outline-offset:4px}
+.system-card-icon{width:64px;height:64px;display:grid;place-items:center;background:#eaf2fd;border-radius:18px;margin-bottom:24px}.system-card-icon svg{width:34px;height:34px}.schedule-card .system-card-icon{color:#237c76;background:#e7f5f2}
+.system-card-tag{font-size:12px;color:#7387a4;margin-bottom:10px}.system-card strong{font-size:25px;line-height:1.4;color:#103564}.system-card-description{color:#70819a;font-size:14px;line-height:1.85;font-weight:400;margin-top:12px}.system-card-action{display:flex;align-items:center;justify-content:space-between;align-self:stretch;font-size:14px;font-weight:700;color:#245a94;border-top:1px solid #e7edf6;padding-top:22px;margin-top:28px}.system-card-action span{font-size:24px;font-weight:400}
+@media(max-width:700px){#systemHome{margin:24px auto 40px;padding:0 18px}.home-intro h2{font-size:26px}.system-cards{grid-template-columns:1fr;gap:18px}.system-card{padding:25px}.system-card strong{font-size:23px}}
