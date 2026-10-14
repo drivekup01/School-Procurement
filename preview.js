@@ -163,6 +163,24 @@ function page6TableHTML(tbl){
  });
  return table;
 }
+/* Page 10: six financial rows and four original Word columns. */
+function page10TableHTML(tbl){
+ const table=document.createElement('table');table.className='word-table word-page10-table';
+ const widths=wns(wn(tbl,'tblGrid'),'gridCol').map(c=>Number(wa(c,'w'))||1);
+ const total=widths.reduce((a,b)=>a+b,0),cols=document.createElement('colgroup');
+ widths.forEach(width=>{const col=document.createElement('col');col.style.width=(width/total*100)+'%';cols.append(col)});
+ table.append(cols);
+ for(const tr of wns(tbl,'tr')){
+  const row=document.createElement('tr');
+  for(const tc of wns(tr,'tc')){
+   const cell=document.createElement('td');
+   for(const p of wns(tc,'p'))cell.append(paragraphHTML(p));
+   row.append(cell);
+  }
+  table.append(row);
+ }
+ return table;
+}
 function tableHTML(tbl){
  const table=document.createElement('table');table.className='word-table';
  for(const tr of wns(tbl,'tr')){
@@ -277,6 +295,14 @@ function paginateWord(groups){
    if(subject)subject.classList.add('p5-subject-rule');
    return applyPageSections(page);
   }
+  if(groupIndex===9){
+   const page=buildPage(group);
+   for(const table of Array.from(page.querySelectorAll('.word-content > table.word-table'))){
+    const source=sourceTableForPreview.get(table);
+    if(source)table.replaceWith(page10TableHTML(source));
+   }
+   return applyPageSections(page);
+  }
   if(groupIndex===5){
    const page=buildPage(group);
    for(const table of Array.from(page.querySelectorAll('.word-content > table.word-table'))){
@@ -358,6 +384,7 @@ async function loadPDF(){
 }
 async function renderPDFPage(number,preserveScroll=false){
  if(!pdfDocument)return;
+ if(number===10)syncPage10Amounts();
  currentPDFPage=Math.max(1,Math.min(number,pdfDocument.numPages));updatePageControls();
  if(number===1){renderHTMLFirstPage(preserveScroll);return}
  const oldX=pdfStage.scrollLeft,oldY=pdfStage.scrollTop;

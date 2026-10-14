@@ -61,7 +61,7 @@ button{font-weight:650;border-color:#dbe6f5;color:#163f75}
 .word-flex-table-section>.word-table{width:100%}
  .word-page8-garuda-header{display:flex;justify-content:center;align-items:center;width:100%;margin:0 0 4mm} .word-page8-garuda{display:block;width:30mm;height:30mm;object-fit:contain}
 </style><link rel="stylesheet" href="preview.css?v=20261013-5"><link rel="stylesheet" href="preview-page1.css?v=20261014-4">
-<link rel="stylesheet" href="preview-page2.css?v=20261013-10"><link rel="stylesheet" href="preview-page3.css?v=20261013-1"><link rel="stylesheet" href="preview-page4-table.css?v=20261014-2"><link rel="stylesheet" href="preview-page4-content.css?v=20261013-1"><link rel="stylesheet" href="preview-page6-table.css?v=20261014-3"><link rel="stylesheet" href="preview-page5.css?v=20261014-1"></head><body>
+<link rel="stylesheet" href="preview-page2.css?v=20261013-10"><link rel="stylesheet" href="preview-page3.css?v=20261013-1"><link rel="stylesheet" href="preview-page4-table.css?v=20261014-2"><link rel="stylesheet" href="preview-page4-content.css?v=20261013-1"><link rel="stylesheet" href="preview-page6-table.css?v=20261014-3"><link rel="stylesheet" href="preview-page5.css?v=20261014-1"><link rel="stylesheet" href="preview-page10-table.css?v=20261014-1"></head><body>
 <header class="school-top"><div class="brand"><img src="https://drivekup01.github.io/School-OS/assets/school-logo.svg" alt="ตราโรงเรียน" class="brand-logo"><div><h1>โรงเรียนค่ายบางระจันวิทยาคม</h1><small>ระบบจัดทำเอกสารราชการ · School Procurement</small></div></div><time id="headerDate" class="header-date"></time><span id="state" class="system-status" hidden>ขั้นตอนเริ่มต้น</span></header>
 <main><section class="fields"><div class="section-head"><span class="section-icon" aria-hidden="true">📄</span><div><strong>จัดทำเอกสารราชการ</strong></div></div>
 <h2>ข้อมูลเอกสาร</h2><label>หน้าเอกสาร</label><div class="page-navigation"><button id="prevPage" type="button" disabled aria-label="หน้าก่อนหน้า">‹</button><span id="pageCounter" aria-live="polite">– / –</span><button id="nextPage" type="button" disabled aria-label="หน้าถัดไป">›</button></div>
@@ -69,7 +69,7 @@ button{font-weight:650;border-color:#dbe6f5;color:#163f75}
 <div class="group"><h3>ช่องกรอกข้อมูลของหน้านี้</h3><div id="pageFields"><p class="muted">กำลังอ่านพารามิเตอร์จาก PDF...</p></div></div>
 <div class="group" id="saveArea"><button type="button" id="saveDocumentData" disabled title="รอเชื่อมต่อฐานข้อมูลก่อนเปิดใช้งาน">บันทึกข้อมูล</button><p class="muted" id="saveStatus" role="status">ยังไม่ได้เชื่อมต่อฐานข้อมูล — ปุ่มบันทึกจะเปิดใช้งานหลังตั้งค่าการเชื่อมต่อที่ปลอดภัย</p></div>
 </section><section class="preview"><div class="toolbar"><strong id="previewTitle">ตัวอย่างเอกสาร · HTML + CSS หน้าแรก</strong><span id="zoomIndicator" title="หมุนล้อเมาส์บน Preview เพื่อย่อหรือขยาย" style="font-size:12px;color:#486080;white-space:nowrap">ขยาย 100%</span><div class="toolbar-controls"><button id="exportWord" type="button">⬇ Export Word</button></div></div><div class="document-frame"><div id="pdfRender" class="renderer-scroll"><p class="renderer-message">กำลังโหลด PDF...</p></div></div></section></main>
-<script src="preview.js?v=20261014-7"></script><script src="preview-page1.js?v=20261013-5"></script>
+<script src="preview.js?v=20261014-8"></script><script src="preview-page1.js?v=20261013-5"></script>
 <script src="preview-page2.js?v=20261013-9"></script><script src="preview-page3.js?v=20261014-2"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 (function updateHeaderDate(){
@@ -277,6 +277,24 @@ function syncBudgetAmountText(){
  const display=document.getElementById('field-budget_amount_text');
  if(display)display.value=converted;
 }
+const page10MoneyKeys=new Set(['pa','pv','pt','pw','pf','pn']);
+function page10Money(value){
+ const raw=String(value??'').trim();
+ if(!/^\d+(?:\.\d{1,2})?$/.test(raw))return '';
+ const [whole,decimal='']=raw.split('.');
+ return BigInt(whole).toString()+'.'+decimal.padEnd(2,'0');
+}
+function syncPage10Amounts(){
+ for(const key of page10MoneyKeys)formValues[key]=page10Money(formValues[key]);
+ const amount=formValues.pn;
+ if(!amount){formValues.pnt='';return}
+ const [whole,decimal]=amount.split('.');
+ function words(n){
+  if(n>=1000000n)return words(n/1000000n)+'ล้าน'+(n%1000000n?words(n%1000000n):'');
+  return budgetAmountInThaiWords(n.toString()).replace(/บาทถ้วน$/,'');
+ }
+ formValues.pnt=words(BigInt(whole))+'บาท'+(decimal==='00'?'ถ้วน':words(BigInt(decimal))+'สตางค์');
+}
 function renderFormFields(){
  lastFormPage=currentPDFPage;
  const shared=document.getElementById('sharedFields'),specific=document.getElementById('pageFields');
@@ -293,6 +311,19 @@ function renderFormFields(){
   if(key==='project_name'||key==='activity_name'||key==='requesting_unit'){addRelatedSelect(parent,key);return;}
   const wrap=document.createElement('div');wrap.className='input-wrap';
   const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;
+  if(currentPDFPage===10&&page10MoneyKeys.has(key)){
+   const input=document.createElement('input');input.id='field-'+key;input.type='text';input.inputMode='decimal';
+   input.placeholder='1000.00';input.value=formValues[key]??'';
+   input.addEventListener('input',()=>{
+    const formatted=page10Money(input.value);
+    input.setCustomValidity(input.value.trim()&&!formatted?'กรอกจำนวนเงินไม่ติดลบ และทศนิยมไม่เกิน 2 ตำแหน่ง':'');
+    formValues[key]=formatted;syncPage10Amounts();
+    try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}
+    renderPDFPage(currentPDFPage);
+   });
+   input.addEventListener('blur',()=>{if(input.checkValidity())input.value=formValues[key]||''});
+   wrap.append(label,input);parent.append(wrap);return;
+  }
   if(calendarFieldKeys.has(key)){
    const field=document.createElement('div');field.style.cssText='position:relative;width:100%';
    const display=document.createElement('input');display.id='field-'+key;display.type='text';display.readOnly=true;display.placeholder='เลือกวันที่';display.style.cssText='width:100%;padding-right:42px;cursor:pointer';display.value=toThaiDocumentDate(formValues[key]||'');
@@ -353,7 +384,7 @@ function renderFormFields(){
   }
   shared.append(box);
  }
- const pageOnly=[...new Set([...common,...unique])].filter(key=>!sharedSet.has(key));
+ const pageOnly=[...new Set([...common,...unique])].filter(key=>!sharedSet.has(key)&&!(currentPDFPage===10&&key==='pnt'));
  const summary=document.createElement('p');summary.className='page-field-count';
  summary.textContent='หน้า '+currentPDFPage+' · '+pageOnly.length+' ช่องเฉพาะหน้า · '+sharedKeys.length+' ช่องข้อมูลกลาง';
  specific.appendChild(summary);
@@ -374,6 +405,7 @@ loadPDF();
 document.getElementById('exportWord').addEventListener('click',exportFilledWord);
 async function exportFilledWord(){
  syncBudgetAmountText();
+ syncPage10Amounts();
  const button=document.getElementById('exportWord');button.disabled=true;button.textContent='กำลังสร้าง Word...';
  try{
   if(!window.JSZip)throw new Error('ไม่สามารถโหลดเครื่องมือสร้าง Word ได้');
