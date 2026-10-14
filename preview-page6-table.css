@@ -6,4 +6,4 @@
 .word-generated .word-page6-table .p6-satang{white-space:nowrap;overflow-wrap:normal;word-break:normal;text-align:center;padding-left:2px;padding-right:2px}
 /* Word's blank item cells have nil borders. Keep visible HTML boundaries
    below the header and above the total, joining the baht/satang dividers. */
-.word-generated .word-page6-table tr:nth-child(3)>td{border-top:1px solid #111 !important;border-bottom:1px solid #111 !important}
+.word-generated .word-page6-table tr:nth-of-type(3)>td{border-top:1px solid #111 !important;border-bottom:1px solid #111 !important}
