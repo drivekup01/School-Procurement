@@ -303,37 +303,47 @@ function renderFormFields(){
   input.addEventListener('input',()=>{formValues[key]=input.value;if(key==='budget_amount')syncBudgetAmountText();try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}activeField=key;renderPDFPage(currentPDFPage)});
   wrap.append(label,input);parent.appendChild(wrap);
  }
- const pairedKeys=['chief_officer_signer_name','assigned_officer_position'];
- const pairedVisible=pairedKeys.some(k=>parameterIndex.get(k)?.has(currentPDFPage));
- const visibleCommon=common.filter(k=>!pairedKeys.includes(k));
- const visibleUnique=unique.filter(k=>!pairedKeys.includes(k));
- if(!visibleCommon.length&&!pairedVisible)shared.innerHTML='<p class="muted">ยังไม่พบพารามิเตอร์ที่ซ้ำข้ามหน้า</p>';
- else visibleCommon.forEach(k=>addField(shared,k));
- if(pairedVisible){
-  const group=document.createElement('div');group.className='input-wrap';group.style.marginTop='12px';
-  const title=document.createElement('label');title.textContent='ผู้ได้รับมอบหมาย / หัวหน้าเจ้าหน้าที่';group.append(title);
-  const row=document.createElement('div');row.style.cssText='display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap';
-  const nameWrap=document.createElement('div');nameWrap.style.cssText='flex:2 1 190px;min-width:0';
-  const nameLabel=document.createElement('label');nameLabel.textContent='ชื่อผู้ได้รับมอบหมาย';nameLabel.htmlFor='field-chief_officer_signer_name';
-  const name=document.createElement('input');name.id='field-chief_officer_signer_name';name.type='text';name.value=formValues.chief_officer_signer_name??'';
-  name.addEventListener('input',()=>saveFieldValue('chief_officer_signer_name',name.value));
-  nameWrap.append(nameLabel,name);
-  const positionWrap=document.createElement('div');positionWrap.style.cssText='flex:1 1 160px;min-width:0';
-  const positionLabel=document.createElement('label');positionLabel.textContent='ตำแหน่ง';positionLabel.htmlFor='field-assigned_officer_position';
-  const position=document.createElement('select');position.id='field-assigned_officer_position';
-  const positions=['ครู','ครูอัตราจ้าง','เจ้าหน้าที่ธุรการ'];
-  position.add(new Option('เลือกตำแหน่ง',''));
-  if(formValues.assigned_officer_position&&!positions.includes(formValues.assigned_officer_position))position.add(new Option(formValues.assigned_officer_position,formValues.assigned_officer_position));
-  positions.forEach(v=>position.add(new Option(v,v)));
-  position.value=formValues.assigned_officer_position??'';
-  position.addEventListener('change',()=>saveFieldValue('assigned_officer_position',position.value));
-  positionWrap.append(positionLabel,position);row.append(nameWrap,positionWrap);group.append(row);shared.append(group);
+ const sharedKeys=[
+  'project_name','activity_name','requesting_unit','budget_amount','budget_year',
+  'assigned_officer_name','assigned_officer_position','chief_officer_signer_name',
+  'officer_signer_name','inspector_name','vendor_name','procurement_description',
+  'purchase_item','hire_item'
+ ];
+ const sharedSet=new Set([...sharedKeys,'budget_amount_text']);
+ const groups=[
+  ['โครงการและฝ่ายงาน',['project_name','activity_name','requesting_unit']],
+  ['งบประมาณ',['budget_amount','budget_year']],
+  ['บุคลากร',['assigned_officer_name','assigned_officer_position','chief_officer_signer_name','officer_signer_name','inspector_name']],
+  ['ผู้ขาย / ผู้รับจ้าง',['vendor_name']],
+  ['รายละเอียดจัดซื้อ / จ้าง',['procurement_description','purchase_item','hire_item']]
+ ];
+ for(const [heading,keys] of groups){
+  const box=document.createElement('div');box.className='shared-data-group';
+  const title=document.createElement('h3');title.textContent=heading;box.append(title);
+  for(const key of keys){
+   // Preserve existing values; show shared fields even if only used on another page.
+   if(key==='assigned_officer_position'){
+    const wrap=document.createElement('div');wrap.className='input-wrap';
+    const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;
+    const select=document.createElement('select');select.id='field-'+key;
+    const options=['ครู','ครูอัตราจ้าง','เจ้าหน้าที่ธุรการ'];
+    select.add(new Option('เลือกตำแหน่ง',''));
+    if(formValues[key]&&!options.includes(formValues[key]))select.add(new Option(formValues[key],formValues[key]));
+    options.forEach(v=>select.add(new Option(v,v)));
+    select.value=formValues[key]||'';
+    select.addEventListener('change',()=>saveFieldValue(key,select.value));
+    wrap.append(label,select);box.append(wrap);
+   }else addField(box,key);
+  }
+  shared.append(box);
  }
+ const pageOnly=[...new Set([...common,...unique])].filter(key=>!sharedSet.has(key));
  const summary=document.createElement('p');summary.className='page-field-count';
- summary.textContent='หน้า '+currentPDFPage+' · '+visibleUnique.length+' ช่องเฉพาะหน้า · '+(visibleCommon.length+(pairedVisible?2:0))+' ช่องใช้ร่วมกัน';
+ summary.textContent='หน้า '+currentPDFPage+' · '+pageOnly.length+' ช่องเฉพาะหน้า · '+sharedKeys.length+' ช่องข้อมูลกลาง';
  specific.appendChild(summary);
- if(!visibleUnique.length){const info=document.createElement('p');info.className='muted';info.textContent='หน้านี้ไม่พบพารามิเตอร์เฉพาะหน้า';specific.appendChild(info);}
- else visibleUnique.forEach(k=>addField(specific,k));
+ if(!pageOnly.length){
+  const info=document.createElement('p');info.className='muted';info.textContent='หน้านี้ไม่มีพารามิเตอร์เฉพาะหน้า';specific.appendChild(info);
+ }else pageOnly.forEach(k=>addField(specific,k));
 }
 const sharedToggle=document.getElementById('sharedToggle');
 const sharedBody=document.getElementById('sharedBody');
