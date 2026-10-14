@@ -46,7 +46,8 @@ function listProcurementDocuments() {
     if (file.isTrashed()) continue;
     try {
       const data = validate_(JSON.parse(file.getBlob().getDataAsString('UTF-8')));
-      result.push({ id: file.getId(), name: data.name || file.getName(), savedAt: file.getLastUpdated().toISOString() });
+      const fields = data.stores['school-procurement-preview-values-v1'];
+      result.push({ id: file.getId(), name: data.name || file.getName(), savedAt: file.getLastUpdated().toISOString(), department: fields.requesting_unit || '', documentNumber: fields.document_date || '' });
     } catch (_) { /* Ignore unrelated JSON files in the supplied folder. */ }
   }
   return result.sort((a, b) => b.savedAt.localeCompare(a.savedAt));
