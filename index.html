@@ -226,32 +226,31 @@ function saveFieldValue(key,value){
 }
 function addRelatedSelect(parent,key){
  const wrap=document.createElement('div');wrap.className='input-wrap';
- const label=document.createElement('label');label.textContent=thaiFieldLabel(key);wrap.append(label);
+ const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;wrap.append(label);
  const select=document.createElement('select');select.id='field-'+key;
  let choices=[];
  if(key==='requesting_unit')choices=departments;
- else if(projectActivityData){
-  if(key==='project_name')choices=[...projectActivityData].filter(([_,v])=>!formValues.requesting_unit||formValues.requesting_unit===departments[4]||v.department===formValues.requesting_unit).map(([k])=>k);
-  else choices=projectActivityData.get(formValues.project_name)?.activities||[];
+ else if(projectActivityData&&departments.includes(formValues.requesting_unit)){
+  const projects=[...projectActivityData].filter(([_,v])=>formValues.requesting_unit===departments[4]||v.department===formValues.requesting_unit);
+  if(key==='project_name')choices=projects.map(([k])=>k);
+  else if(projects.some(([name])=>name===formValues.project_name))choices=projectActivityData.get(formValues.project_name)?.activities||[];
  }
  select.append(new Option(key==='requesting_unit'?'เลือกฝ่ายงาน':key==='project_name'?'เลือกโครงการ':'เลือกกิจกรรม',''));
  for(const choice of choices)select.add(new Option(choice,choice));
  select.value=choices.includes(formValues[key])?formValues[key]:'';
- if(key==='activity_name'&&!formValues.project_name)select.disabled=true;
+ if(key!=='requesting_unit'&&!departments.includes(formValues.requesting_unit))select.disabled=true;
+ if(key==='activity_name'&&(!formValues.project_name||!choices.length))select.disabled=true;
  if(key!=='requesting_unit'&&!projectActivityData){
   select.disabled=true;
   const info=document.createElement('p');info.className='muted';info.textContent=projectActivityError;wrap.append(info);
  }
- if(key==='activity_name'&&formValues.project_name&&choices.length===0){
+ if(key==='activity_name'&&departments.includes(formValues.requesting_unit)&&formValues.project_name&&choices.length===0){
   const info=document.createElement('p');info.className='muted';info.textContent='โครงการนี้ไม่มีรายการกิจกรรมย่อยในต้นฉบับ';wrap.append(info);
  }
  select.addEventListener('focus',()=>{activeField=key;highlightField(key)});
  select.addEventListener('change',()=>{
   formValues[key]=select.value;
-  if(key==='requesting_unit'&&projectActivityData&&formValues.project_name){
-   const item=projectActivityData.get(formValues.project_name);
-   if(item&&select.value!==departments[4]&&select.value&&item.department!==select.value){formValues.project_name='';formValues.activity_name='';}
-  }
+  if(key==='requesting_unit'){formValues.project_name='';formValues.activity_name='';}
   if(key==='project_name')formValues.activity_name='';
   try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}
   activeField=key;renderFormFields();renderPDFPage(currentPDFPage);
@@ -360,7 +359,7 @@ function renderFormFields(){
  ];
  const sharedSet=new Set([...sharedKeys,'budget_amount_text']);
  const groups=[
-  ['โครงการและฝ่ายงาน',['project_name','activity_name','requesting_unit']],
+  ['ฝ่ายงาน โครงการ และกิจกรรม',['requesting_unit','project_name','activity_name']],
   ['งบประมาณ',['budget_amount','budget_year']],
   ['บุคลากร',['assigned_officer_name','assigned_officer_position','chief_officer_signer_name','officer_signer_name','inspector_name']],
   ['ผู้ขาย / ผู้รับจ้าง',['vendor_name']],
