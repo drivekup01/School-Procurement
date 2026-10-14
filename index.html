@@ -323,7 +323,8 @@ async function exportFilledWord(){
     const regex=/\{\{\s*([\w.-]+)\s*\}\}/g;
     const matches=Array.from(full.matchAll(regex)).reverse();
     for(const match of matches){
-     const key=match[1],replacement=String(formValues[key]??'');
+     const key=match[1],raw=formValues[key];
+     const replacement=String(calendarFieldKeys.has(key)?toThaiDocumentDate(raw??''):(raw??''));
      if(replacement==='')continue;
      const start=match.index,end=start+match[0].length;
      const first=offset[start]?.node,last=offset[end-1]?.node;
@@ -344,6 +345,10 @@ async function exportFilledWord(){
      replacements++;changed=true;
     }
    }
+   if(filename==='word/document.xml'&&typeof window.exportPage4TableToWord==='function'){
+    const tableWrites=window.exportPage4TableToWord(doc);
+    if(tableWrites){replacements+=tableWrites;changed=true;}
+   }
    if(changed)zip.file(filename,new XMLSerializer().serializeToString(doc));
   }
   if(replacements===0)throw new Error('ยังไม่มีค่าพารามิเตอร์ที่ตรงกับข้อความใน Word ให้ส่งออก');
@@ -353,4 +358,4 @@ async function exportFilledWord(){
  finally{button.disabled=false;button.textContent='⬇ Export Word';}
 }
 
-</script><script src="preview-page4-inputs.js?v=20261014-2"></script></body></html>
+</script><script src="preview-page4-inputs.js?v=20261014-3"></script></body></html>
