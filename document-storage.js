@@ -11,38 +11,39 @@
  saveButton.disabled=false;saveButton.removeAttribute('title');saveButton.textContent='บันทึก';
   const editor=document.querySelector('main'),manager=document.createElement('section');manager.id='documentManager';manager.hidden=true;manager.style.cssText='margin:18px 26px;padding:22px';
  const finish=document.createElement('button');finish.type='button';finish.id='finishDocument';finish.textContent='เสร็จสิ้น';finish.style.marginLeft='8px';saveButton.after(finish);
- const managerStatus=document.createElement('p');managerStatus.className='muted';manager.append(heading,managerStatus,list);editor.after(manager);heading.textContent='ประวัติเอกสาร';status.textContent='';const undo=document.createElement('button');undo.type='button';undo.className='document-undo-delete';undo.textContent='คืนค่าเอกสารที่ลบล่าสุด';undo.hidden=true;managerStatus.after(undo);
+ const managerStatus=document.createElement('p');managerStatus.className='muted';manager.append(heading,managerStatus,list);editor.after(manager);heading.textContent='เอกสารจัดซื้อ / จัดจ้าง';status.textContent='';const undo=document.createElement('button');undo.type='button';undo.className='document-undo-delete';undo.textContent='คืนค่าเอกสารที่ลบล่าสุด';undo.hidden=true;managerStatus.after(undo);
 
   const toolbar=document.createElement('div');toolbar.className='history-toolbar';
  const search=document.createElement('input');search.type='search';search.id='historySearch';search.placeholder='ค้นหาชื่อเอกสารหรือเลขที่หนังสือ';search.setAttribute('aria-label','ค้นหาเอกสาร');
  const filter=document.createElement('select');filter.id='historyDepartment';filter.setAttribute('aria-label','กรองฝ่ายงาน');
  const create=document.createElement('button');create.type='button';create.textContent='＋ สร้างเอกสารใหม่';
- toolbar.append(search,filter,create);managerStatus.before(toolbar);let savedFiles=[],loadSerial=0;
+ const academic=document.createElement('select');academic.id='historyAcademicYear';academic.setAttribute('aria-label','เลือกปีการศึกษา');const yearKey='school-procurement-academic-year-v1';const currentYear=Number(new Intl.DateTimeFormat('en',{timeZone:'Asia/Bangkok',year:'numeric'}).format(new Date()))+543;academic.add(new Option('ปีการศึกษา '+currentYear,currentYear));academic.value=sessionStorage.getItem(yearKey)||String(currentYear);const description=document.createElement('p');description.className='history-year-description';const top=document.createElement('div');top.className='history-header';const titleBlock=document.createElement('div');heading.replaceWith(top);titleBlock.append(heading,description);top.append(titleBlock,create);create.classList.add('history-create');toolbar.append(academic,search,filter);managerStatus.before(toolbar);let savedFiles=[],loadSerial=0;academic.addEventListener('change',()=>{sessionStorage.setItem(yearKey,academic.value);drawHistory()});
 
  function setViewHash(hash){const url=new URL(location.href);url.hash=hash;history.replaceState(null,'',url.href)}
  function show(managing){const target=managing?'history.html':'procurement.html';if(!cloud&&!location.pathname.endsWith('/'+target)){location.assign(target);return;}editor.hidden=managing;manager.hidden=!managing;setViewHash(managing?'#history':'#editor');if(managing)renderHistory().catch(error=>managerStatus.textContent='อ่านรายการไม่สำเร็จ: '+error.message)}
  search.addEventListener('input',drawHistory);filter.addEventListener('change',drawHistory);
  create.addEventListener('click',()=>{
   if(Object.values(formValues).some(value=>String(value??'').trim())&&!confirm('เริ่มเอกสารใหม่? กรุณาบันทึกรายละเอียดปัจจุบันก่อนหากต้องการเก็บไว้'))return;
-  for(const key of [...keys,activeKey,draftKey])localStorage.removeItem(key);
+  sessionStorage.setItem(yearKey,academic.value);for(const key of [...keys,activeKey,draftKey])localStorage.removeItem(key);
   refreshDraft().then(()=>show(false)).catch(error=>managerStatus.textContent='เปิดไม่สำเร็จ: '+error.message);
  });
  function busy(value){saveButton.disabled=finish.disabled=value;list.querySelectorAll('button').forEach(button=>button.disabled=value)}
  function documentName(){return [formValues.document_date,formValues.procurement_description||formValues.project_name||formValues.requesting_unit].filter(Boolean).join(' · ').slice(0,120)||'เอกสารจัดซื้อจัดจ้าง'}
  function localHistory(){const data=JSON.parse(localStorage.getItem(historyKey)||'[]');if(!Array.isArray(data))throw Error('ไม่สามารถอ่านประวัติเอกสาร');return data}
   function metadata(file){const fields=file.data?.stores?.[keys[0]]||{};return {department:file.department||fields.requesting_unit||'',number:file.documentNumber||fields.document_date||''}}
+ function documentYear(file){const explicit=Number(file.academicYear||file.data?.academicYear);if(explicit>=2400&&explicit<=2800)return explicit;const number=String(metadata(file).number||'');const match=number.match(/\/\s*(\d{4}|\d{2})(?:\D*)$/);if(match){const value=Number(match[1]);const year=value<100?2500+value:value;if(year>=2400&&year<=2800)return year}const date=new Date(file.savedAt||file.data?.savedAt);return Number.isNaN(date.getTime())?currentYear:Number(new Intl.DateTimeFormat('en',{timeZone:'Asia/Bangkok',year:'numeric'}).format(date))+543}
  async function renderHistory(){
   const serial=++loadSerial;managerStatus.textContent='กำลังอ่านเอกสาร...';
   const files=cloud?await rpc('listProcurementDocuments'):localHistory();if(serial!==loadSerial)return;
   undo.hidden=cloud||!localTrash().length;savedFiles=files.sort((a,b)=>String(b.savedAt).localeCompare(String(a.savedAt)));
-  const previous=filter.value;filter.replaceChildren(new Option('ทุกฝ่ายงาน',''));
+  const previousYear=academic.value,years=[...new Set([2569,2570,currentYear,...savedFiles.map(documentYear)])].sort((a,b)=>b-a);academic.replaceChildren(...years.map(y=>new Option('ปีการศึกษา '+y,y)));academic.value=sessionStorage.getItem(yearKey)||String(savedFiles.length?Math.max(...savedFiles.map(documentYear)):currentYear);if(!years.includes(Number(academic.value)))academic.value=previousYear||String(currentYear);const previous=filter.value;filter.replaceChildren(new Option('ทุกฝ่ายงาน',''));
   [...new Set(savedFiles.map(file=>metadata(file).department).filter(Boolean))].sort().forEach(department=>filter.add(new Option(department,department)));
   filter.value=previous;drawHistory();
  }
  function drawHistory(){
   const query=search.value.trim().toLocaleLowerCase();
-  const files=savedFiles.filter(file=>(!filter.value||metadata(file).department===filter.value)&&(!query||(file.name+' '+metadata(file).number).toLocaleLowerCase().includes(query)));
-  list.replaceChildren();managerStatus.textContent='แสดง '+files.length+' จาก '+savedFiles.length+' เอกสาร'+(cloud?'':' · เก็บในเบราว์เซอร์นี้');
+  description.textContent='แสดงเอกสารจัดซื้อ / จัดจ้างทั้งหมดของปีการศึกษา '+academic.value;const yearFiles=savedFiles.filter(file=>documentYear(file)===Number(academic.value));const files=yearFiles.filter(file=>(!filter.value||metadata(file).department===filter.value)&&(!query||(file.name+' '+metadata(file).number).toLocaleLowerCase().includes(query)));
+  list.replaceChildren();managerStatus.textContent='แสดง '+files.length+' จาก '+yearFiles.length+' เอกสาร'+(cloud?'':' · เก็บในเบราว์เซอร์นี้');
   if(!files.length){const empty=document.createElement('p');empty.className='muted';empty.textContent=savedFiles.length?'ไม่พบเอกสารที่ตรงกับการค้นหา':'ยังไม่มีเอกสารที่เสร็จสิ้น เริ่มได้จากปุ่มสร้างเอกสารใหม่';list.append(empty);return}
   const table=document.createElement('table');table.className='history-table';
   const labels=['ลำดับ','เลขที่ / ชื่อเอกสาร','ฝ่ายงาน','วันที่บันทึก','จัดการ'],thead=document.createElement('thead'),header=document.createElement('tr');
@@ -70,7 +71,7 @@
   syncBudgetAmountText();syncPage10Amounts();
   const stores={};for(const key of keys){const raw=localStorage.getItem(key);stores[key]=raw?JSON.parse(raw):{}}
   stores[keys[0]]={...formValues};
-  return validate({format,version:1,name:documentName(),savedAt:new Date().toISOString(),stores});
+  return validate({format,version:1,name:documentName(),savedAt:new Date().toISOString(),academicYear:active.academicYear||(active.id?documentYear({data:{stores},savedAt:new Date().toISOString()}):Number(sessionStorage.getItem(yearKey))||currentYear),stores});
  }
  function download(data){
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
@@ -84,7 +85,7 @@
   try{
    const data=snapshot();
    if(cloud){active=await rpc('saveProcurementDocument',data,active.id||'')}
-   else{const history=localHistory(),index=history.findIndex(file=>file.id===active.id);active={id:index<0?crypto.randomUUID():active.id,name:data.name,savedAt:data.savedAt};const entry={...active,data};if(index<0)history.unshift(entry);else history[index]=entry;localStorage.setItem(historyKey,JSON.stringify(history))}
+   else{const history=localHistory(),index=history.findIndex(file=>file.id===active.id);active={id:index<0?crypto.randomUUID():active.id,name:data.name,savedAt:data.savedAt,academicYear:data.academicYear};const entry={...active,data};if(index<0)history.unshift(entry);else history[index]=entry;localStorage.setItem(historyKey,JSON.stringify(history))}
    await clearCompletedDraft();
   }catch(error){status.textContent='บันทึกไม่สำเร็จ: '+error.message}finally{busy(false)}
  }
@@ -114,7 +115,7 @@
   validate(data);
   if(!confirm('เปิดเอกสารนี้แทนข้อมูลที่กำลังกรอกอยู่? กรุณาบันทึกข้อมูลปัจจุบันก่อนหากต้องการเก็บไว้'))return;
   const old=new Map([...keys,activeKey].map(key=>[key,localStorage.getItem(key)]));
-  try{for(const key of keys)localStorage.setItem(key,JSON.stringify(data.stores[key]));localStorage.setItem(activeKey,JSON.stringify({id:id||'',name:data.name||''}))}
+  try{for(const key of keys)localStorage.setItem(key,JSON.stringify(data.stores[key]));localStorage.setItem(activeKey,JSON.stringify({id:id||'',name:data.name||'',academicYear:documentYear({data:data,savedAt:data.savedAt})}))}
   catch(error){for(const [key,value]of old){try{value===null?localStorage.removeItem(key):localStorage.setItem(key,value)}catch{}}throw error}
   await refreshDraft();show(false);
  }
