@@ -214,13 +214,35 @@ function paginateWord(groups){
    for(const node of nodes)if(/\{\{[\w.-]+\}\}/.test(node.nodeValue||''))node.replaceWith(wordFieldFragments(node.nodeValue));
    return page;
   }
+  // Pages 4–11: isolate original Word blocks into flex sections without
+  // changing their order, text, table cells, or the approved pages 1–3.
+  function applyPageSections(page){
+   const content=page.querySelector('.word-content');
+   if(!content)return page;
+   content.classList.add('word-flex-layout');
+   const nodes=Array.from(content.children);
+   let section=null;
+   for(const node of nodes){
+    const text=(node.textContent||'').trim();
+    const isTable=node.matches('table');
+    const isHeading=!isTable&&(/^(?:บันทึกข้อความ|ประกาศ|ใบเบิกพัสดุ|ใบตรวจรับพัสดุ|เรื่อง\\s|เรียน\\s|[๐-๙0-9]+[.)]\\s)/.test(text));
+    if(!section||isHeading||isTable){
+     section=document.createElement('div');
+     section.className='word-flex-section'+(isTable?' word-flex-table-section':isHeading?' word-flex-heading-section':'');
+     content.append(section);
+    }
+    section.append(node);
+    if(isTable)section=null;
+   }
+   return page;
+  }
   if(groupIndex===4){
    const page=buildPage(group);
    page.classList.add('word-page5');
    const paragraphs=Array.from(page.querySelectorAll('.word-content > .word-paragraph'));
    const subject=paragraphs.find(p=>/^เรื่อง\s/.test(p.textContent.trim()));
    if(subject)subject.classList.add('p5-subject-rule');
-   return page;
+   return applyPageSections(page);
   }
   if(groupIndex===5){
    const page=buildPage(group);
@@ -228,7 +250,7 @@ function paginateWord(groups){
     const source=sourceTableForPreview.get(table);
     if(source)table.replaceWith(page4TableHTML(source,'word-page6-table'));
    }
-   return page;
+   return applyPageSections(page);
   }
   if(groupIndex===3){
    const page=buildPage(group);
@@ -253,9 +275,9 @@ function paginateWord(groups){
     const sourceTable=sourcePage4Table;
     if(sourceTable)table.replaceWith(page4TableHTML(sourceTable));
    }
-   return page;
+   return applyPageSections(page);
   }
-  return buildPage(group);
+  return applyPageSections(buildPage(group));
  });
 }
 
