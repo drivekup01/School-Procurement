@@ -13,16 +13,17 @@
  const finish=document.createElement('button');finish.type='button';finish.id='finishDocument';finish.textContent='เสร็จสิ้น';finish.style.marginLeft='8px';saveButton.after(finish);
  const managerStatus=document.createElement('p');managerStatus.className='muted';manager.append(heading,managerStatus,list);editor.after(manager);heading.textContent='ประวัติเอกสาร';status.textContent='';
  const nav=document.createElement('nav');nav.style.cssText='display:flex;gap:8px;padding:16px 26px 0';const editTab=document.createElement('button'),manageTab=document.createElement('button');editTab.type=manageTab.type='button';editTab.textContent='จัดทำเอกสาร';manageTab.textContent='ประวัติเอกสาร';nav.append(editTab,manageTab);editor.before(nav);
- const style=document.createElement('style');style.textContent='main[hidden],#documentManager[hidden]{display:none!important}.document-manager-row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #e6ebf3}.document-manager-detail{flex:1;min-width:0}.document-manager-actions{display:flex;gap:8px}@media(max-width:600px){.document-manager-row{flex-wrap:wrap}.document-manager-actions{margin-left:28px}}';document.head.append(style);
+ 
   const toolbar=document.createElement('div');toolbar.className='history-toolbar';
  const search=document.createElement('input');search.type='search';search.id='historySearch';search.placeholder='ค้นหาชื่อเอกสารหรือเลขที่หนังสือ';search.setAttribute('aria-label','ค้นหาเอกสาร');
  const filter=document.createElement('select');filter.id='historyDepartment';filter.setAttribute('aria-label','กรองฝ่ายงาน');
  const create=document.createElement('button');create.type='button';create.textContent='＋ สร้างเอกสารใหม่';
  toolbar.append(search,filter,create);managerStatus.before(toolbar);let savedFiles=[],loadSerial=0;
- const historyStyle=document.createElement('style');historyStyle.textContent='.history-toolbar{display:grid;grid-template-columns:minmax(200px,1fr) minmax(180px,260px) auto;gap:12px;margin:18px 0}.history-toolbar button{background:#173f75;color:white}.history-table{width:100%;border-collapse:collapse;font-size:14px}.history-table th{padding:12px;text-align:left;background:#edf3fc;color:#153b70}.history-table td{padding:14px 12px;border-bottom:1px solid #e6ebf3;vertical-align:middle}.history-table td:nth-child(2){overflow-wrap:anywhere}.history-table button{white-space:nowrap}.history-name{border:0;background:transparent;padding:0;color:#245ca1;text-align:left;text-decoration:underline;white-space:normal!important}@media(max-width:700px){.history-toolbar{grid-template-columns:1fr}.history-table thead{display:none}.history-table,.history-table tbody,.history-table tr,.history-table td{display:block}.history-table tr{border:1px solid #dce5ef;border-radius:12px;margin:12px 0;padding:10px}.history-table td{border:0;padding:5px 8px}.history-table td:before{content:attr(data-label);font-size:12px;color:#7384a2;margin-right:10px}.history-table td:last-child:before{display:none}}';document.head.append(historyStyle);
+ 
  function setViewHash(hash){const url=new URL(location.href);url.hash=hash;history.replaceState(null,'',url.href)}
- function show(managing){const home=document.getElementById('systemHome');if(home)home.hidden=true;nav.hidden=false;editor.hidden=managing;manager.hidden=!managing;setViewHash(managing?'#history':'#editor');editTab.setAttribute('aria-current',managing?'false':'page');manageTab.setAttribute('aria-current',managing?'page':'false');if(managing)renderHistory().catch(error=>managerStatus.textContent='อ่านรายการไม่สำเร็จ: '+error.message)}
- nav.id='systemNav';window.openBudgetSystem=()=>show(true);
+ function show(managing){const target=managing?'history.html':'procurement.html';if(!cloud&&!location.pathname.endsWith('/'+target)){location.assign(target);return;}const home=document.getElementById('systemHome');if(home)home.hidden=true;const budgetHome=document.getElementById('budgetHome');if(budgetHome)budgetHome.hidden=true;nav.hidden=false;editor.hidden=managing;manager.hidden=!managing;setViewHash(managing?'#history':'#editor');editTab.setAttribute('aria-current',managing?'false':'page');manageTab.setAttribute('aria-current',managing?'page':'false');if(managing)renderHistory().catch(error=>managerStatus.textContent='อ่านรายการไม่สำเร็จ: '+error.message)}
+  nav.id='systemNav';
+ for(const [text,page]of [['← หน้าหลัก','index.html'],['← ระบบงานงบประมาณ','budget.html']]){const link=document.createElement('a');link.textContent=text;link.href=window.schoolAppPageLinks?.[page]||page;link.target='_top';link.style.cssText='padding:10px 12px;color:#163f75;text-decoration:none';nav.prepend(link)}
  search.addEventListener('input',drawHistory);filter.addEventListener('change',drawHistory);
  create.addEventListener('click',()=>{
   if(Object.values(formValues).some(value=>String(value??'').trim())&&!confirm('เริ่มเอกสารใหม่? กรุณาบันทึกรายละเอียดปัจจุบันก่อนหากต้องการเก็บไว้'))return;
@@ -119,5 +120,5 @@
  }
   saveButton.addEventListener('click',saveDraft);finish.addEventListener('click',complete);
  const nextView=sessionStorage.getItem('school-procurement-next-view-v1');
- if(nextView==='manage'||location.hash==='#history'){sessionStorage.removeItem('school-procurement-next-view-v1');show(true)}
+ if(nextView==='manage'||window.documentPageView==='history'||location.hash==='#history'){sessionStorage.removeItem('school-procurement-next-view-v1');show(true)}
 })();

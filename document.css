@@ -1,0 +1,60 @@
+
+:root{font-family:system-ui,"Noto Sans Thai",sans-serif;color:#192b43;background:#eef3fa}*{box-sizing:border-box}body{margin:0}header{height:72px;background:white;border-bottom:1px solid #dce4ee;display:flex;align-items:center;justify-content:space-between;padding:0 28px}h1{font-size:19px;margin:0}small{color:#728198}main{display:grid;grid-template-columns:minmax(320px,390px) minmax(400px,1fr);gap:18px;padding:18px;min-height:calc(100vh - 72px)}section{background:#fff;border:1px solid #dee5ef;border-radius:15px;min-width:0}.fields{padding:18px;overflow:auto;max-height:calc(100vh - 108px)}h2{font-size:16px;margin:4px 0 14px}.group{padding:15px 0;border-top:1px solid #e6ebf3}.group h3{font-size:14px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}select,input{display:block;width:100%;padding:11px;border:1px solid #cad6e4;border-radius:9px;background:#fff;font-size:14px}select:disabled,input:disabled{background:#f4f6f9;color:#788597}.preview{display:flex;flex-direction:column;overflow:hidden}.toolbar{padding:14px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid #e6ebf3}.toolbar strong{font-size:15px}.document-frame{position:relative;flex:1;min-height:680px;background:#eff2f8}iframe{width:100%;height:100%;min-height:680px;border:0;background:#eff2f8}.note{padding:10px 18px;background:#fff9ed;color:#70501d;font-size:12px;border-top:1px solid #f4e6c4}.muted{color:#6a7c94;font-size:13px;line-height:1.7}.ref{color:#315b96;font-size:12px;text-decoration:none}button{border:1px solid #d2dae5;border-radius:9px;padding:10px 12px;background:#fff;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}@media(max-width:900px){main{grid-template-columns:1fr}.fields{max-height:none}iframe{min-height:580px}}
+.renderer-scroll{height:680px;overflow:auto;background:#dce3ed;padding:18px}.renderer-message{padding:28px;text-align:center;color:#576b87}.toolbar-controls{display:flex;gap:8px;align-items:center}.toolbar select{width:auto;max-width:250px;padding:9px}.document-frame{min-height:680px}@media(max-width:900px){.toolbar{flex-wrap:wrap}.renderer-scroll{height:580px}}.input-wrap{margin-bottom:12px}.input-wrap label{display:flex;justify-content:space-between;gap:5px;align-items:center}.input-wrap small{font-weight:400;font-size:11px}.input-wrap input:focus{outline:2px solid #7eb3ff}.page-field-count{font-size:12px;color:#64748b;margin:4px 0 10px}.shared-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:2px 0 12px;text-align:left;border:0;border-radius:0;background:transparent;font-size:14px;font-weight:700;color:inherit}.shared-toggle:hover{color:#245ca1}.shared-toggle:focus-visible{outline:2px solid #2675df;outline-offset:3px}.shared-toggle span:last-child{font-size:18px;line-height:1}#sharedBody[hidden]{display:none!important}
+/* Shared-data form hierarchy only; never applies to document preview. */
+#sharedFields{display:flex;flex-direction:column;gap:14px;padding:8px 0 12px}
+#sharedFields .shared-data-group{border:1px solid #dbe6f4;border-radius:14px;background:#f8fbff;padding:14px 15px 12px;box-shadow:0 2px 7px #183d6410}
+#sharedFields .shared-data-group>h3{font-size:15px;font-weight:800;color:#143d71;background:#e8f1fd;border-radius:9px;padding:10px 12px;margin:0 0 12px;border-left:4px solid #3976c3}
+#sharedFields .shared-data-group .input-wrap{margin:0 0 13px;padding:0 2px}
+#sharedFields .shared-data-group .input-wrap:last-child{margin-bottom:0}
+#sharedFields .shared-data-group .input-wrap>label{font-size:13px;font-weight:650;color:#315477;margin:7px 0 6px}
+#sharedFields .shared-data-group input,#sharedFields .shared-data-group select{background:#fff;border:1px solid #ccdbef;border-radius:10px}
+#sharedFields .shared-data-group input:focus,#sharedFields .shared-data-group select:focus{outline:2px solid #80b5ff;outline-offset:1px}
+/* School-OS inspired school identity: visual-only overrides */
+:root{font-family:"Noto Sans Thai",Tahoma,system-ui,sans-serif;color:#102e56;background:#f4f8fe}
+body{background:linear-gradient(180deg,#ecf3fc,#f8fbff 420px);min-height:100vh}
+header.school-top{height:88px;border:0;background:#103564;color:#fff;padding:0 32px;box-shadow:0 3px 12px #102c4b1a}
+.brand{display:flex;align-items:center;gap:16px;min-width:0}
+.brand-logo{width:60px;height:60px;object-fit:contain;filter:drop-shadow(0 2px 3px #0004)}
+.brand h1{font-size:23px;font-weight:800;color:#ffdc78;line-height:1.25}
+.brand small{display:block;color:#d5e4f7;font-weight:600;margin-top:5px}
+.system-status{font-size:12px;border-radius:24px;background:#ffffff19;border:1px solid #ffffff30;color:#fff;padding:10px 14px;max-width:36%;line-height:1.4}
+.campus-banner{height:168px;background:#123a6f url("https://drivekup01.github.io/School-OS/assets/school-header.webp") center 54%/cover no-repeat;position:relative;overflow:hidden}
+.campus-shade{height:100%;display:flex;flex-direction:column;justify-content:center;padding:26px 38px;background:linear-gradient(90deg,#10305eeb 0%,#10305ecc 35%,#10305e0a 84%)}
+.banner-title{font-size:26px;font-weight:800;color:#fff;text-shadow:0 2px 5px #0003}
+.banner-subtitle{font-size:13px;color:#e6efff;margin-top:7px}
+.workspace-heading{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 26px 8px}
+.workspace-heading h2{font-size:24px;margin:0;color:#12396c;letter-spacing:-.2px}
+.workspace-heading p{font-size:12px;color:#8292ae;margin:5px 0 0}
+.work-chip{font-size:12px;white-space:nowrap;color:#13734b;background:#e6f7ee;border-radius:22px;padding:8px 13px;border:1px solid #c7ecd8;font-weight:700}
+main{padding:16px 26px 28px;gap:20px;grid-template-columns:minmax(330px,400px) minmax(410px,1fr);min-height:0}
+main>section{border:1px solid #e2eaf6;box-shadow:0 5px 24px #132f5610;border-radius:18px;background:#fff}
+.fields{max-height:calc(100vh - 100px);padding:0 20px 22px}
+.fields>.section-head{position:sticky;top:0;z-index:3;margin:0 -20px 17px;padding:16px 20px;display:flex;align-items:center;gap:12px;background:#102f5b;color:#fff;border-radius:17px 17px 0 0}
+.section-icon{display:flex;align-items:center;justify-content:center;width:38px;height:38px;background:#ffffff21;border-radius:11px;font-size:20px}
+.section-head strong{display:block;font-size:14px}.section-head small{color:#c8d8ef;font-size:11px;display:block;margin-top:2px}
+.fields h2{font-size:17px;color:#12396c;margin:8px 0 16px}
+.group{padding:17px 0;border-color:#e7edf8}
+.group h3{color:#153b70;font-size:14px}
+input,select{border-color:#dce5f3;background:#fbfdff;color:#173358;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus{outline:none;border-color:#6aa4f2;box-shadow:0 0 0 3px #80b6ff33}
+label{color:#244671}
+button{font-weight:650;border-color:#dbe6f5;color:#163f75}
+.shared-toggle{color:#153b70;padding:4px 0 12px}
+.shared-toggle:hover{color:#307bd8}
+.toolbar{background:#fff;padding:16px 20px;gap:10px}
+.toolbar strong{color:#153b70;font-size:15px}
+.toolbar-controls button{background:#f7faff}
+.document-frame,.renderer-scroll{background:#e9eff7}
+.note{background:#fff9ea;border-top:1px solid #fae9bc;color:#805b25}
+.muted{color:#7384a2}
+@media(max-width:1000px){header.school-top{padding:12px 20px}.campus-banner{height:135px}.workspace-heading{padding:18px 16px 5px}main{padding:12px 16px 24px;grid-template-columns:1fr}.fields{max-height:none}.system-status{display:none}}
+@media(max-width:600px){.brand-logo{width:43px;height:43px}.brand h1{font-size:16px}.brand small{font-size:10px}.campus-shade{padding:15px 20px}.banner-title{font-size:19px}.banner-subtitle{font-size:11px}.workspace-heading h2{font-size:19px}.work-chip{display:none}}
+#exportWord{background:#173f75;color:#fff;border:1px solid #173f75;padding:11px 17px;border-radius:10px;white-space:nowrap}#exportWord:hover{background:#245992}#exportWord:disabled{opacity:.65;cursor:wait}.system-status[hidden]{display:none!important}.page-navigation{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #dce5f3;background:#fbfdff;border-radius:11px;padding:5px}.page-navigation button{font-size:25px;line-height:1;min-width:48px;height:39px;padding:3px 10px;border:0;background:#e7effa;border-radius:8px;color:#173f75}.page-navigation button:hover:not(:disabled){background:#d4e4fa}.page-navigation button:disabled{opacity:.3;cursor:default}.page-navigation span{font-size:15px;font-weight:750;color:#173f75;white-space:nowrap}.fields>.section-head strong{font-size:20px;line-height:1.35}.fields>.section-head .section-icon{font-size:23px;width:43px;height:43px}.school-top{position:relative}.header-date{position:absolute;right:24px;bottom:9px;color:#dce9fa;font-size:12px;font-weight:600;white-space:nowrap}@media(max-width:600px){.header-date{right:12px;bottom:5px;font-size:10px}.school-top .brand{padding-bottom:8px}}
+/* Page 4–11 flex sections: neutral spacing, original Word margins remain authoritative. */
+.word-generated .word-content.word-flex-layout{display:flex;flex-direction:column;gap:0;align-items:stretch}
+.word-flex-section{display:flex;flex-direction:column;gap:0;min-width:0;flex:0 0 auto}
+.word-flex-section>.word-paragraph{flex:none}
+.word-flex-table-section{width:100%}
+.word-flex-table-section>.word-table{width:100%}
+ .word-page8-garuda-header{display:flex;justify-content:center;align-items:center;width:100%;margin:0 0 4mm} .word-page8-garuda{display:block;width:30mm;height:30mm;object-fit:contain}

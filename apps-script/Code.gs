@@ -2,9 +2,13 @@ const FOLDER_ID = '1M3B95sHXT0pCaiK8ZN2w5lseE7r-D1NO';
 const APP_URL = 'https://drivekup01.github.io/School-Procurement/';
 const MARKER = 'school-procurement-document-v1';
 
-function doGet() {
-  const response = UrlFetchApp.fetch(APP_URL + 'index.html');
-  const html = response.getContentText().replace('<head>', '<head><base href="' + APP_URL + '" target="_top">');
+function doGet(e) {
+  const pages = {home:'index.html', budget:'budget.html', procurement:'procurement.html', history:'history.html'};
+  const page = pages[e && e.parameter && e.parameter.page] || pages.home;
+  const response = UrlFetchApp.fetch(APP_URL + page);
+  const links = {};Object.keys(pages).forEach(key => links[pages[key]] = ScriptApp.getService().getUrl() + '?page=' + key);
+  let html = response.getContentText().replace('<head>', '<head><base href="' + APP_URL + '" target="_top"><script>window.schoolAppPageLinks=' + JSON.stringify(links) + ';</script>');
+  Object.keys(links).forEach(file => { html = html.split('href="' + file + '"').join('href="' + links[file] + '"'); });
   return HtmlService.createHtmlOutput(html).setTitle('เอกสารจัดซื้อจัดจ้าง');
 }
 
