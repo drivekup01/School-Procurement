@@ -32,3 +32,15 @@ body[data-document-view="editor"] .preview>.document-frame{background:#efeaf5}
 body[data-document-view="editor"] #systemNav button:focus-visible,body[data-document-view="editor"] .fields button:focus-visible,body[data-document-view="editor"] #exportWord:focus-visible{outline:3px solid #b88be1;outline-offset:3px}
 @media(max-width:1000px){body[data-document-view="editor"] main{padding:20px;gap:20px}body[data-document-view="editor"] .fields{max-height:none}}
 @media(max-width:600px){body[data-document-view="editor"] header.school-top{padding:20px 18px;min-height:96px}body[data-document-view="editor"] .brand h1{font-size:16px}body[data-document-view="editor"] #systemNav{padding:16px 18px 0!important;gap:6px!important}body[data-document-view="editor"] #systemNav a{font-size:12px;padding:9px!important}body[data-document-view="editor"] main{padding:18px 12px 28px}body[data-document-view="editor"] .fields .group{padding:14px}body[data-document-view="editor"] .preview>.toolbar{padding:16px}body[data-document-view="editor"] .preview>.toolbar strong{font-size:13px}}
+/* Match the Preview pane while keeping the form independently scrollable. */
+@media(min-width:1101px){body[data-document-view="editor"] .fields{height:0;min-height:100%;max-height:none;align-self:stretch;overflow:auto}}
+body[data-document-view="editor"] .fields{padding:0 14px 14px}
+body[data-document-view="editor"] .fields>.section-head{margin:0 -14px 12px;padding:16px 14px}
+body[data-document-view="editor"] .fields .group{padding:10px;margin-top:10px;border-radius:12px}
+body[data-document-view="editor"] #sharedFields{gap:10px}
+body[data-document-view="editor"] #sharedFields .shared-data-group{padding:9px 10px 8px;border-radius:10px;box-shadow:none;border-color:#e5d8ef;background:#fcfaff}
+body[data-document-view="editor"] #sharedFields .shared-data-group>h3{font-size:13px;padding:6px 8px;margin-bottom:7px;background:#f0e6f8;color:#704595;border-color:#aa7acb}
+body[data-document-view="editor"] #sharedFields .shared-data-group .input-wrap,body[data-document-view="editor"] .fields .input-wrap{margin-bottom:8px}
+body[data-document-view="editor"] #sharedFields .shared-data-group .input-wrap>label,body[data-document-view="editor"] .fields label{margin:6px 0 4px;font-size:12px}
+body[data-document-view="editor"] .fields :is(input,select){padding:9px 10px;border-radius:9px;font-size:13px}
+@media(max-width:1100px){body[data-document-view="editor"] .fields{height:auto;min-height:0;max-height:none}}
