@@ -92,7 +92,20 @@
           ]
         }
       ],
-      "sourceRow": 5
+      "sourceRow": 5,
+      "income": [
+        null,
+        206000,
+        null,
+        null
+      ],
+      "remaining": [
+        null,
+        114626,
+        null,
+        null
+      ],
+      "balanceSourceRow": 5
     },
     {
       "id": 2,
@@ -137,7 +150,20 @@
           ]
         }
       ],
-      "sourceRow": 13
+      "sourceRow": 13,
+      "income": [
+        null,
+        62000,
+        26500,
+        60311
+      ],
+      "remaining": [
+        null,
+        21650,
+        21500,
+        49511
+      ],
+      "balanceSourceRow": 7
     },
     {
       "id": 3,
@@ -172,7 +198,20 @@
           ]
         }
       ],
-      "sourceRow": 17
+      "sourceRow": 17,
+      "income": [
+        2000,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        2000,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 9
     },
     {
       "id": 4,
@@ -186,7 +225,20 @@
         0
       ],
       "activities": [],
-      "sourceRow": 20
+      "sourceRow": 20,
+      "income": [
+        108395,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        16967,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 11
     },
     {
       "id": 5,
@@ -200,7 +252,20 @@
         0
       ],
       "activities": [],
-      "sourceRow": 21
+      "sourceRow": 21,
+      "income": [
+        4000,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        4000,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 13
     },
     {
       "id": 6,
@@ -245,7 +310,20 @@
           ]
         }
       ],
-      "sourceRow": 22
+      "sourceRow": 22,
+      "income": [
+        68000,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        5999,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 15
     },
     {
       "id": 7,
@@ -259,7 +337,20 @@
         0
       ],
       "activities": [],
-      "sourceRow": 26
+      "sourceRow": 26,
+      "income": [
+        1000,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        1000,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 17
     },
     {
       "id": 8,
@@ -314,7 +405,20 @@
           ]
         }
       ],
-      "sourceRow": 27
+      "sourceRow": 27,
+      "income": [
+        5000,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        700,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 19
     },
     {
       "id": 9,
@@ -399,7 +503,20 @@
           ]
         }
       ],
-      "sourceRow": 32
+      "sourceRow": 32,
+      "income": [
+        7300,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        5434,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 21
     },
     {
       "id": 10,
@@ -434,7 +551,20 @@
           ]
         }
       ],
-      "sourceRow": 40
+      "sourceRow": 40,
+      "income": [
+        1000,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        840,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 23
     },
     {
       "id": 11,
@@ -489,7 +619,20 @@
           ]
         }
       ],
-      "sourceRow": 43
+      "sourceRow": 43,
+      "income": [
+        4000,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        4000,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 25
     },
     {
       "id": 12,
@@ -534,7 +677,20 @@
           ]
         }
       ],
-      "sourceRow": 48
+      "sourceRow": 48,
+      "income": [
+        690654,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        0,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 27
     },
     {
       "id": 13,
@@ -569,7 +725,20 @@
           ]
         }
       ],
-      "sourceRow": 52
+      "sourceRow": 52,
+      "income": [
+        277725,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        -220,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 29
     },
     {
       "id": 14,
@@ -674,7 +843,20 @@
           ]
         }
       ],
-      "sourceRow": 55
+      "sourceRow": 55,
+      "income": [
+        20000,
+        null,
+        4000,
+        null
+      ],
+      "remaining": [
+        17815,
+        null,
+        3700,
+        null
+      ],
+      "balanceSourceRow": 31
     },
     {
       "id": 15,
@@ -696,6 +878,18 @@
             0,
             0,
             30000.0
+          ],
+          "income": [
+            null,
+            null,
+            null,
+            30000
+          ],
+          "remaining": [
+            null,
+            null,
+            null,
+            0
           ]
         },
         {
@@ -706,6 +900,18 @@
             0,
             0,
             60000.0
+          ],
+          "income": [
+            null,
+            null,
+            null,
+            60000
+          ],
+          "remaining": [
+            null,
+            null,
+            null,
+            9800
           ]
         },
         {
@@ -716,6 +922,18 @@
             0,
             0,
             30000.0
+          ],
+          "income": [
+            null,
+            null,
+            null,
+            30000
+          ],
+          "remaining": [
+            null,
+            null,
+            null,
+            836
           ]
         },
         {
@@ -726,10 +944,35 @@
             0,
             0,
             35000.0
+          ],
+          "income": [
+            null,
+            null,
+            null,
+            35000
+          ],
+          "remaining": [
+            null,
+            null,
+            null,
+            7886
           ]
         }
       ],
-      "sourceRow": 65
+      "sourceRow": 65,
+      "income": [
+        null,
+        null,
+        null,
+        155000
+      ],
+      "remaining": [
+        null,
+        null,
+        null,
+        18522
+      ],
+      "balanceSourceRow": 33
     },
     {
       "id": 16,
@@ -743,7 +986,20 @@
         0
       ],
       "activities": [],
-      "sourceRow": 70
+      "sourceRow": 70,
+      "income": [
+        1000,
+        null,
+        null,
+        null
+      ],
+      "remaining": [
+        1000,
+        null,
+        null,
+        null
+      ],
+      "balanceSourceRow": 42
     }
   ],
   "registers": [
@@ -2323,5 +2579,22 @@
         }
       ]
     }
-  ]
+  ],
+  "balanceSummary": {
+    "remaining": [
+      59535,
+      136276,
+      3700,
+      68033
+    ],
+    "sourceRow": 44
+  },
+  "incomeTotals": [
+    1190074,
+    268000,
+    30500,
+    215311
+  ],
+  "amountBasis": "ยอดคงเหลือ: ช่องสีเป็นรายรับ ช่องขาวเป็นยอดคงเหลือ; แถวรวมใช้เป็นยอดสรุป",
+  "balanceSourceSheet": "ยอดคงเหลือ"
 }
