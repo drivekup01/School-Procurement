@@ -277,6 +277,20 @@ function paginateWord(groups){
    }
    return applyPageSections(page);
   }
+  if(groupIndex===7){
+   const page=applyPageSections(buildPage(group));
+   page.classList.add('word-page8');
+   const content=page.querySelector('.word-content');
+   const header=document.createElement('div');
+   header.className='word-page8-garuda-header';
+   const garuda=document.createElement('img');
+   garuda.src='krut-3-cm.png';
+   garuda.alt='ตราครุฑ';
+   garuda.className='word-page8-garuda';
+   header.append(garuda);
+   content.prepend(header);
+   return page;
+  }
   return applyPageSections(buildPage(group));
  });
 }
