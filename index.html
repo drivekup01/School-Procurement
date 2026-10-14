@@ -310,7 +310,7 @@ function renderFormFields(){
  else visibleCommon.forEach(k=>addField(shared,k));
  if(pairedVisible){
   const group=document.createElement('div');group.className='input-wrap';group.style.marginTop='12px';
-  const title=document.createElement('label');title.textContent='ผู้ได้รับมอบหมาย';group.append(title);
+  const title=document.createElement('label');title.textContent='ผู้ได้รับมอบหมาย / หัวหน้าเจ้าหน้าที่';group.append(title);
   const row=document.createElement('div');row.style.cssText='display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap';
   const nameWrap=document.createElement('div');nameWrap.style.cssText='flex:2 1 190px;min-width:0';
   const nameLabel=document.createElement('label');nameLabel.textContent='ชื่อผู้ได้รับมอบหมาย';nameLabel.htmlFor='field-chief_officer_signer_name';
