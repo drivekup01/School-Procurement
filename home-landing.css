@@ -1,0 +1,26 @@
+/* School portal: purple school identity, two bento entry cards, no sidebar. */
+.school-home{color:#322246;background:radial-gradient(ellipse at 50% 0,#eee4fa 0,transparent 65%),#faf8fd;min-height:100vh}
+.landing-shell{max-width:1180px;margin:0 auto;padding:40px 40px 20px}
+.school-home .portal-main{max-width:none;margin:0;padding:0}
+.school-home .school-identity{padding:4px 0 32px;gap:14px;text-align:center}
+.school-home .home-school-logo{width:120px;height:120px;filter:drop-shadow(0 8px 20px #7745a41a)}
+.school-home .school-identity h1{font-size:38px;line-height:1.45;color:#38244d;letter-spacing:-.6px;margin:0}
+.school-home .school-identity p{font-size:14px;color:#9887a8;margin:0}
+.school-home .system-cards{display:grid;grid-template-columns:1.16fr 1fr;gap:22px}
+.school-home .system-card{position:relative;overflow:hidden;border-radius:28px;padding:30px;min-height:360px;box-shadow:0 14px 38px #6a408a0a;border:1px solid #eadff3;transition:transform .2s,box-shadow .2s}
+.school-home .system-card:hover{transform:translateY(-4px);box-shadow:0 18px 42px #65408021}.school-home .system-card:focus-visible{outline:3px solid #aa74d0;outline-offset:5px}
+.school-home .budget-landing{background:linear-gradient(125deg,#663394,#8050b3);border-color:transparent;color:white}
+.school-home .schedule-home{background:linear-gradient(130deg,#f1e9fa,#faf7fe);color:#49325f}
+.school-home .system-card-icon{position:relative;z-index:1;width:54px;height:54px;border-radius:16px;margin:0 0 18px}
+.school-home .budget-landing .system-card-icon{background:#ffffff1c;color:#f7edff;border:1px solid #ffffff23}
+.school-home .schedule-home .system-card-icon{background:white;color:#8552af;box-shadow:0 4px 14px #6b408710}
+.school-home .system-card-tag{font-size:11px;letter-spacing:.2px;position:relative;z-index:1;margin-bottom:36px}
+.school-home .budget-landing .system-card-tag{color:#e6d3f4}.school-home .schedule-home .system-card-tag{color:#9d86af}
+.school-home .system-card strong{font-size:26px;line-height:1.4;position:relative;z-index:1}.school-home .budget-landing strong{color:white}.school-home .schedule-home strong{color:#49305e}
+.school-home .system-card-description{position:relative;z-index:1;font-size:13px;line-height:1.85;min-height:48px;margin-top:10px}.school-home .budget-landing .system-card-description{color:#e1d0ef}.school-home .schedule-home .system-card-description{color:#9a85ad}
+.school-home .system-card-action{position:relative;z-index:1;margin-top:auto;padding-top:22px;font-size:13px;border-top:1px solid #ffffff25}.school-home .budget-landing .system-card-action{color:white}.school-home .schedule-home .system-card-action{color:#7b4aa4;border-color:#e2d5ec}.school-home .system-card-action span{width:34px;height:34px;border-radius:50%;background:#ffffff17;display:grid;place-items:center;font-size:21px}.school-home .schedule-home .system-card-action span{background:white}
+.bento-art{position:absolute;right:28px;top:35px;pointer-events:none;transform:rotate(-7deg)}
+.budget-art{width:146px;height:125px}.art-sheet{position:absolute;right:10px;top:0;width:85px;height:110px;border-radius:14px;background:#fff1;backdrop-filter:blur(2px);border:1px solid #fff3;display:flex;flex-direction:column;padding:16px;gap:7px}.art-sheet i{height:4px;border-radius:4px;background:#fff4;width:75%}.art-sheet i:nth-child(2){width:55%}.art-sheet b{font-size:30px;font-weight:400;color:#fff7;margin-top:10px}.art-bars{position:absolute;bottom:0;left:0;display:flex;align-items:flex-end;gap:6px;padding:11px;border-radius:12px;background:#a888c54d;border:1px solid #ffffff20}.art-bars i{width:14px;height:26px;border-radius:4px;background:#ddc6f080}.art-bars i:nth-child(2){height:40px}.art-bars i:nth-child(3){height:54px;background:#f0e3fa99}
+.calendar-art{width:120px;height:110px;background:#fff8;border:1px solid #fff;border-radius:16px;transform:rotate(8deg);box-shadow:0 12px 25px #7842980b}.calendar-top{display:block;height:24px;border-radius:16px 16px 0 0;background:#d9c0eb80}.calendar-cells{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:14px}.calendar-cells i{height:12px;border-radius:4px;background:#ece1f4}.calendar-cells i:nth-child(3n){background:#bd90d9}.calendar-cells i:nth-child(7){background:#9160b2}
+.school-home footer{padding:32px 0 10px;font-size:11px;color:#b1a3be}.school-splash{background:#faf8fd}.school-splash p{color:#583474}.school-splash small{color:#b09abc}
+@media(max-width:760px){.landing-shell{padding:32px 18px 16px}.school-home .school-identity h1{font-size:27px;letter-spacing:0}.school-home .home-school-logo{width:100px;height:100px}.school-home .system-cards{grid-template-columns:1fr;gap:18px}.school-home .system-card{min-height:330px;padding:26px;border-radius:24px}.school-home .system-card strong{font-size:23px}.bento-art{right:24px;top:30px}.school-home .school-identity p{font-size:12px}}
