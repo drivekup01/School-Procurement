@@ -13,13 +13,13 @@
  const finish=document.createElement('button');finish.type='button';finish.id='finishDocument';finish.textContent='เสร็จสิ้น';finish.style.marginLeft='8px';saveButton.after(finish);
  const managerStatus=document.createElement('p');managerStatus.className='muted';manager.append(heading,managerStatus,list);editor.after(manager);heading.textContent='ประวัติเอกสาร';status.textContent='';
  const nav=document.createElement('nav');nav.style.cssText='display:flex;gap:8px;padding:16px 26px 0';const editTab=document.createElement('button'),manageTab=document.createElement('button');editTab.type=manageTab.type='button';editTab.textContent='จัดทำเอกสาร';manageTab.textContent='ประวัติเอกสาร';nav.append(editTab,manageTab);editor.before(nav);
- 
+
   const toolbar=document.createElement('div');toolbar.className='history-toolbar';
  const search=document.createElement('input');search.type='search';search.id='historySearch';search.placeholder='ค้นหาชื่อเอกสารหรือเลขที่หนังสือ';search.setAttribute('aria-label','ค้นหาเอกสาร');
  const filter=document.createElement('select');filter.id='historyDepartment';filter.setAttribute('aria-label','กรองฝ่ายงาน');
  const create=document.createElement('button');create.type='button';create.textContent='＋ สร้างเอกสารใหม่';
  toolbar.append(search,filter,create);managerStatus.before(toolbar);let savedFiles=[],loadSerial=0;
- 
+
  function setViewHash(hash){const url=new URL(location.href);url.hash=hash;history.replaceState(null,'',url.href)}
  function show(managing){const target=managing?'history.html':'procurement.html';if(!cloud&&!location.pathname.endsWith('/'+target)){location.assign(target);return;}const home=document.getElementById('systemHome');if(home)home.hidden=true;const budgetHome=document.getElementById('budgetHome');if(budgetHome)budgetHome.hidden=true;nav.hidden=false;editor.hidden=managing;manager.hidden=!managing;setViewHash(managing?'#history':'#editor');editTab.setAttribute('aria-current',managing?'false':'page');manageTab.setAttribute('aria-current',managing?'page':'false');if(managing)renderHistory().catch(error=>managerStatus.textContent='อ่านรายการไม่สำเร็จ: '+error.message)}
   nav.id='systemNav';
