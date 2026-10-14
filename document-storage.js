@@ -5,13 +5,13 @@
  const host=document.getElementById('saveArea'),saveButton=document.getElementById('saveDocumentData'),status=document.getElementById('saveStatus');
  const cloud=!!window.google?.script?.run;
  let active={};try{active=JSON.parse(localStorage.getItem(activeKey)||'{}')}catch{}
-  const historyKey='school-procurement-document-history-v1',draftKey='school-procurement-document-draft-v1';
+  const historyKey='school-procurement-document-history-v1',draftKey='school-procurement-document-draft-v1',trashKey='school-procurement-document-trash-v1';
  const heading=document.createElement('h3');heading.textContent='ประวัติการบันทึกเอกสาร';
  const list=document.createElement('div');list.id='documentHistory';
  saveButton.disabled=false;saveButton.removeAttribute('title');saveButton.textContent='บันทึก';
   const editor=document.querySelector('main'),manager=document.createElement('section');manager.id='documentManager';manager.hidden=true;manager.style.cssText='margin:18px 26px;padding:22px';
  const finish=document.createElement('button');finish.type='button';finish.id='finishDocument';finish.textContent='เสร็จสิ้น';finish.style.marginLeft='8px';saveButton.after(finish);
- const managerStatus=document.createElement('p');managerStatus.className='muted';manager.append(heading,managerStatus,list);editor.after(manager);heading.textContent='ประวัติเอกสาร';status.textContent='';
+ const managerStatus=document.createElement('p');managerStatus.className='muted';manager.append(heading,managerStatus,list);editor.after(manager);heading.textContent='ประวัติเอกสาร';status.textContent='';const undo=document.createElement('button');undo.type='button';undo.className='document-undo-delete';undo.textContent='คืนค่าเอกสารที่ลบล่าสุด';undo.hidden=true;managerStatus.after(undo);
 
   const toolbar=document.createElement('div');toolbar.className='history-toolbar';
  const search=document.createElement('input');search.type='search';search.id='historySearch';search.placeholder='ค้นหาชื่อเอกสารหรือเลขที่หนังสือ';search.setAttribute('aria-label','ค้นหาเอกสาร');
@@ -34,7 +34,7 @@
  async function renderHistory(){
   const serial=++loadSerial;managerStatus.textContent='กำลังอ่านเอกสาร...';
   const files=cloud?await rpc('listProcurementDocuments'):localHistory();if(serial!==loadSerial)return;
-  savedFiles=files.sort((a,b)=>String(b.savedAt).localeCompare(String(a.savedAt)));
+  undo.hidden=cloud||!localTrash().length;savedFiles=files.sort((a,b)=>String(b.savedAt).localeCompare(String(a.savedAt)));
   const previous=filter.value;filter.replaceChildren(new Option('ทุกฝ่ายงาน',''));
   [...new Set(savedFiles.map(file=>metadata(file).department).filter(Boolean))].sort().forEach(department=>filter.add(new Option(department,department)));
   filter.value=previous;drawHistory();
@@ -55,9 +55,12 @@
    title.addEventListener('click',edit);cells[1].append(title);const number=metadata(file).number;if(number){const line=document.createElement('small');line.style.display='block';line.textContent='เลขที่ '+number;cells[1].append(line)}
    cells[2].textContent=metadata(file).department||'—';cells[3].textContent=new Date(file.savedAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'});
    const actions=document.createElement('div');actions.className='document-manager-actions';const downloadButton=document.createElement('button');downloadButton.type='button';downloadButton.textContent='ดาวน์โหลด';downloadButton.addEventListener('click',async()=>{busy(true);try{const data=cloud?(await rpc('openProcurementDocument',file.id)).data:file.data;download(validate(data))}catch(error){managerStatus.textContent='ดาวน์โหลดไม่สำเร็จ: '+error.message}finally{busy(false)}});
-   const editButton=document.createElement('button');editButton.type='button';editButton.textContent='แก้ไข';editButton.addEventListener('click',edit);actions.append(downloadButton,editButton);cells[4].append(actions);body.append(row);
+   const editButton=document.createElement('button');editButton.type='button';editButton.textContent='แก้ไข';editButton.addEventListener('click',edit);actions.append(downloadButton,editButton);if(!cloud){const remove=document.createElement('button');remove.type='button';remove.className='document-delete';remove.textContent='ลบ';remove.setAttribute('aria-label','ลบเอกสาร '+file.name);remove.addEventListener('click',()=>removeLocalDocument(file));actions.append(remove)}cells[4].append(actions);body.append(row);
   });list.append(table);
  }
+ function localTrash(){const value=JSON.parse(localStorage.getItem(trashKey)||'[]');if(!Array.isArray(value))throw Error('อ่านเอกสารที่ลบไม่ได้');return value}
+ function removeLocalDocument(file){if(!confirm('ลบเอกสาร "'+file.name+'" ออกจากประวัติหรือไม่?'))return;busy(true);try{const history=localHistory(),current=history.find(item=>item.id===file.id);if(!current)throw Error('เอกสารนี้ถูกลบไปแล้ว กรุณาเปิดรายการใหม่');const trash=localTrash();localStorage.setItem(trashKey,JSON.stringify([...trash.filter(item=>item.id!==current.id),{...current,deletedAt:new Date().toISOString()}]));localStorage.setItem(historyKey,JSON.stringify(history.filter(item=>item.id!==file.id)));if(active.id===file.id){active={};localStorage.removeItem(activeKey)}renderHistory().then(()=>{managerStatus.textContent='ลบเอกสารแล้ว · คืนค่าได้จากปุ่มด้านล่าง'}).catch(error=>managerStatus.textContent=error.message)}catch(error){managerStatus.textContent='ลบไม่สำเร็จ: '+error.message}finally{busy(false)}}
+ undo.addEventListener('click',()=>{busy(true);try{const trash=localTrash(),last=trash[trash.length-1];if(!last)return;const history=localHistory();if(!history.some(item=>item.id===last.id)){const restored={...last};delete restored.deletedAt;localStorage.setItem(historyKey,JSON.stringify([...history,restored]))}localStorage.setItem(trashKey,JSON.stringify(trash.slice(0,-1)));renderHistory().then(()=>managerStatus.textContent='คืนค่าเอกสารแล้ว').catch(error=>managerStatus.textContent=error.message)}catch(error){managerStatus.textContent='คืนค่าไม่สำเร็จ: '+error.message}finally{busy(false)}});
  function rpc(method,...args){return new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[method](...args,sessionStorage.getItem('school-auth-token')))}
  function validate(data){
   if(!data||data.format!==format||data.version!==1||!data.stores||Object.keys(data.stores).length!==keys.length||!keys.every(key=>data.stores[key]&&typeof data.stores[key]==='object'&&!Array.isArray(data.stores[key])))throw Error('ไฟล์นี้ไม่ใช่ข้อมูลเอกสารที่ระบบรองรับ');
