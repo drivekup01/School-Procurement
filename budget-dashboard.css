@@ -4,3 +4,8 @@ body{background:radial-gradient(ellipse at 55% 0,#eee4fa 0,transparent 60%),#faf
 #balanceSummary table{width:100%}#balanceSummary h3{color:#76459e;font-size:14px}#balanceSummary .source-register{margin-top:18px}#balanceSummary .table-wrap{overflow:auto}
 
 .stat .stat-income{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}.stat .stat-unit{font-size:12px;font-weight:normal;opacity:.9}.stat-remaining{font-size:14px;line-height:1.8;color:#ffffffde;font-variant-numeric:tabular-nums}@media(max-width:650px){.stat .stat-income{font-size:17px}.stat-remaining{font-size:12px}.stat .stat-unit{font-size:10px}}
+/* Larger card typography, with balances subordinate to income. */
+.stat>span{font-size:16px;font-weight:600;line-height:1.6}.stat .stat-income{font-size:30px;line-height:1.4}.stat .stat-unit{font-size:15px}.stat-remaining{font-size:18px;line-height:1.8}
+@media(min-width:1500px){.stat .stat-income{font-size:34px}}
+@media(max-width:1100px){.stat .stat-income{font-size:28px}}
+@media(max-width:650px){.stat>span{font-size:12px}.stat .stat-income{font-size:20px;overflow-wrap:anywhere}.stat .stat-unit{font-size:12px}.stat-remaining{font-size:14px}}
