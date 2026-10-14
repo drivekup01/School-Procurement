@@ -58,9 +58,24 @@
    const data=snapshot();
    if(cloud){active=await rpc('saveProcurementDocument',data,active.id||'')}
    else{const history=localHistory(),index=history.findIndex(file=>file.id===active.id);active={id:index<0?crypto.randomUUID():active.id,name:data.name,savedAt:data.savedAt};const entry={...active,data};if(index<0)history.unshift(entry);else history[index]=entry;localStorage.setItem(historyKey,JSON.stringify(history))}
-   try{localStorage.setItem(activeKey,JSON.stringify(active))}catch{}
-   status.textContent='บันทึกไฟล์งานแล้ว';show(true);
+   clearCompletedDraft();
   }catch(error){status.textContent='บันทึกไม่สำเร็จ: '+error.message}finally{busy(false)}
+ }
+ function clearCompletedDraft(){
+  const viewKey='school-procurement-next-view-v1';
+  const draftKeys=[...keys,activeKey,draftKey];
+  const previous=new Map(draftKeys.map(key=>[key,localStorage.getItem(key)]));
+  try{
+   sessionStorage.setItem(viewKey,'manage');
+   for(const key of draftKeys)localStorage.removeItem(key);
+  }catch(error){
+   for(const [key,value]of previous){try{value===null?localStorage.removeItem(key):localStorage.setItem(key,value)}catch{}}
+   try{sessionStorage.removeItem(viewKey)}catch{}
+   status.textContent='บันทึกไฟล์งานแล้ว แต่ล้างช่องกรอกไม่สำเร็จ: '+error.message;
+   return;
+  }
+  // Reload also resets table and checkbox values held inside page controllers.
+  location.reload();
  }
  function restore(data,id){
   validate(data);
@@ -71,5 +86,6 @@
   location.reload();
  }
   saveButton.addEventListener('click',saveDraft);finish.addEventListener('click',complete);
-
+ const nextView=sessionStorage.getItem('school-procurement-next-view-v1');
+ if(nextView==='manage'){sessionStorage.removeItem('school-procurement-next-view-v1');show(true)}
 })();
