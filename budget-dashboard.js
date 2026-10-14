@@ -14,5 +14,5 @@
   $('bars').innerHTML=depts.map((d,i)=>`<div class="bar-row"><div class="bar-label"><span>${escape(d.replace('ฝ่ายบริหารงาน',''))}</span><strong>${money(values[i])}</strong></div><div class="track"><div style="width:${values[i]/max*100}%"></div></div></div>`).join('');
  }
  $('department').addEventListener('change',render);
- fetch('budget-data.json').then(r=>{if(!r.ok)throw Error();return r.json()}).then(data=>{projects=data.projects;$('department').innerHTML+=[...new Set(projects.map(p=>p.department))].map(d=>`<option>${escape(d)}</option>`).join('');render()}).catch(()=>{$('error').hidden=false;$('error').textContent='ไม่สามารถโหลดข้อมูลงบประมาณได้ กรุณาลองใหม่';});
+ fetch('budget-data.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error();return r.json()}).then(data=>{projects=data.projects;$('department').innerHTML+=[...new Set(projects.map(p=>p.department))].map(d=>`<option>${escape(d)}</option>`).join('');render()}).catch(()=>{$('error').hidden=false;$('error').textContent='ไม่สามารถโหลดข้อมูลงบประมาณได้ กรุณาลองใหม่';});
 })();
