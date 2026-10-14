@@ -94,7 +94,7 @@ const thaiParameterLabels={
  purchase_item_count:"จำนวนรายการจัดซื้อ",
  assigned_officer_name:"ชื่อผู้ได้รับมอบหมาย",
  assigned_officer_position:"ตำแหน่งผู้ได้รับมอบหมาย",
- chief_officer_signer_name:"ชื่อหัวหน้าเจ้าหน้าที่",
+ chief_officer_signer_name:"ชื่อผู้ได้รับมอบหมาย",
  officer_signer_name:"ชื่อเจ้าหน้าที่",
  vendor_name:"ชื่อผู้ขาย/ผู้รับจ้าง",
  pa:"จำนวนเงินก่อน VAT",
@@ -302,13 +302,37 @@ function renderFormFields(){
   input.addEventListener('input',()=>{formValues[key]=input.value;if(key==='budget_amount')syncBudgetAmountText();try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}activeField=key;renderPDFPage(currentPDFPage)});
   wrap.append(label,input);parent.appendChild(wrap);
  }
- if(!common.length)shared.innerHTML='<p class="muted">ยังไม่พบพารามิเตอร์ที่ซ้ำข้ามหน้า</p>';
- else common.forEach(k=>addField(shared,k));
+ const pairedKeys=['chief_officer_signer_name','assigned_officer_position'];
+ const pairedVisible=pairedKeys.some(k=>parameterIndex.get(k)?.has(currentPDFPage));
+ const visibleCommon=common.filter(k=>!pairedKeys.includes(k));
+ const visibleUnique=unique.filter(k=>!pairedKeys.includes(k));
+ if(!visibleCommon.length&&!pairedVisible)shared.innerHTML='<p class="muted">ยังไม่พบพารามิเตอร์ที่ซ้ำข้ามหน้า</p>';
+ else visibleCommon.forEach(k=>addField(shared,k));
+ if(pairedVisible){
+  const group=document.createElement('div');group.className='input-wrap';group.style.marginTop='12px';
+  const title=document.createElement('label');title.textContent='ผู้ได้รับมอบหมาย';group.append(title);
+  const row=document.createElement('div');row.style.cssText='display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap';
+  const nameWrap=document.createElement('div');nameWrap.style.cssText='flex:2 1 190px;min-width:0';
+  const nameLabel=document.createElement('label');nameLabel.textContent='ชื่อผู้ได้รับมอบหมาย';nameLabel.htmlFor='field-chief_officer_signer_name';
+  const name=document.createElement('input');name.id='field-chief_officer_signer_name';name.type='text';name.value=formValues.chief_officer_signer_name??'';
+  name.addEventListener('input',()=>saveFieldValue('chief_officer_signer_name',name.value));
+  nameWrap.append(nameLabel,name);
+  const positionWrap=document.createElement('div');positionWrap.style.cssText='flex:1 1 160px;min-width:0';
+  const positionLabel=document.createElement('label');positionLabel.textContent='ตำแหน่ง';positionLabel.htmlFor='field-assigned_officer_position';
+  const position=document.createElement('select');position.id='field-assigned_officer_position';
+  const positions=['ครู','ครูอัตราจ้าง','เจ้าหน้าที่ธุรการ'];
+  position.add(new Option('เลือกตำแหน่ง',''));
+  if(formValues.assigned_officer_position&&!positions.includes(formValues.assigned_officer_position))position.add(new Option(formValues.assigned_officer_position,formValues.assigned_officer_position));
+  positions.forEach(v=>position.add(new Option(v,v)));
+  position.value=formValues.assigned_officer_position??'';
+  position.addEventListener('change',()=>saveFieldValue('assigned_officer_position',position.value));
+  positionWrap.append(positionLabel,position);row.append(nameWrap,positionWrap);group.append(row);shared.append(group);
+ }
  const summary=document.createElement('p');summary.className='page-field-count';
- summary.textContent='หน้า '+currentPDFPage+' · '+unique.length+' ช่องเฉพาะหน้า · '+common.length+' ช่องใช้ร่วมกัน';
+ summary.textContent='หน้า '+currentPDFPage+' · '+visibleUnique.length+' ช่องเฉพาะหน้า · '+(visibleCommon.length+(pairedVisible?2:0))+' ช่องใช้ร่วมกัน';
  specific.appendChild(summary);
- if(!unique.length){const info=document.createElement('p');info.className='muted';info.textContent='หน้านี้ไม่พบพารามิเตอร์เฉพาะหน้า';specific.appendChild(info);}
- else unique.forEach(k=>addField(specific,k));
+ if(!visibleUnique.length){const info=document.createElement('p');info.className='muted';info.textContent='หน้านี้ไม่พบพารามิเตอร์เฉพาะหน้า';specific.appendChild(info);}
+ else visibleUnique.forEach(k=>addField(specific,k));
 }
 const sharedToggle=document.getElementById('sharedToggle');
 const sharedBody=document.getElementById('sharedBody');
