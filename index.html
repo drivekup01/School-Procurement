@@ -211,6 +211,7 @@ async function loadProjectActivities(){
 }
 function saveFieldValue(key,value){
  formValues[key]=value;
+ if(key==='budget_amount')syncBudgetAmountText();
  try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}
  activeField=key;
  renderPDFPage(currentPDFPage);
@@ -251,6 +252,23 @@ function addRelatedSelect(parent,key){
 }
 loadProjectActivities();
 
+function budgetAmountInThaiWords(value){
+ const raw=String(value??'').replace(/,/g,'').trim();
+ if(!/^\\d+(?:\\.\\d{1,2})?$/.test(raw))return '';
+ const [whole,decimal='']=raw.split('.');
+ const digits=['ศูนย์','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
+ const units=['','สิบ','ร้อย','พัน','หมื่น','แสน'];
+ function part(n){if(!n)return '';const str=String(n);let out='';for(let i=0;i<str.length;i++){const d=Number(str[i]),p=str.length-i-1;if(!d)continue;if(p===1&&d===1)out+='สิบ';else if(p===1&&d===2)out+='ยี่สิบ';else if(p===0&&d===1&&str.length>1)out+='เอ็ด';else out+=digits[d]+units[p]}return out}
+ function integerWords(input){let n=BigInt(input),out='';if(n===0n)return 'ศูนย์';while(n>0n){const chunk=Number(n%1000000n);if(chunk)out=part(chunk)+(out?'ล้าน':'')+out;n/=1000000n}return out}
+ const baht=integerWords(whole),sat=Number(decimal.padEnd(2,'0'));
+ return baht+'บาท'+(sat?part(sat)+'สตางค์':'ถ้วน');
+}
+function syncBudgetAmountText(){
+ const converted=budgetAmountInThaiWords(formValues.budget_amount);
+ formValues.budget_amount_text=converted;
+ const display=document.getElementById('field-budget_amount_text');
+ if(display)display.value=converted;
+}
 function renderFormFields(){
  lastFormPage=currentPDFPage;
  const shared=document.getElementById('sharedFields'),specific=document.getElementById('pageFields');
@@ -263,6 +281,7 @@ function renderFormFields(){
   else unique.push(key);
  }
  function addField(parent,key){
+  if(key==='budget_amount_text')syncBudgetAmountText();
   if(key==='project_name'||key==='activity_name'||key==='requesting_unit'){addRelatedSelect(parent,key);return;}
   const wrap=document.createElement('div');wrap.className='input-wrap';
   const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;
@@ -278,8 +297,9 @@ function renderFormFields(){
   }
   const input=document.createElement('input');input.id='field-'+key;input.type='text';input.autocomplete='off';
   input.placeholder='กรอก'+thaiFieldLabel(key);input.value=formValues[key]??'';
+  if(key==='budget_amount_text'){input.readOnly=true;input.title='คำนวณจากวงเงินงบประมาณอัตโนมัติ';}
   input.addEventListener('focus',()=>{activeField=key;highlightField(key)});
-  input.addEventListener('input',()=>{formValues[key]=input.value;try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}activeField=key;renderPDFPage(currentPDFPage)});
+  input.addEventListener('input',()=>{formValues[key]=input.value;if(key==='budget_amount')syncBudgetAmountText();try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}activeField=key;renderPDFPage(currentPDFPage)});
   wrap.append(label,input);parent.appendChild(wrap);
  }
  if(!common.length)shared.innerHTML='<p class="muted">ยังไม่พบพารามิเตอร์ที่ซ้ำข้ามหน้า</p>';
@@ -298,9 +318,11 @@ sharedToggle.addEventListener('click',()=>{
  sharedBody.hidden=expanded;
  document.getElementById('sharedChevron').textContent=expanded?'▸':'▾';
 });
+syncBudgetAmountText();
 loadPDF();
 document.getElementById('exportWord').addEventListener('click',exportFilledWord);
 async function exportFilledWord(){
+ syncBudgetAmountText();
  const button=document.getElementById('exportWord');button.disabled=true;button.textContent='กำลังสร้าง Word...';
  try{
   if(!window.JSZip)throw new Error('ไม่สามารถโหลดเครื่องมือสร้าง Word ได้');
