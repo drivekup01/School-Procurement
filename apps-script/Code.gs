@@ -3,7 +3,7 @@ const APP_URL = 'https://drivekup01.github.io/School-Procurement/';
 const MARKER = 'school-procurement-document-v1';
 
 function doGet(e) {
-  const pages = {home:'index.html', budget:'budget-dashboard.html', procurement:'procurement.html', history:'history.html'};
+  const pages = {home:'index.html', budget:'budget-dashboard.html', projects:'budget-projects.html', procurement:'procurement.html', history:'history.html'};
   const page = pages[e && e.parameter && e.parameter.page] || pages.home;
   const response = UrlFetchApp.fetch(APP_URL + page);
   const links = {};Object.keys(pages).forEach(key => links[pages[key]] = ScriptApp.getService().getUrl() + '?page=' + key);

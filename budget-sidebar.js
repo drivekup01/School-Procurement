@@ -6,8 +6,8 @@
  const brand=document.createElement('a');brand.className='budget-sidebar-brand';brand.href='https://drivekup01.github.io/School-Portal/';brand.target='_top';
  brand.innerHTML='<img src="school-logo.svg" alt="ตราโรงเรียน"><span>ค่ายบางระจันวิทยาคม<small>ระบบงานงบประมาณ</small></span>';sidebar.append(brand);
  const nav=document.createElement('nav');nav.setAttribute('aria-label','เมนูระบบงบประมาณ');
- const current=document.body.dataset.documentView||'budget';
- for(const [name,page,key] of [['◈ ภาพรวมงบประมาณ','budget-dashboard.html','budget'],['▤ โครงการและกิจกรรม','budget-dashboard.html#projects','projects'],['▧ จัดทำเอกสาร','procurement.html','editor'],['≡ ประวัติเอกสาร','history.html#history','history'],['← หน้าหลักโรงเรียน','https://drivekup01.github.io/School-Portal/','home']]){
+ const current=document.body.dataset.documentView||document.body.dataset.budgetPage||'budget';
+ for(const [name,page,key] of [['◈ ภาพรวมงบประมาณ','budget-dashboard.html','budget'],['▤ โครงการและกิจกรรม','budget-projects.html','projects'],['▧ จัดทำเอกสาร','procurement.html','editor'],['≡ เอกสารจัดซื้อ / จัดจ้าง','history.html#history','history'],['← หน้าหลักโรงเรียน','https://drivekup01.github.io/School-Portal/','home']]){
   const link=document.createElement('a');link.textContent=name;const [file,hash]=page.split('#');link.href=page.startsWith('https:')?page:pageLink(file)+(hash?'#'+hash:'');link.target='_top';link.dataset.view=key;if(key===current){link.className='active';link.setAttribute('aria-current','page')}nav.append(link);
  }sidebar.append(nav);
  const note=document.createElement('div');note.className='budget-sidebar-note';note.innerHTML='งานบริหารงบประมาณ<small>โรงเรียนค่ายบางระจันวิทยาคม</small>';sidebar.append(note);document.body.prepend(sidebar);document.body.classList.add('has-budget-sidebar');
