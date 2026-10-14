@@ -7,7 +7,8 @@
  document.addEventListener('DOMContentLoaded',()=>{
   const splash=document.getElementById('schoolSplash'),main=document.querySelector('.portal-main');
   main.inert=true;
-  const finish=()=>{document.documentElement.classList.remove('home-intro-active');main.inert=false;splash.hidden=true};
+  const sidebar=document.querySelector('.home-sidebar');if(sidebar)sidebar.inert=true;
+  const finish=()=>{document.documentElement.classList.remove('home-intro-active');main.inert=false;if(sidebar)sidebar.inert=false;splash.hidden=true};
   splash.querySelector('img').addEventListener('error',finish,{once:true});
   setTimeout(finish,1250);
  },{once:true});
