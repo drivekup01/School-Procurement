@@ -130,6 +130,39 @@ function page4TableHTML(tbl,tableClass='word-page4-table'){
  });
  return table;
 }
+/* Page 6 only: retain Word cells and border omissions, with equal satang columns. */
+function page6TableHTML(tbl){
+ const table=page4TableHTML(tbl,'word-page6-table');
+ const widths=wns(wn(tbl,'tblGrid'),'gridCol').map(c=>Number(wa(c,'w'))||1);
+ // Keep each baht/satang pair's total width from Word.
+ if(widths.length===9){
+  const satangWidth=Math.max(widths[4],widths[6],widths[8]);
+  for(const index of [4,6,8]){
+   widths[index-1]+=widths[index]-satangWidth;
+   widths[index]=satangWidth;
+  }
+  const total=widths.reduce((a,b)=>a+b,0);
+  Array.from(table.querySelectorAll('col')).forEach((col,index)=>{
+   col.style.width=(widths[index]/total*100)+'%';
+  });
+ }
+ wns(tbl,'tr').forEach((tr,rowIndex)=>{
+  let cellIndex=0,column=0;
+  for(const tc of wns(tr,'tc')){
+   const pr=wn(tc,'tcPr'),span=Number(wa(wn(pr,'gridSpan'),'val'))||1;
+   const merge=wn(pr,'vMerge');
+   if(merge&&wa(merge,'val')!=='restart'){column+=span;continue}
+   const cell=table.rows[rowIndex].cells[cellIndex++];
+   for(const side of ['top','right','bottom','left']){
+    const border=wn(wn(pr,'tcBorders'),side);
+    if(border&&['nil','none'].includes(wa(border,'val')))cell.style.setProperty('border-'+side+'-style','hidden');
+   }
+   if(span===1&&[4,6,8].includes(column))cell.classList.add('p6-satang');
+   column+=span;
+  }
+ });
+ return table;
+}
 function tableHTML(tbl){
  const table=document.createElement('table');table.className='word-table';
  for(const tr of wns(tbl,'tr')){
@@ -248,7 +281,7 @@ function paginateWord(groups){
    const page=buildPage(group);
    for(const table of Array.from(page.querySelectorAll('.word-content > table.word-table'))){
     const source=sourceTableForPreview.get(table);
-    if(source)table.replaceWith(page4TableHTML(source,'word-page6-table'));
+    if(source)table.replaceWith(page6TableHTML(source));
    }
    return applyPageSections(page);
   }
