@@ -20,12 +20,13 @@
  const create=document.createElement('button');create.type='button';create.textContent='＋ สร้างเอกสารใหม่';
  toolbar.append(search,filter,create);managerStatus.before(toolbar);let savedFiles=[],loadSerial=0;
  const historyStyle=document.createElement('style');historyStyle.textContent='.history-toolbar{display:grid;grid-template-columns:minmax(200px,1fr) minmax(180px,260px) auto;gap:12px;margin:18px 0}.history-toolbar button{background:#173f75;color:white}.history-table{width:100%;border-collapse:collapse;font-size:14px}.history-table th{padding:12px;text-align:left;background:#edf3fc;color:#153b70}.history-table td{padding:14px 12px;border-bottom:1px solid #e6ebf3;vertical-align:middle}.history-table td:nth-child(2){overflow-wrap:anywhere}.history-table button{white-space:nowrap}.history-name{border:0;background:transparent;padding:0;color:#245ca1;text-align:left;text-decoration:underline;white-space:normal!important}@media(max-width:700px){.history-toolbar{grid-template-columns:1fr}.history-table thead{display:none}.history-table,.history-table tbody,.history-table tr,.history-table td{display:block}.history-table tr{border:1px solid #dce5ef;border-radius:12px;margin:12px 0;padding:10px}.history-table td{border:0;padding:5px 8px}.history-table td:before{content:attr(data-label);font-size:12px;color:#7384a2;margin-right:10px}.history-table td:last-child:before{display:none}}';document.head.append(historyStyle);
- function show(managing){editor.hidden=managing;manager.hidden=!managing;history.replaceState(null,'',managing?'#history':'#editor');editTab.setAttribute('aria-current',managing?'false':'page');manageTab.setAttribute('aria-current',managing?'page':'false');if(managing)renderHistory().catch(error=>managerStatus.textContent='อ่านรายการไม่สำเร็จ: '+error.message)}
+ function setViewHash(hash){const url=new URL(location.href);url.hash=hash;history.replaceState(null,'',url.href)}
+ function show(managing){editor.hidden=managing;manager.hidden=!managing;setViewHash(managing?'#history':'#editor');editTab.setAttribute('aria-current',managing?'false':'page');manageTab.setAttribute('aria-current',managing?'page':'false');if(managing)renderHistory().catch(error=>managerStatus.textContent='อ่านรายการไม่สำเร็จ: '+error.message)}
  search.addEventListener('input',drawHistory);filter.addEventListener('change',drawHistory);
  create.addEventListener('click',()=>{
   if(Object.values(formValues).some(value=>String(value??'').trim())&&!confirm('เริ่มเอกสารใหม่? กรุณาบันทึกรายละเอียดปัจจุบันก่อนหากต้องการเก็บไว้'))return;
   for(const key of [...keys,activeKey,draftKey])localStorage.removeItem(key);
-  history.replaceState(null,'','#editor');location.reload();
+  setViewHash('#editor');location.reload();
  });editTab.addEventListener('click',()=>show(false));manageTab.addEventListener('click',()=>show(true));
  function busy(value){saveButton.disabled=finish.disabled=value;list.querySelectorAll('button').forEach(button=>button.disabled=value)}
  function documentName(){return [formValues.document_date,formValues.procurement_description||formValues.project_name||formValues.requesting_unit].filter(Boolean).join(' · ').slice(0,120)||'เอกสารจัดซื้อจัดจ้าง'}
@@ -107,7 +108,7 @@
   const old=new Map([...keys,activeKey].map(key=>[key,localStorage.getItem(key)]));
   try{for(const key of keys)localStorage.setItem(key,JSON.stringify(data.stores[key]));localStorage.setItem(activeKey,JSON.stringify({id:id||'',name:data.name||''}))}
   catch(error){for(const [key,value]of old){try{value===null?localStorage.removeItem(key):localStorage.setItem(key,value)}catch{}}throw error}
-  history.replaceState(null,'','#editor');location.reload();
+  setViewHash('#editor');location.reload();
  }
   saveButton.addEventListener('click',saveDraft);finish.addEventListener('click',complete);
  const nextView=sessionStorage.getItem('school-procurement-next-view-v1');
