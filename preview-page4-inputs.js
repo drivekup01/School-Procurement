@@ -107,7 +107,12 @@
   function write(cell,value){
    if(!cell)return false;
    const texts=Array.from(cell.getElementsByTagNameNS(ns,'t'));
-   if(!texts.length)return false;
+   if(!texts.length){
+    const paragraph=Array.from(cell.getElementsByTagNameNS(ns,'p'))[0];
+    if(!paragraph)return false;
+    const run=doc.createElementNS(ns,'w:r'),text=doc.createElementNS(ns,'w:t');
+    run.append(text);paragraph.append(run);texts.push(text);
+   }
    texts[0].textContent=String(value??'');
    texts[0].setAttribute('xml:space','preserve');
    texts.slice(1).forEach(n=>n.textContent='');
