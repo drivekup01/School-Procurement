@@ -271,12 +271,15 @@ function renderFormFields(){
    wrap.append(label,input);parent.append(wrap);return;
   }
   if(calendarFieldKeys.has(key)){
-   const field=document.createElement('div');field.style.cssText='position:relative;width:100%';
-   const display=document.createElement('input');display.id='field-'+key;display.type='text';display.readOnly=true;display.placeholder='เลือกวันที่';display.style.cssText='width:100%;padding-right:42px;cursor:pointer';display.value=toThaiDocumentDate(formValues[key]||'');
-   const picker=document.createElement('input');picker.type='date';picker.setAttribute('aria-label','เลือก'+thaiFieldLabel(key));picker.value=toCalendarValue(formValues[key]||'');picker.style.cssText='position:absolute;right:12px;top:50%;width:20px;height:24px;transform:translateY(-50%);opacity:0;pointer-events:none';
-   const button=document.createElement('button');button.type='button';button.textContent='▣';button.setAttribute('aria-label','เปิดปฏิทิน');button.style.cssText='position:absolute;right:7px;top:50%;transform:translateY(-50%);border:0;background:transparent;width:32px;height:32px;padding:0;font-size:20px;color:#234e86;cursor:pointer';
-   const choose=()=>{try{picker.showPicker()}catch{picker.focus();picker.click()}};
-   button.addEventListener('click',choose);display.addEventListener('click',choose);
+   const field=document.createElement('div');field.style.cssText='position:relative;width:100%;min-height:44px';
+   const display=document.createElement('input');display.id='date-display-'+key;display.type='text';display.readOnly=true;display.tabIndex=-1;display.setAttribute('aria-hidden','true');display.placeholder='เลือกวันที่';display.style.cssText='width:100%;min-height:44px;padding-right:42px;pointer-events:none';display.value=toThaiDocumentDate(formValues[key]||'');
+   // The actual date input receives the tap, including on iOS Safari. Do not hide
+   // it with display:none or depend on forwarding a click from another element.
+   const picker=document.createElement('input');picker.id='field-'+key;picker.type='date';picker.setAttribute('aria-label','เลือก'+thaiFieldLabel(key));picker.value=toCalendarValue(formValues[key]||'');picker.style.cssText='position:absolute;inset:0;width:100%;height:100%;min-height:44px;margin:0;opacity:0;pointer-events:auto;z-index:2;font-size:16px;cursor:pointer';
+   const button=document.createElement('span');button.textContent='▣';button.setAttribute('aria-hidden','true');button.style.cssText='position:absolute;right:7px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:32px;height:32px;font-size:20px;color:#234e86;pointer-events:none';
+   picker.addEventListener('click',()=>{try{picker.showPicker?.()}catch{/* Native tap/focus still opens the mobile picker. */}});
+   picker.addEventListener('focus',()=>{activeField=key;highlightField(key);field.style.outline='2px solid #8b61b3';field.style.outlineOffset='2px';field.style.borderRadius='9px'});
+   picker.addEventListener('blur',()=>{field.style.outline=''});
    picker.addEventListener('change',()=>{const value=toThaiDocumentDate(picker.value);display.value=value;formValues[key]=value;try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}activeField=key;renderPDFPage(currentPDFPage)});
    field.append(display,picker,button);wrap.append(label,field);parent.appendChild(wrap);return;
   }
