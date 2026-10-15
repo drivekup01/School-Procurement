@@ -25,6 +25,7 @@
  create.addEventListener('click',()=>{
   if(Object.values(formValues).some(value=>String(value??'').trim())&&!confirm('เริ่มเอกสารใหม่? กรุณาบันทึกรายละเอียดปัจจุบันก่อนหากต้องการเก็บไว้'))return;
   sessionStorage.setItem(yearKey,academic.value);for(const key of [...keys,activeKey,draftKey])localStorage.removeItem(key);
+  if(!cloud&&window.documentPageView==='history'){location.assign('procurement.html#editor');return}
   refreshDraft().then(()=>show(false)).catch(error=>managerStatus.textContent='เปิดไม่สำเร็จ: '+error.message);
  });
  function busy(value){saveButton.disabled=finish.disabled=value;list.querySelectorAll('button').forEach(button=>button.disabled=value)}
@@ -102,6 +103,7 @@
    status.textContent='บันทึกไฟล์งานแล้ว แต่ล้างช่องกรอกไม่สำเร็จ: '+error.message;
    return;
   }
+  if(!cloud){sessionStorage.removeItem(viewKey);show(true);return}
   await refreshDraft();sessionStorage.removeItem(viewKey);show(true);
  }
  async function refreshDraft(){
@@ -117,6 +119,7 @@
   const old=new Map([...keys,activeKey].map(key=>[key,localStorage.getItem(key)]));
   try{for(const key of keys)localStorage.setItem(key,JSON.stringify(data.stores[key]));localStorage.setItem(activeKey,JSON.stringify({id:id||'',name:data.name||'',academicYear:documentYear({data:data,savedAt:data.savedAt})}))}
   catch(error){for(const [key,value]of old){try{value===null?localStorage.removeItem(key):localStorage.setItem(key,value)}catch{}}throw error}
+  if(!cloud&&window.documentPageView==='history'){location.assign('procurement.html#editor');return}
   await refreshDraft();show(false);
  }
   saveButton.addEventListener('click',saveDraft);finish.addEventListener('click',complete);

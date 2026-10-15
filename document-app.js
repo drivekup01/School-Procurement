@@ -109,7 +109,7 @@ function findDepartment(text){
 async function loadProjectActivities(){
  try{
   if(!window.JSZip)throw Error('ไม่สามารถเปิดตัวอ่านไฟล์ Word');
-  const response=await fetch(encodeURI(budgetSourceFile),{cache:'no-store'});
+  const response=await fetch(encodeURI(budgetSourceFile),{cache:'default'});
   if(!response.ok)throw Error('เปิดไฟล์สรุปงบประมาณไม่ได้ ('+response.status+')');
   const zip=await JSZip.loadAsync(await response.arrayBuffer());
   const xml=await zip.file('word/document.xml')?.async('string');
@@ -184,7 +184,7 @@ function addRelatedSelect(parent,key){
  });
  wrap.append(select);parent.append(wrap);
 }
-loadProjectActivities();
+if(window.documentPageView!=='history')loadProjectActivities();
 
 function budgetAmountInThaiWords(value){
  const raw=String(value??'').replace(/,/g,'').trim();
@@ -350,7 +350,7 @@ sharedToggle.addEventListener('click',()=>{
  document.getElementById('sharedChevron').textContent=expanded?'▸':'▾';
 });
 syncBudgetAmountText();
-loadPDF();
+if(window.documentPageView!=='history')loadPDF();
 document.getElementById('exportWord').addEventListener('click',exportFilledWord);
 async function exportFilledWord(){
  syncBudgetAmountText();
@@ -358,7 +358,7 @@ async function exportFilledWord(){
  const button=document.getElementById('exportWord');button.disabled=true;button.textContent='กำลังสร้าง Word...';
  try{
   if(!window.JSZip)throw new Error('ไม่สามารถโหลดเครื่องมือสร้าง Word ได้');
-  const response=await fetch('procurement-template13.docx',{cache:'no-store'});
+  const response=await fetch('procurement-template13.docx',{cache:'default'});
   if(!response.ok)throw new Error('ไม่สามารถอ่าน Word ต้นฉบับ');
   const zip=await JSZip.loadAsync(await response.arrayBuffer());
   const xmlFiles=Object.keys(zip.files).filter(name=>/^word\/(document|header\d*|footer\d*)\.xml$/.test(name));

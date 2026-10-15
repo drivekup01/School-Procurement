@@ -379,7 +379,7 @@ async function loadPDF(){
  try{
   if(!window.JSZip)throw Error('ไม่สามารถโหลด JSZip เพื่ออ่าน Word');
   pdfStage.innerHTML='<p class="renderer-message">กำลังอ่านเอกสาร Word ต้นฉบับ...</p>';
-  const response=await fetch('procurement-template13.docx',{cache:'no-store'});
+  const response=await fetch('procurement-template13.docx',{cache:'default'});
   if(!response.ok)throw Error('ไม่สามารถอ่าน Word ต้นฉบับ ('+response.status+')');
   const zip=await JSZip.loadAsync(await response.arrayBuffer());
   const file=zip.file('word/document.xml');
