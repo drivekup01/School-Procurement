@@ -247,6 +247,16 @@ function renderFormFields(){
   if(key==='project_name'||key==='activity_name'||key==='requesting_unit'){addRelatedSelect(parent,key);return;}
   const wrap=document.createElement('div');wrap.className='input-wrap';
   const label=document.createElement('label');label.textContent=thaiFieldLabel(key);label.htmlFor='field-'+key;
+  if(window.procurementPersonnelFields?.has(key)){
+   const select=document.createElement('select');select.id='field-'+key;select.dataset.personnelField=key;
+   select.add(new Option('เลือก'+thaiFieldLabel(key),''));
+   const names=window.procurementPersonnel.names,current=String(formValues[key]??'');
+   if(current&&!names.includes(current))select.add(new Option(current+' (ชื่อเดิมในเอกสาร)',current));
+   names.forEach(name=>select.add(new Option(name,name)));select.value=current;
+   select.addEventListener('focus',()=>{activeField=key;highlightField(key)});
+   select.addEventListener('change',()=>saveFieldValue(key,select.value));
+   wrap.append(label,select);parent.append(wrap);return;
+  }
   if(currentPDFPage===10&&page10MoneyKeys.has(key)){
    const input=document.createElement('input');input.id='field-'+key;input.type='text';input.inputMode='decimal';
    input.placeholder='1000.00';input.value=formValues[key]??'';
