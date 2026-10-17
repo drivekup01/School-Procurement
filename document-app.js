@@ -368,7 +368,7 @@ async function exportFilledWord(){
    const doc=new DOMParser().parseFromString(xml,'application/xml');
    if(doc.querySelector('parsererror'))throw new Error('ไฟล์เอกสารมี XML ที่อ่านไม่ได้');
    const paragraphs=Array.from(doc.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','p'));
-   let changed=false;
+   let changed=normalizeDeliveryDateBinding(doc);
    for(const paragraph of paragraphs){
     const nodes=Array.from(paragraph.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','t'));
     if(!nodes.length)continue;
