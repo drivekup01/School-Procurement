@@ -1,3 +1,22 @@
+/* Correct the legacy delivery-date binding without changing Word run formatting. */
+function normalizeDeliveryDateBinding(doc){
+ const ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main';let changed=false;
+ for(const paragraph of Array.from(doc.getElementsByTagNameNS(ns,'p'))){
+  const nodes=Array.from(paragraph.getElementsByTagNameNS(ns,'t'));
+  const full=nodes.map(n=>n.textContent||'').join('');
+  const matches=Array.from(full.matchAll(/ลงวันที่\s*(\{\{\s*delivery_document_number\s*\}\})/g)).reverse();
+  for(const match of matches){
+   const start=match.index+match[0].length-match[1].length,end=start+match[1].length;
+   let offset=0,first=null,last=null,begin=0,finish=0;
+   for(const node of nodes){const next=offset+(node.textContent||'').length;if(!first&&start>=offset&&start<next){first=node;begin=start-offset;}if(end>offset&&end<=next){last=node;finish=end-offset;break;}offset=next;}
+   if(!first||!last)continue;
+   if(first===last)first.textContent=first.textContent.slice(0,begin)+'{{delivery_document_date}}'+first.textContent.slice(finish);
+   else{const suffix=last.textContent.slice(finish);first.textContent=first.textContent.slice(0,begin)+'{{delivery_document_date}}';let inside=false;for(const node of nodes){if(node===first){inside=true;continue;}if(node===last){node.textContent=suffix;break;}if(inside)node.textContent='';}}
+   changed=true;
+  }
+ }
+ return changed;
+}
 /* Word HTML preview controller. Every displayed page comes from the DOCX source. */
 const prevPage=document.getElementById('prevPage'),nextPage=document.getElementById('nextPage'),pageCounter=document.getElementById('pageCounter'),pdfStage=document.getElementById('pdfRender');
 let pdfZoom=1,zoomTimer=null,pdfRenderSerial=0,pdfDocument=null,parameterIndex=new Map(),detectedPages=new Set(),currentPDFPage=1,activeField=null,lastFormPage=0,activePageRender=0;
@@ -386,6 +405,7 @@ async function loadPDF(){
   if(!file)throw Error('ไม่พบ word/document.xml');
   const doc=new DOMParser().parseFromString(await file.async('string'),'application/xml');
   if(doc.querySelector('parsererror'))throw Error('อ่าน XML ของ Word ไม่สำเร็จ');
+  normalizeDeliveryDateBinding(doc);
   const body=doc.getElementsByTagNameNS(WORD_NS,'body')[0];
   sourcePage4Table=Array.from(body.getElementsByTagNameNS(WORD_NS,'tbl')).find(t=>Array.from(t.getElementsByTagNameNS(WORD_NS,'t')).some(n=>(n.textContent||'').includes('รายละเอียดของวัสดุที่จะซื้อ/จ้าง')))||null;
   const groups=wordBlocks(body);
