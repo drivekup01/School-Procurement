@@ -107,42 +107,7 @@ function findDepartment(text){
  return '';
 }
 async function loadProjectActivities(){
- try{
-  if(!window.JSZip)throw Error('ไม่สามารถเปิดตัวอ่านไฟล์ Word');
-  const response=await fetch(encodeURI(budgetSourceFile),{cache:'default'});
-  if(!response.ok)throw Error('เปิดไฟล์สรุปงบประมาณไม่ได้ ('+response.status+')');
-  const zip=await JSZip.loadAsync(await response.arrayBuffer());
-  const xml=await zip.file('word/document.xml')?.async('string');
-  if(!xml)throw Error('ไม่พบตารางในไฟล์ Word');
-  const doc=new DOMParser().parseFromString(xml,'application/xml');
-  if(doc.getElementsByTagName('parsererror').length)throw Error('โครงสร้างไฟล์ Word ไม่สมบูรณ์');
-  const ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-  const projects=new Map();
-  let department='',project='';
-  for(const table of Array.from(doc.getElementsByTagNameNS(ns,'tbl'))){
-   for(const row of Array.from(table.children).filter(n=>n.localName==='tr')){
-    const cells=Array.from(row.children).filter(n=>n.localName==='tc').map(docxCellText);
-    if(!cells.length)continue;
-    if(cells.length===1){
-      const found=findDepartment(cells[0]);
-      if(found){department=found;project='';}continue;
-    }
-    const number=cells[0].trim(),name=(cells[1]||'').trim();
-    if(/^(?:[1-9]|[1-3]\d|40)$/.test(number)&&name.startsWith('โครงการ')&&department){
-      project=name;
-      if(!projects.has(project))projects.set(project,{department,activities:[]});
-    }else if(!number&&/^[-–]\s*/.test(name)&&project){
-      const activity=name.replace(/^[-–]\s*/,'').trim();
-      if(activity&&!projects.get(project).activities.includes(activity))projects.get(project).activities.push(activity);
-    }else if(/^รวม/.test(number)){project='';}
-   }
-  }
-  if(projects.size!==40)throw Error('อ่านโครงการได้ '+projects.size+' จาก 40 รายการ จึงยังไม่เปิด Dropdown ที่อาจมีข้อมูลไม่ครบ');
-  const counts=departments.slice(0,4).map(d=>[...projects.values()].filter(x=>x.department===d).length);
-  if(counts.join(',')!=='17,2,4,17')throw Error('จำนวนโครงการแต่ละฝ่ายไม่ตรงกับต้นฉบับ: '+counts.join('/'));
-  projectActivityData=projects;projectActivityError='';
- }catch(error){projectActivityData=null;projectActivityError=error.message;console.error('Budget reference:',error);}
- renderFormFields();
+ try{const client=await window.budgetFirebaseReady,year=Number(formValues.budget_year)||2570,data=await client.readYear(year);if(!data.projects?.length)throw Error('ไม่พบโครงการของปี '+year);projectActivityData=new Map(data.projects.map(p=>[p.name,{department:p.department,activities:(p.activities||[]).map(a=>a.name)}]));projectActivityError='';}catch(error){projectActivityData=null;projectActivityError=error.message;console.error('Budget reference:',error)}renderFormFields();
 }
 function saveFieldValue(key,value){
  formValues[key]=value;
