@@ -1,3 +1,15 @@
-.shared-item{padding:14px;border:1px solid #e7def1;border-radius:12px;margin-bottom:14px}.shared-item textarea{width:100%;min-height:64px;padding:10px;border:1px solid #dce5f3;border-radius:9px;font:inherit;resize:vertical}.shared-item button{margin-top:12px}.shared-measure{position:absolute;left:-20000px;top:0;visibility:hidden;width:210mm}.shared-paginated .shared-flow{display:block!important;height:100%;overflow:visible}.shared-flow>.word-paragraph{flex:none}.shared-page-stack{display:flex;flex-direction:column;gap:22px;align-items:flex-start}.shared-paginated table tr{height:auto!important}.shared-paginated table td{height:auto!important;overflow:visible!important}.shared-flow table{margin:0!important}.shared-flow table .word-paragraph{min-height:0!important}@media print{.shared-page-stack{gap:0}.shared-page-stack .word-page-shell{break-after:page}}
-
-.shared-sheet-label{color:#654285;font:600 13px system-ui,sans-serif;margin-bottom:-14px}@media print{.shared-sheet-label{display:none}}
+/* Structural UI layout; visual rules: procurement-ui.css. */
+.shared-item{padding:14px;margin-bottom:14px}
+.shared-item textarea{width:100%;min-height:64px;padding:10px;resize:vertical}
+.shared-item button{margin-top:12px}
+.shared-measure{position:absolute;left:-20000px;top:0;visibility:hidden;width:210mm}
+.shared-paginated .shared-flow{display:block!important;height:100%;overflow:visible}
+.shared-flow>.word-paragraph{flex:none}
+.shared-page-stack{display:flex;flex-direction:column;gap:22px;align-items:flex-start}
+.shared-paginated table tr{height:auto!important}
+.shared-paginated table td{height:auto!important;overflow:visible!important}
+.shared-flow table{margin:0!important}
+.shared-flow table .word-paragraph{min-height:0!important}
+@media print{.shared-page-stack{gap:0}.shared-page-stack .word-page-shell{break-after:page}}
+.shared-sheet-label{margin-bottom:-14px}
+@media print{.shared-sheet-label{display:none}}

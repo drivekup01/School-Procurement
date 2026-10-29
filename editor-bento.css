@@ -1,46 +1,34 @@
-/* Bento application chrome only. No rules target Word pages or their contents. */
-body[data-document-view="editor"]{background:radial-gradient(ellipse at 50% 0,#eee4fa 0,transparent 60%),#faf8fd;color:#38244d}
-body[data-document-view="editor"] header.school-top{height:auto;min-height:100px;background:transparent;box-shadow:none;border-bottom:1px solid #e8ddf1;padding:24px 32px;color:#38244d}
-body[data-document-view="editor"] .brand h1{color:#38244d;font-size:22px;line-height:1.5}
-body[data-document-view="editor"] .brand small,body[data-document-view="editor"] .header-date{color:#9a85ad}
+/* Structural UI layout; visual rules: procurement-ui.css. */
+body[data-document-view="editor"] header.school-top{height:auto;min-height:100px;padding:24px 32px}
+body[data-document-view="editor"] .brand h1{line-height:1.5}
 body[data-document-view="editor"] #systemNav{flex-wrap:wrap;align-items:center;gap:10px!important;padding:20px 32px 0!important}
-body[data-document-view="editor"] #systemNav a{color:#7c51a1!important;font-size:13px;border-radius:12px}
-body[data-document-view="editor"] #systemNav a:hover{background:#efe5f8}
-body[data-document-view="editor"] #systemNav button{background:white;color:#7c51a1;border:1px solid #e5d8ef;border-radius:13px;padding:12px 18px}
-body[data-document-view="editor"] #systemNav button[aria-current="page"]{background:linear-gradient(125deg,#663394,#8050b3);color:white;border-color:transparent}
+body[data-document-view="editor"] #systemNav button{padding:12px 18px}
 body[data-document-view="editor"] main{padding:24px 32px 36px;gap:24px}
-body[data-document-view="editor"] main>section{border:1px solid #eadff3;box-shadow:0 14px 38px #6a408a0a;border-radius:26px}
 body[data-document-view="editor"] .fields{padding:0 20px 22px}
-body[data-document-view="editor"] .fields>.section-head{background:linear-gradient(125deg,#663394,#8050b3);padding:22px 20px;border-radius:25px 25px 0 0}
-body[data-document-view="editor"] .fields .section-icon{background:#ffffff20;border:1px solid #ffffff25;border-radius:14px}
-body[data-document-view="editor"] .fields h2,body[data-document-view="editor"] .fields h3,body[data-document-view="editor"] .fields label{color:#64417e}
-body[data-document-view="editor"] .fields .group{background:linear-gradient(130deg,#f8f3fc,#fdfbff);border:1px solid #eadff3;border-radius:18px;padding:18px;margin-top:16px}
-body[data-document-view="editor"] .fields :is(input,select){background:white;border-color:#e2d5ef;border-radius:12px;color:#49325f;padding:12px;font:inherit;font-size:14px}
-body[data-document-view="editor"] .fields :is(input,select):focus{border-color:#b88be1;box-shadow:0 0 0 3px #b88be125}
-body[data-document-view="editor"] .fields .muted{color:#9a85ad}
-body[data-document-view="editor"] .fields button{background:#f4ecfa;color:#7c51a1;border-color:#e5d8ef;border-radius:11px}
-body[data-document-view="editor"] .fields .shared-toggle{background:none;border:0;color:#76459e}
-body[data-document-view="editor"] .fields .page-navigation{background:#f8f3fc;border-color:#eadff3;border-radius:14px;padding:7px}
-body[data-document-view="editor"] .fields .page-navigation span{color:#704595}
-body[data-document-view="editor"] #saveArea{background:white}
-body[data-document-view="editor"] #saveDocumentData{background:#f2e8fa;color:#754c98;padding:12px 18px}
-body[data-document-view="editor"] #finishDocument{background:linear-gradient(125deg,#663394,#8050b3);color:white;border-color:transparent;padding:12px 18px}
-body[data-document-view="editor"] .preview>.toolbar{background:#fcfaff;border-bottom:1px solid #eadff3;padding:18px 22px;flex-wrap:wrap;border-radius:25px 25px 0 0}
-body[data-document-view="editor"] .preview>.toolbar strong{color:#64417e}
-body[data-document-view="editor"] #exportWord{background:linear-gradient(125deg,#663394,#8050b3);border:0;border-radius:12px;color:white}
-body[data-document-view="editor"] .preview>.document-frame{background:#efeaf5}
+body[data-document-view="editor"] .fields>.section-head{padding:22px 20px}
+body[data-document-view="editor"] .fields .group{padding:18px;margin-top:16px}
+body[data-document-view="editor"] .fields :is(input,select){padding:12px}
+body[data-document-view="editor"] .fields .page-navigation{padding:7px}
+body[data-document-view="editor"] #saveDocumentData{padding:12px 18px}
+body[data-document-view="editor"] #finishDocument{padding:12px 18px}
+body[data-document-view="editor"] .preview>.toolbar{padding:18px 22px;flex-wrap:wrap}
 body[data-document-view="editor"] #systemNav button:focus-visible,body[data-document-view="editor"] .fields button:focus-visible,body[data-document-view="editor"] #exportWord:focus-visible{outline:3px solid #b88be1;outline-offset:3px}
-@media(max-width:1000px){body[data-document-view="editor"] main{padding:20px;gap:20px}body[data-document-view="editor"] .fields{max-height:none}}
-@media(max-width:600px){body[data-document-view="editor"] header.school-top{padding:20px 18px;min-height:96px}body[data-document-view="editor"] .brand h1{font-size:16px}body[data-document-view="editor"] #systemNav{padding:16px 18px 0!important;gap:6px!important}body[data-document-view="editor"] #systemNav a{font-size:12px;padding:9px!important}body[data-document-view="editor"] main{padding:18px 12px 28px}body[data-document-view="editor"] .fields .group{padding:14px}body[data-document-view="editor"] .preview>.toolbar{padding:16px}body[data-document-view="editor"] .preview>.toolbar strong{font-size:13px}}
-/* Match the Preview pane while keeping the form independently scrollable. */
+@media(max-width:1000px){body[data-document-view="editor"] main{padding:20px;gap:20px}
+body[data-document-view="editor"] .fields{max-height:none}}
+@media(max-width:600px){body[data-document-view="editor"] header.school-top{padding:20px 18px;min-height:96px}
+body[data-document-view="editor"] #systemNav{padding:16px 18px 0!important;gap:6px!important}
+body[data-document-view="editor"] #systemNav a{padding:9px!important}
+body[data-document-view="editor"] main{padding:18px 12px 28px}
+body[data-document-view="editor"] .fields .group{padding:14px}
+body[data-document-view="editor"] .preview>.toolbar{padding:16px}}
 @media(min-width:1101px){body[data-document-view="editor"] .fields{height:0;min-height:100%;max-height:none;align-self:stretch;overflow:auto}}
 body[data-document-view="editor"] .fields{padding:0 14px 14px}
 body[data-document-view="editor"] .fields>.section-head{margin:0 -14px 12px;padding:16px 14px}
-body[data-document-view="editor"] .fields .group{padding:10px;margin-top:10px;border-radius:12px}
+body[data-document-view="editor"] .fields .group{padding:10px;margin-top:10px}
 body[data-document-view="editor"] #sharedFields{gap:10px}
-body[data-document-view="editor"] #sharedFields .shared-data-group{padding:9px 10px 8px;border-radius:10px;box-shadow:none;border-color:#e5d8ef;background:#fcfaff}
-body[data-document-view="editor"] #sharedFields .shared-data-group>h3{font-size:13px;padding:6px 8px;margin-bottom:7px;background:#f0e6f8;color:#704595;border-color:#aa7acb}
+body[data-document-view="editor"] #sharedFields .shared-data-group{padding:9px 10px 8px}
+body[data-document-view="editor"] #sharedFields .shared-data-group>h3{padding:6px 8px;margin-bottom:7px}
 body[data-document-view="editor"] #sharedFields .shared-data-group .input-wrap,body[data-document-view="editor"] .fields .input-wrap{margin-bottom:8px}
-body[data-document-view="editor"] #sharedFields .shared-data-group .input-wrap>label,body[data-document-view="editor"] .fields label{margin:6px 0 4px;font-size:12px}
-body[data-document-view="editor"] .fields :is(input,select){padding:9px 10px;border-radius:9px;font-size:13px}
+body[data-document-view="editor"] #sharedFields .shared-data-group .input-wrap>label,body[data-document-view="editor"] .fields label{margin:6px 0 4px}
+body[data-document-view="editor"] .fields :is(input,select){padding:9px 10px}
 @media(max-width:1100px){body[data-document-view="editor"] .fields{height:auto;min-height:0;max-height:none}}

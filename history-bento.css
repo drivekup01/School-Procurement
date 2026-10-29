@@ -1,32 +1,42 @@
-/* Isolated history theme; document editor and preview retain their own styles. */
-body[data-document-view="history"]:has(#documentManager:not([hidden])){background:radial-gradient(ellipse at 50% 0,#eee4fa 0,transparent 65%),#faf8fd;color:#38244d;min-height:100vh}
+/* Structural UI layout; visual rules: procurement-ui.css. */
+body[data-document-view="history"]:has(#documentManager:not([hidden])){min-height:100vh}
 body[data-document-view="history"]:has(#documentManager:not([hidden])) .campus-banner,body[data-document-view="history"]:has(#documentManager:not([hidden])) .workspace-heading{display:none}
-body[data-document-view="history"]:has(#documentManager:not([hidden])) header.school-top{height:auto;min-height:96px;max-width:1220px;margin:auto;padding:25px 32px;background:transparent;color:#38244d;box-shadow:none;border-bottom:1px solid #e8ddf1}
-body[data-document-view="history"]:has(#documentManager:not([hidden])) .brand h1{color:#38244d;font-size:20px;line-height:1.6}
-body[data-document-view="history"]:has(#documentManager:not([hidden])) .brand small,body[data-document-view="history"]:has(#documentManager:not([hidden])) .header-date{color:#9a85ad}
+body[data-document-view="history"]:has(#documentManager:not([hidden])) header.school-top{height:auto;min-height:96px;max-width:1220px;margin:auto;padding:25px 32px}
+body[data-document-view="history"]:has(#documentManager:not([hidden])) .brand h1{line-height:1.6}
 body[data-document-view="history"]:has(#documentManager:not([hidden])) #systemNav{max-width:1220px;margin:18px auto 0;padding:0 32px!important;flex-wrap:wrap;align-items:center;gap:10px!important}
-body[data-document-view="history"]:has(#documentManager:not([hidden])) #systemNav a{color:#7c51a1!important;font-size:13px;padding:12px!important;border-radius:12px}
-body[data-document-view="history"]:has(#documentManager:not([hidden])) #systemNav a:hover{background:#efe5f8}
-body[data-document-view="history"]:has(#documentManager:not([hidden])) #systemNav button{border:1px solid #e5d8ef;border-radius:13px;color:#7c51a1;background:#fff;padding:12px 18px}
-body[data-document-view="history"]:has(#documentManager:not([hidden])) #systemNav button[aria-current="page"]{background:linear-gradient(125deg,#663394,#8050b3);color:white;border-color:transparent}
-body[data-document-view="history"] #documentManager{max-width:1156px;margin:26px auto 48px!important;padding:32px!important;border-radius:28px;border:1px solid #eadff3;box-shadow:0 14px 38px #6a408a0a;background:#fff}
-body[data-document-view="history"] #documentManager h3{font-size:28px;line-height:1.5;margin:0 0 10px;color:#38244d}
-body[data-document-view="history"] #documentManager h3:after{content:'เอกสารจัดซื้อ / จัดจ้างที่บันทึกแล้ว พร้อมเปิดกลับมาทำงานต่อ';display:block;font-size:13px;line-height:1.8;color:#9a85ad;font-weight:normal;margin-top:8px}
-body[data-document-view="history"] .history-toolbar{background:linear-gradient(130deg,#f1e9fa,#faf7fe);padding:22px;border:1px solid #eadff3;border-radius:22px;gap:14px;margin:24px 0 18px;align-items:center}
-body[data-document-view="history"] .history-toolbar input,body[data-document-view="history"] .history-toolbar select{border:1px solid #e2d5ef;border-radius:13px;padding:14px;color:#49325f;background:white;min-width:0}
-body[data-document-view="history"] .history-toolbar button{background:linear-gradient(125deg,#663394,#8050b3);border:0;border-radius:13px;padding:14px 18px;color:white;font:inherit;font-size:13px;white-space:nowrap}
-body[data-document-view="history"] #documentManager .muted{color:#9a85ad;font-size:12px}
-body[data-document-view="history"] .history-table{border-collapse:separate;border-spacing:0;border:1px solid #eadff3;border-radius:18px;overflow:hidden;font-size:13px}
-body[data-document-view="history"] .history-table th{background:#f5effa;color:#7b5a98;font-size:12px;font-weight:600;padding:16px}
-body[data-document-view="history"] .history-table td{padding:20px 16px;border-color:#eee6f5;line-height:1.8;color:#49325f}
-body[data-document-view="history"] .history-table tr:last-child td{border-bottom:0}
-body[data-document-view="history"] .history-table tbody tr:hover{background:#fcfaff}
-body[data-document-view="history"] .history-name{color:#76459e;text-decoration:none;font-weight:600;font:inherit;text-align:left}
-body[data-document-view="history"] .history-table small{color:#a38db5;margin-top:5px}
-body[data-document-view="history"] .document-manager-actions button{background:#f5eefb;border:1px solid #e5d8ef;color:#7b4ca1;border-radius:11px;font-size:12px;padding:10px 14px}
+body[data-document-view="history"]:has(#documentManager:not([hidden])) #systemNav a{padding:12px!important}
+body[data-document-view="history"]:has(#documentManager:not([hidden])) #systemNav button{padding:12px 18px}
+body[data-document-view="history"] #documentManager{max-width:1156px;margin:26px auto 48px!important;padding:32px!important}
+body[data-document-view="history"] #documentManager h3{line-height:1.5;margin:0 0 10px}
+body[data-document-view="history"] #documentManager h3:after{content:'เอกสารจัดซื้อ / จัดจ้างที่บันทึกแล้ว พร้อมเปิดกลับมาทำงานต่อ';display:block;line-height:1.8;margin-top:8px}
+body[data-document-view="history"] .history-toolbar{padding:22px;gap:14px;margin:24px 0 18px;align-items:center}
+body[data-document-view="history"] .history-toolbar input,body[data-document-view="history"] .history-toolbar select{padding:14px;min-width:0}
+body[data-document-view="history"] .history-toolbar button{padding:14px 18px;white-space:nowrap}
+body[data-document-view="history"] .history-table{overflow:hidden}
+body[data-document-view="history"] .history-table th{padding:16px}
+body[data-document-view="history"] .history-table td{padding:20px 16px;line-height:1.8}
+body[data-document-view="history"] .history-name{text-align:left}
+body[data-document-view="history"] .history-table small{margin-top:5px}
+body[data-document-view="history"] .document-manager-actions button{padding:10px 14px}
 body[data-document-view="history"] #documentManager button:hover{filter:brightness(.97)}
 body[data-document-view="history"] #documentManager :is(button,input,select):focus-visible{outline:3px solid #b88be1;outline-offset:3px}
 @media(max-width:1250px){body[data-document-view="history"] #documentManager{margin:26px 32px 40px!important}}
-@media(max-width:700px){body[data-document-view="history"]:has(#documentManager:not([hidden])) header.school-top{padding:20px 18px;gap:12px;flex-wrap:wrap}body[data-document-view="history"]:has(#documentManager:not([hidden])) .brand h1{font-size:16px}body[data-document-view="history"]:has(#documentManager:not([hidden])) #systemNav{padding:0 18px!important;gap:6px!important}body[data-document-view="history"]:has(#documentManager:not([hidden])) #systemNav a{font-size:12px;padding:9px!important}body[data-document-view="history"] #documentManager{margin:22px 18px 32px!important;padding:22px!important;border-radius:24px}body[data-document-view="history"] #documentManager h3{font-size:24px}body[data-document-view="history"] .history-toolbar{padding:16px;grid-template-columns:minmax(0,1fr);border-radius:18px}body[data-document-view="history"] .history-table{border:0;overflow:visible}body[data-document-view="history"] .history-table tr{background:#faf7fe;border:1px solid #eadff3;border-radius:18px;padding:14px;margin:14px 0}body[data-document-view="history"] .history-table td{padding:7px 4px;overflow-wrap:anywhere}body[data-document-view="history"] .history-table td:before{color:#a38db5}body[data-document-view="history"] .document-manager-actions{margin-left:0;flex-wrap:wrap}body[data-document-view="history"] .history-table button{white-space:normal}}
-body[data-document-view="history"] .document-manager-actions .document-delete{color:#ae4662;background:#fff0f4;border-color:#f2d5df}body[data-document-view="history"] .document-undo-delete{padding:9px 14px;margin:8px 0 16px;border:1px solid #e5d8ef;border-radius:11px;background:#f5eefb;color:#7b4ca1;font:12px Tahoma,system-ui,sans-serif;cursor:pointer}
-body[data-document-view="history"] #documentManager h3:after{content:none}body[data-document-view="history"] .history-header{display:flex;align-items:center;justify-content:space-between;gap:22px}body[data-document-view="history"] .history-year-description{margin:8px 0 0;color:#9a85ad;font-size:13px;line-height:1.8}body[data-document-view="history"] .history-header .history-create{padding:16px 23px;font:600 14px Tahoma,system-ui,sans-serif;color:white;background:linear-gradient(125deg,#663394,#8050b3);border:0;border-radius:15px;white-space:nowrap;cursor:pointer}body[data-document-view="history"] .history-toolbar{grid-template-columns:minmax(150px,210px) minmax(180px,1fr) minmax(160px,260px)}@media(max-width:900px){body[data-document-view="history"] .history-header{align-items:flex-start;flex-wrap:wrap}body[data-document-view="history"] .history-toolbar{grid-template-columns:1fr}body[data-document-view="history"] .history-header .history-create{padding:14px 20px;font-size:13px}}
+@media(max-width:700px){body[data-document-view="history"]:has(#documentManager:not([hidden])) header.school-top{padding:20px 18px;gap:12px;flex-wrap:wrap}
+body[data-document-view="history"]:has(#documentManager:not([hidden])) #systemNav{padding:0 18px!important;gap:6px!important}
+body[data-document-view="history"]:has(#documentManager:not([hidden])) #systemNav a{padding:9px!important}
+body[data-document-view="history"] #documentManager{margin:22px 18px 32px!important;padding:22px!important}
+body[data-document-view="history"] .history-toolbar{padding:16px;grid-template-columns:minmax(0,1fr)}
+body[data-document-view="history"] .history-table{overflow:visible}
+body[data-document-view="history"] .history-table tr{padding:14px;margin:14px 0}
+body[data-document-view="history"] .history-table td{padding:7px 4px;overflow-wrap:anywhere}
+body[data-document-view="history"] .document-manager-actions{margin-left:0;flex-wrap:wrap}
+body[data-document-view="history"] .history-table button{white-space:normal}}
+body[data-document-view="history"] .document-undo-delete{padding:9px 14px;margin:8px 0 16px;cursor:pointer}
+body[data-document-view="history"] #documentManager h3:after{content:none}
+body[data-document-view="history"] .history-header{display:flex;align-items:center;justify-content:space-between;gap:22px}
+body[data-document-view="history"] .history-year-description{margin:8px 0 0;line-height:1.8}
+body[data-document-view="history"] .history-header .history-create{padding:16px 23px;white-space:nowrap;cursor:pointer}
+body[data-document-view="history"] .history-toolbar{grid-template-columns:minmax(150px,210px) minmax(180px,1fr) minmax(160px,260px)}
+@media(max-width:900px){body[data-document-view="history"] .history-header{align-items:flex-start;flex-wrap:wrap}
+body[data-document-view="history"] .history-toolbar{grid-template-columns:1fr}
+body[data-document-view="history"] .history-header .history-create{padding:14px 20px}}
