@@ -1,0 +1,34 @@
+{
+  "version": "20261030-unified1",
+  "shared": "https://drivekup01.github.io/School-Portal/shared/school-ui.css?v=20261030-unified1",
+  "bundles": {
+    "styles/procurement-history.css": [
+      "document-history.css",
+      "history-bento.css",
+      "School-Budget/budget-sidebar.css",
+      "document-loading.css",
+      "School-Budget/school-auth.css",
+      "procurement-ui.css"
+    ],
+    "styles/procurement-editor.css": [
+      "document.css",
+      "preview.css",
+      "preview-page1.css",
+      "preview-page2.css",
+      "preview-page3.css",
+      "preview-page4-table.css",
+      "preview-page4-content.css",
+      "preview-page5.css",
+      "preview-page6-table.css",
+      "preview-page10-table.css",
+      "preview-page11.css",
+      "document-history.css",
+      "editor-bento.css",
+      "School-Budget/budget-sidebar.css",
+      "document-loading.css",
+      "School-Budget/school-auth.css",
+      "shared-procurement-items.css",
+      "procurement-ui.css"
+    ]
+  }
+}
