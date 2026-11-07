@@ -21,11 +21,22 @@
  const create=document.createElement('button');create.type='button';create.textContent='＋ สร้างเอกสารใหม่';
  const academic=document.createElement('select');academic.id='historyAcademicYear';academic.setAttribute('aria-label','เลือกปีการศึกษา');const yearKey='school-procurement-academic-year-v1';const currentYear=Number(new Intl.DateTimeFormat('en',{timeZone:'Asia/Bangkok',year:'numeric'}).format(new Date()))+543;academic.add(new Option('ปีการศึกษา '+currentYear,currentYear));academic.value=sessionStorage.getItem(yearKey)||String(currentYear);const description=document.createElement('p');description.className='history-year-description';const top=document.createElement('div');top.className='history-header';const titleBlock=document.createElement('div');heading.replaceWith(top);titleBlock.append(heading,description);top.append(titleBlock,create);create.classList.add('history-create');create.hidden=!canCreate;toolbar.append(academic,search,filter);managerStatus.before(toolbar);let savedFiles=[],loadSerial=0;academic.addEventListener('change',()=>{sessionStorage.setItem(yearKey,academic.value);drawHistory()});
 
+ // Capture the clean state before the first real user edit, after automatic rendering.
+ let editBaseline=null;
+ function editFingerprint(){
+  const derived=new Set(['budget_amount_text','agreed_price_text','pt','pn','pnt']);
+  function clean(value){if(value===null||value===undefined||value===''||value===false)return undefined;if(Array.isArray(value)){const rows=value.map(clean).filter(v=>v!==undefined);return rows.length?rows:undefined;}if(typeof value==='object'){const out={};for(const key of Object.keys(value).sort()){const v=clean(value[key]);if(v!==undefined)out[key]=v;}return Object.keys(out).length?out:undefined;}return value;}
+  const stores=snapshot().stores;stores[keys[0]]=Object.fromEntries(Object.entries(stores[keys[0]]).filter(([key])=>!derived.has(key)));return JSON.stringify(clean(stores)||{});
+ }
+ function hasUnsavedChanges(){return canEdit&&window.documentPageView!=='history'&&editBaseline!==null&&editFingerprint()!==editBaseline;}
+ function beginEdit(event){if(!canEdit||window.documentPageView==='history'||!event.isTrusted)return;if(editBaseline===null)editBaseline=editFingerprint();}
+ editor.addEventListener('input',beginEdit,true);editor.addEventListener('change',beginEdit,true);
+ editor.addEventListener('click',event=>{if(event.target.closest('#shared-items button'))beginEdit(event);},true);
  function setViewHash(hash){const url=new URL(location.href);url.hash=hash;history.replaceState(null,'',url.href)}
  function show(managing){const target=managing?'history.html':'procurement.html';if(!location.pathname.endsWith('/'+target)){location.assign(target);return;}editor.hidden=managing;manager.hidden=!managing;setViewHash(managing?'#history':'#editor');if(managing)renderHistory().catch(error=>managerStatus.textContent='อ่านรายการไม่สำเร็จ: '+error.message)}
  search.addEventListener('input',drawHistory);filter.addEventListener('change',drawHistory);
  create.addEventListener('click',async()=>{
-  if(Object.values(formValues).some(value=>String(value??'').trim())&&!confirm('เริ่มเอกสารใหม่? กรุณาบันทึกรายละเอียดปัจจุบันก่อนหากต้องการเก็บไว้'))return;
+  if(hasUnsavedChanges()&&!confirm('เริ่มเอกสารใหม่? กรุณาบันทึกรายละเอียดปัจจุบันก่อนหากต้องการเก็บไว้'))return;
   try{await rpc('clearProcurementDraft')}catch(e){managerStatus.textContent=e.message;return;}sessionStorage.setItem(yearKey,academic.value);for(const key of [...keys,activeKey,draftKey])localStorage.removeItem(key);
   if(window.documentPageView==='history'){location.assign('procurement.html#editor');return}
   rpc('clearProcurementDraft').then(()=>refreshDraft()).then(()=>show(false)).catch(error=>managerStatus.textContent='เปิดไม่สำเร็จ: '+error.message);
@@ -82,7 +93,7 @@
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download=data.name.replace(/[\\/]/g,' ')+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
- async function saveDraft(){if(!canEdit)return;busy(true);try{const data=snapshot();const value={page:currentPDFPage,data,active};await rpc('saveProcurementDraft',value);localStorage.setItem(draftKey,JSON.stringify(value));localStorage.setItem(keys[0],JSON.stringify(data.stores[keys[0]]));status.textContent='บันทึกรายละเอียดหน้า '+currentPDFPage+' แล้ว'}catch(error){status.textContent='บันทึกไม่สำเร็จ: '+error.message}finally{busy(false)}}
+ async function saveDraft(){if(!canEdit)return;busy(true);try{const data=snapshot();const value={page:currentPDFPage,data,active};await rpc('saveProcurementDraft',value);localStorage.setItem(draftKey,JSON.stringify(value));localStorage.setItem(keys[0],JSON.stringify(data.stores[keys[0]]));editBaseline=editFingerprint();status.textContent='บันทึกรายละเอียดหน้า '+currentPDFPage+' แล้ว'}catch(error){status.textContent='บันทึกไม่สำเร็จ: '+error.message}finally{busy(false)}}
  async function complete(){
   if(!canEdit)return;busy(true);status.textContent='กำลังบันทึกไฟล์งาน...';
   try{
@@ -93,6 +104,7 @@
   }catch(error){status.textContent='บันทึกไม่สำเร็จ: '+error.message}finally{busy(false)}
  }
  async function clearCompletedDraft(){
+  editBaseline=null;
   const viewKey='school-procurement-next-view-v1';
   const draftKeys=[...keys,activeKey,draftKey];
   const previous=new Map(draftKeys.map(key=>[key,localStorage.getItem(key)]));
@@ -113,11 +125,11 @@
   Object.keys(formValues).forEach(key=>delete formValues[key]);Object.assign(formValues,values);syncPage10Amounts();
   active=JSON.parse(localStorage.getItem(activeKey)||'{}');
   for(const page of [3,4,6,11])window['resetPage'+page+'Draft']?.();
-  currentPDFPage=1;lastFormPage=0;activeField=null;await loadPDF();
+  currentPDFPage=1;lastFormPage=0;activeField=null;await loadPDF();editBaseline=null;
  }
  async function restore(data,id,editable=true){
   validate(data);
-  if(canEdit&&!confirm('เปิดเอกสารนี้แทนข้อมูลที่กำลังกรอกอยู่? กรุณาบันทึกข้อมูลปัจจุบันก่อนหากต้องการเก็บไว้'))return;
+  if(hasUnsavedChanges()&&!confirm('เปิดเอกสารนี้แทนข้อมูลที่กำลังกรอกอยู่? กรุณาบันทึกข้อมูลปัจจุบันก่อนหากต้องการเก็บไว้'))return;
   const old=new Map([...keys,activeKey].map(key=>[key,localStorage.getItem(key)]));
   try{for(const key of keys)localStorage.setItem(key,JSON.stringify(data.stores[key]));localStorage.setItem(activeKey,JSON.stringify({id:id||'',name:data.name||'',savedAt:data.savedAt,academicYear:documentYear({data:data,savedAt:data.savedAt}),editable}))}
   catch(error){for(const [key,value]of old){try{value===null?localStorage.removeItem(key):localStorage.setItem(key,value)}catch{}}throw error}
