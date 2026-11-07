@@ -6,7 +6,7 @@
  const activeSources=window.documentPageView==='history'?sources.filter((src,i)=>i===0||src.startsWith('preview.js?')||src.startsWith('document-app.js?')||src.startsWith('document-storage.js?')):sources;
  const loadScript=src=>new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=src;script.onload=resolve;script.onerror=()=>reject(Error('โหลดส่วนประกอบไม่สำเร็จ'));document.body.append(script)});
  for(const src of activeSources){const preload=document.createElement('link');preload.rel='preload';preload.as='script';preload.href=src;document.head.append(preload)}
- const layoutRequest=fetch('document-layout.html?v=20261023-firebase1').then(r=>{if(!r.ok)throw Error('เปิดแบบฟอร์มไม่ได้');return r.text()});layoutRequest.catch(()=>{});
+ const layoutRequest=fetch('document-layout.html?v=20261107-heading1').then(r=>{if(!r.ok)throw Error('เปิดแบบฟอร์มไม่ได้');return r.text()});layoutRequest.catch(()=>{});
  try{
  await Promise.all([window.schoolAuthReady,loadScript(activeSources[0])]);if(window.documentPageView!=='history'){window.procurementPersonnel=(await window.schoolRpc('getBudgetReferenceData',2570)).personnel;window.procurementPersonnelFields=new Set(['assigned_officer_name','chief_officer_signer_name','officer_signer_name','inspector_name']);}
  const layout=document.createElement('template');layout.innerHTML=await layoutRequest;document.body.append(layout.content);
