@@ -29,7 +29,7 @@ const thaiParameterLabels={
  assigned_officer_name:"ชื่อผู้ได้รับมอบหมาย",
  inspector_name:"ผู้ตรวจรับพัสดุ",
  assigned_officer_position:"ตำแหน่งผู้ได้รับมอบหมาย",
- chief_officer_signer_name:"ชื่อผู้ได้รับมอบหมาย",
+ chief_officer_signer_name:"ชื่อหัวหน้าเจ้าหน้าที่",
  officer_signer_name:"ชื่อเจ้าหน้าที่",
  vendor_name:"ชื่อผู้ขาย/ผู้รับจ้าง",
  pa:"จำนวนเงินก่อน VAT",
