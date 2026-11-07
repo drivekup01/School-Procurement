@@ -351,6 +351,7 @@ async function exportFilledWord(){
     const tableWrites=window.exportPage11TableToWord(doc);
     if(tableWrites){replacements+=tableWrites;changed=true;}
    }
+   if(filename==='word/document.xml'){normalizeWordExportLayout(doc);changed=true;}
    if(changed)zip.file(filename,new XMLSerializer().serializeToString(doc));
   }
   if(replacements===0)throw new Error('ยังไม่มีค่าพารามิเตอร์ที่ตรงกับข้อความใน Word ให้ส่งออก');

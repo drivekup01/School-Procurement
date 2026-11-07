@@ -1,6 +1,6 @@
 @font-face{font-family:ProcurementSarabun;src:url("THSarabun.ttf") format("truetype");font-display:swap}
 .word-page-shell{position:relative;margin:0 auto;flex:none}
-.word-a4{box-sizing:border-box;width:210mm;min-height:297mm;padding:10mm 13mm 10mm 25mm;background:#fff;color:#111;font:16pt/1.12 ProcurementSarabun,"TH Sarabun New",serif;transform-origin:top left;box-shadow:0 2px 9px #0002;overflow-wrap:anywhere}
+.word-a4{box-sizing:border-box;width:210mm;min-height:297mm;padding:15mm 13mm 10mm 25mm;background:#fff;color:#111;font:16pt/1.12 ProcurementSarabun,"TH Sarabun New",serif;transform-origin:top left;box-shadow:0 2px 9px #0002;overflow-wrap:anywhere}
 .word-a4 p{margin:0}
 .word-heading{position:relative;height:20mm;display:flex;align-items:center;justify-content:center}
 .word-heading img{position:absolute;left:0;top:0;width:15mm;height:15mm;object-fit:contain}

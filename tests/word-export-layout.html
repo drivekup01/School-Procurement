@@ -1,0 +1,31 @@
+<!doctype html><meta charset="utf-8"><title>Local Word layout QA</title>
+<h1>Local Word layout QA</h1><input type="file" id="file" accept=".docx"><button id="run">Normalize test copy</button><pre id="result"></pre>
+<script src="/zip.js"></script><script src="../word-export-layout.js"></script>
+<script>
+document.querySelector('#run').onclick=async()=>{
+ try{
+ const zip=await JSZip.loadAsync(await document.querySelector('#file').files[0].arrayBuffer());
+ const xml=await zip.file('word/document.xml').async('string');
+ const doc=new DOMParser().parseFromString(xml,'application/xml');
+ const ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+ const text=doc=>Array.from(doc.getElementsByTagNameNS(ns,'t')).map(n=>n.textContent).join('').replace(/\s+/g,'');
+ const before=text(doc),tableCount=doc.getElementsByTagNameNS(ns,'tbl').length,imageCount=doc.getElementsByTagNameNS(ns,'drawing').length;
+ const broken=doc.cloneNode(true);Array.from(broken.getElementsByTagNameNS(ns,'p')).find(p=>p.getAttributeNS('http://schemas.microsoft.com/office/word/2010/wordml','paraId')==='5DB60E57').setAttributeNS('http://schemas.microsoft.com/office/word/2010/wordml','w14:paraId','CHANGED');
+ let rejected=false;try{normalizeWordExportLayout(broken);}catch{rejected=true;}if(!rejected)throw Error('Changed template must be rejected');
+ normalizeWordExportLayout(doc);
+ if(text(doc)!==before)throw Error('Text changed');
+ const once=new XMLSerializer().serializeToString(doc);normalizeWordExportLayout(doc);
+ if(new XMLSerializer().serializeToString(doc)!==once)throw Error('Layout is not idempotent');
+ const breaks=doc.getElementsByTagNameNS(ns,'pageBreakBefore').length;
+ if(breaks!==10)throw Error('Expected 10 explicit boundaries, got '+breaks);
+ if(doc.getElementsByTagNameNS(ns,'tbl').length!==tableCount||doc.getElementsByTagNameNS(ns,'drawing').length!==imageCount)throw Error('Table or image lost');
+ const margin=doc.getElementsByTagNameNS(ns,'pgMar')[0];if(margin.getAttributeNS(ns,'top')!=='850')throw Error('Expected 1.5 cm top margin');
+ if(doc.getElementsByTagNameNS(ns,'lastRenderedPageBreak').length)throw Error('Stale page breaks remain');
+ zip.file('word/document.xml',once);
+ const blob=await zip.generateAsync({type:'blob'}),a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);a.download='pagination-qa.docx';a.click();
+ document.querySelector('#result').textContent='PASS: text preserved, 10 page boundaries, idempotent normalization. Exported test copy.';
+ }catch(e){document.querySelector('#result').textContent=e.stack;}
+};
+</script>
+
