@@ -3,8 +3,10 @@
  const keys=['school-procurement-preview-values-v1','school-procurement-page3-choices-v1','school-procurement-page4-table-v1','school-procurement-page6-table-v1'];
  const format='school-procurement-document-v1',activeKey='school-procurement-active-document-v1';
  const host=document.getElementById('saveArea'),saveButton=document.getElementById('saveDocumentData'),status=document.getElementById('saveStatus');
- const cloud=true,canEdit=window.schoolUser?.canWriteDocuments===true;
+ const cloud=true,canCreate=window.schoolUser?.canWriteDocuments===true,canManage=window.schoolUser?.schoolRole?['admin','budget'].includes(window.schoolUser.schoolRole):['admin','editor'].includes(window.schoolUser?.role);
+ let canEdit=canCreate;
  let active={};try{active=JSON.parse(localStorage.getItem(activeKey)||'{}')}catch{}
+ if(window.documentPageView!=='history'&&active.editable===false)canEdit=false;window.procurementCanEdit=canEdit;
   const historyKey='school-procurement-document-history-v1',draftKey='school-procurement-document-draft-v1',trashKey='school-procurement-document-trash-v1';
  const heading=document.createElement('h3');heading.textContent='ประวัติการบันทึกเอกสาร';
  const list=document.createElement('div');list.id='documentHistory';
@@ -17,7 +19,7 @@
  const search=document.createElement('input');search.type='search';search.id='historySearch';search.placeholder='ค้นหาชื่อเอกสารหรือเลขที่หนังสือ';search.setAttribute('aria-label','ค้นหาเอกสาร');
  const filter=document.createElement('select');filter.id='historyDepartment';filter.setAttribute('aria-label','กรองฝ่ายงาน');
  const create=document.createElement('button');create.type='button';create.textContent='＋ สร้างเอกสารใหม่';
- const academic=document.createElement('select');academic.id='historyAcademicYear';academic.setAttribute('aria-label','เลือกปีการศึกษา');const yearKey='school-procurement-academic-year-v1';const currentYear=Number(new Intl.DateTimeFormat('en',{timeZone:'Asia/Bangkok',year:'numeric'}).format(new Date()))+543;academic.add(new Option('ปีการศึกษา '+currentYear,currentYear));academic.value=sessionStorage.getItem(yearKey)||String(currentYear);const description=document.createElement('p');description.className='history-year-description';const top=document.createElement('div');top.className='history-header';const titleBlock=document.createElement('div');heading.replaceWith(top);titleBlock.append(heading,description);top.append(titleBlock,create);create.classList.add('history-create');create.hidden=!canEdit;toolbar.append(academic,search,filter);managerStatus.before(toolbar);let savedFiles=[],loadSerial=0;academic.addEventListener('change',()=>{sessionStorage.setItem(yearKey,academic.value);drawHistory()});
+ const academic=document.createElement('select');academic.id='historyAcademicYear';academic.setAttribute('aria-label','เลือกปีการศึกษา');const yearKey='school-procurement-academic-year-v1';const currentYear=Number(new Intl.DateTimeFormat('en',{timeZone:'Asia/Bangkok',year:'numeric'}).format(new Date()))+543;academic.add(new Option('ปีการศึกษา '+currentYear,currentYear));academic.value=sessionStorage.getItem(yearKey)||String(currentYear);const description=document.createElement('p');description.className='history-year-description';const top=document.createElement('div');top.className='history-header';const titleBlock=document.createElement('div');heading.replaceWith(top);titleBlock.append(heading,description);top.append(titleBlock,create);create.classList.add('history-create');create.hidden=!canCreate;toolbar.append(academic,search,filter);managerStatus.before(toolbar);let savedFiles=[],loadSerial=0;academic.addEventListener('change',()=>{sessionStorage.setItem(yearKey,academic.value);drawHistory()});
 
  function setViewHash(hash){const url=new URL(location.href);url.hash=hash;history.replaceState(null,'',url.href)}
  function show(managing){const target=managing?'history.html':'procurement.html';if(!location.pathname.endsWith('/'+target)){location.assign(target);return;}editor.hidden=managing;manager.hidden=!managing;setViewHash(managing?'#history':'#editor');if(managing)renderHistory().catch(error=>managerStatus.textContent='อ่านรายการไม่สำเร็จ: '+error.message)}
@@ -36,7 +38,7 @@
  async function renderHistory(){
   const serial=++loadSerial;managerStatus.textContent='กำลังอ่านเอกสาร...';
   await migrateLocalHistory();const files=await rpc('listProcurementDocuments');if(serial!==loadSerial)return;
-  undo.hidden=window.schoolUser.role!=='admin'||!localTrash().length;savedFiles=files.sort((a,b)=>String(b.savedAt).localeCompare(String(a.savedAt)));
+  undo.hidden=!canManage||!localTrash().length;savedFiles=files.sort((a,b)=>String(b.savedAt).localeCompare(String(a.savedAt)));
   const previousYear=academic.value,years=[...new Set([2569,2570,currentYear,...savedFiles.map(documentYear)])].sort((a,b)=>b-a);academic.replaceChildren(...years.map(y=>new Option('ปีการศึกษา '+y,y)));academic.value=sessionStorage.getItem(yearKey)||String(savedFiles.length?Math.max(...savedFiles.map(documentYear)):currentYear);if(!years.includes(Number(academic.value)))academic.value=previousYear||String(currentYear);const previous=filter.value;filter.replaceChildren(new Option('ทุกฝ่ายงาน',''));
   [...new Set(savedFiles.map(file=>metadata(file).department).filter(Boolean))].sort().forEach(department=>filter.add(new Option(department,department)));
   filter.value=previous;drawHistory();
@@ -53,11 +55,11 @@
    const row=document.createElement('tr');row.className='document-manager-row-history';
    const cells=labels.map(label=>{const cell=document.createElement('td');cell.dataset.label=label;row.append(cell);return cell});
    cells[0].textContent=String(index+1);const title=document.createElement('button');title.type='button';title.className='history-name';title.textContent=file.name;
-   const edit=async()=>{busy(true);try{const data=(await rpc('openProcurementDocument',file.id)).data;validate(data);await restore(data,file.id)}catch(error){managerStatus.textContent='เปิดไม่สำเร็จ: '+error.message}finally{busy(false)}};
+   const edit=async()=>{busy(true);try{const opened=await rpc('openProcurementDocument',file.id);validate(opened.data);await restore(opened.data,file.id,opened.canEdit)}catch(error){managerStatus.textContent='เปิดไม่สำเร็จ: '+error.message}finally{busy(false)}};
    title.addEventListener('click',edit);cells[1].append(title);const number=metadata(file).number;if(number){const line=document.createElement('small');line.style.display='block';line.textContent='เลขที่ '+number;cells[1].append(line)}
    cells[2].textContent=metadata(file).department||'—';cells[3].textContent=new Date(file.savedAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'});
    const actions=document.createElement('div');actions.className='document-manager-actions';const downloadButton=document.createElement('button');downloadButton.type='button';downloadButton.textContent='ดาวน์โหลด';downloadButton.addEventListener('click',async()=>{busy(true);try{const data=cloud?(await rpc('openProcurementDocument',file.id)).data:file.data;download(validate(data))}catch(error){managerStatus.textContent='ดาวน์โหลดไม่สำเร็จ: '+error.message}finally{busy(false)}});
-   const editButton=document.createElement('button');editButton.type='button';editButton.textContent=canEdit?'แก้ไข':'ดูเอกสาร';editButton.addEventListener('click',edit);actions.append(downloadButton,editButton);if(window.schoolUser.role==='admin'){const remove=document.createElement('button');remove.type='button';remove.className='document-delete';remove.textContent='ลบ';remove.setAttribute('aria-label','ลบเอกสาร '+file.name);remove.addEventListener('click',()=>removeLocalDocument(file));actions.append(remove)}cells[4].append(actions);body.append(row);
+   const editButton=document.createElement('button');editButton.type='button';editButton.textContent=file.canEdit?'แก้ไข':'ดูเอกสาร';editButton.addEventListener('click',edit);actions.append(downloadButton,editButton);if(canManage){const remove=document.createElement('button');remove.type='button';remove.className='document-delete';remove.textContent='ลบ';remove.setAttribute('aria-label','ลบเอกสาร '+file.name);remove.addEventListener('click',()=>removeLocalDocument(file));actions.append(remove)}cells[4].append(actions);body.append(row);
   });list.append(table);
  }
  function localTrash(){const value=JSON.parse(localStorage.getItem(trashKey)||'[]');if(!Array.isArray(value))throw Error('อ่านเอกสารที่ลบไม่ได้');return value}
@@ -113,21 +115,21 @@
   for(const page of [3,4,6,11])window['resetPage'+page+'Draft']?.();
   currentPDFPage=1;lastFormPage=0;activeField=null;await loadPDF();
  }
- async function restore(data,id){
+ async function restore(data,id,editable=true){
   validate(data);
   if(canEdit&&!confirm('เปิดเอกสารนี้แทนข้อมูลที่กำลังกรอกอยู่? กรุณาบันทึกข้อมูลปัจจุบันก่อนหากต้องการเก็บไว้'))return;
   const old=new Map([...keys,activeKey].map(key=>[key,localStorage.getItem(key)]));
-  try{for(const key of keys)localStorage.setItem(key,JSON.stringify(data.stores[key]));localStorage.setItem(activeKey,JSON.stringify({id:id||'',name:data.name||'',savedAt:data.savedAt,academicYear:documentYear({data:data,savedAt:data.savedAt})}))}
+  try{for(const key of keys)localStorage.setItem(key,JSON.stringify(data.stores[key]));localStorage.setItem(activeKey,JSON.stringify({id:id||'',name:data.name||'',savedAt:data.savedAt,academicYear:documentYear({data:data,savedAt:data.savedAt}),editable}))}
   catch(error){for(const [key,value]of old){try{value===null?localStorage.removeItem(key):localStorage.setItem(key,value)}catch{}}throw error}
   if(window.documentPageView==='history'){location.assign('procurement.html#editor');return}
-  await refreshDraft();show(false);
+  location.assign('procurement.html?access='+Date.now()+'#editor');
  }
   saveButton.addEventListener('click',saveDraft);finish.addEventListener('click',complete);
  const nextView=sessionStorage.getItem('school-procurement-next-view-v1');
  if(nextView==='manage'||window.documentPageView==='history'||location.hash==='#history'){sessionStorage.removeItem('school-procurement-next-view-v1');show(true)}else if(!localStorage.getItem(keys[0])||localStorage.getItem(keys[0])==='{}'){rpc('getProcurementDraft').then(async draft=>{if(!draft)return;validate(draft.data);for(const key of keys)localStorage.setItem(key,JSON.stringify(draft.data.stores[key]));if(draft.active)localStorage.setItem(activeKey,JSON.stringify(draft.active));await refreshDraft();currentPDFPage=draft.page||1;await renderPDFPage(currentPDFPage);status.textContent='เปิดฉบับร่างล่าสุดแล้ว';}).catch(e=>status.textContent=e.message)}
 })();
 
-if(!window.schoolUser?.canWriteDocuments){
+if(window.procurementCanEdit===false||!window.schoolUser?.canWriteDocuments){
  const lock=()=>{document.querySelectorAll('main input,main textarea,main select:not(#pdfPageSelect),main [contenteditable]').forEach(input=>{if(input.hasAttribute('contenteditable'))input.contentEditable='false';else input.disabled=true;});};
  lock();new MutationObserver(lock).observe(document.querySelector('main'),{childList:true,subtree:true});
 }
