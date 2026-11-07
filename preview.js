@@ -452,7 +452,7 @@ async function loadPDF(){
 }
 async function renderPDFPage(number,preserveScroll=false){
  if(!pdfDocument)return;
- if(number===10)syncPage10Amounts();
+ syncPage10Amounts();
  currentPDFPage=Math.max(1,Math.min(number,pdfDocument.numPages));updatePageControls();
  if(number===1){renderHTMLFirstPage(preserveScroll);return}
  const oldX=pdfStage.scrollLeft,oldY=pdfStage.scrollTop;

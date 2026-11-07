@@ -111,7 +111,7 @@ async function loadProjectActivities(){
 }
 function saveFieldValue(key,value){
  formValues[key]=value;
- if(key==='budget_amount')syncBudgetAmountText();
+ if(key==='budget_amount'||key==='agreed_price'||page10MoneyKeys.has(key))syncPage10Amounts();
  try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}
  activeField=key;
  renderPDFPage(currentPDFPage);
@@ -152,15 +152,14 @@ function addRelatedSelect(parent,key){
 if(window.documentPageView!=='history')loadProjectActivities();
 
 function budgetAmountInThaiWords(value){
- const raw=String(value??'').replace(/,/g,'').trim();
- if(!/^\d+(?:\.\d{1,2})?$/.test(raw))return '';
- const [whole,decimal='']=raw.split('.');
- const digits=['ศูนย์','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
- const units=['','สิบ','ร้อย','พัน','หมื่น','แสน'];
- function part(n){if(!n)return '';const str=String(n);let out='';for(let i=0;i<str.length;i++){const d=Number(str[i]),p=str.length-i-1;if(!d)continue;if(p===1&&d===1)out+='สิบ';else if(p===1&&d===2)out+='ยี่สิบ';else if(p===0&&d===1&&str.length>1)out+='เอ็ด';else out+=digits[d]+units[p]}return out}
- function integerWords(input){let n=BigInt(input),out='';if(n===0n)return 'ศูนย์';while(n>0n){const chunk=Number(n%1000000n);if(chunk)out=part(chunk)+(out?'ล้าน':'')+out;n/=1000000n}return out}
- const baht=integerWords(whole),sat=Number(decimal.padEnd(2,'0'));
- return baht+'บาท'+(sat?part(sat)+'สตางค์':'ถ้วน');
+ const amount=page10Money(value);if(!amount)return '';
+ const [whole,decimal]=amount.split('.'),digits=['ศูนย์','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'],units=['','สิบ','ร้อย','พัน','หมื่น','แสน'];
+ function words(n,afterMillion=false){
+  if(n>=1000000n)return words(n/1000000n)+'ล้าน'+(n%1000000n?words(n%1000000n,true):'');
+  if(n===0n)return 'ศูนย์';const str=n.toString();let out='';
+  for(let i=0;i<str.length;i++){const d=Number(str[i]),position=str.length-i-1;if(!d)continue;if(position===1&&d===1)out+='สิบ';else if(position===1&&d===2)out+='ยี่สิบ';else if(position===0&&d===1&&(str.length>1||afterMillion))out+='เอ็ด';else out+=digits[d]+units[position];}return out;
+ }
+ return words(BigInt(whole))+'บาท'+(decimal==='00'?'ถ้วน':words(BigInt(decimal))+'สตางค์');
 }
 function syncBudgetAmountText(){
  const converted=budgetAmountInThaiWords(formValues.budget_amount);
@@ -170,12 +169,13 @@ function syncBudgetAmountText(){
 }
 const page10MoneyKeys=new Set(['pa','pv','pt','pw','pf','pn']);
 function page10Money(value){
- const raw=String(value??'').trim();
- if(!/^\d+(?:\.\d{1,2})?$/.test(raw))return '';
- const [whole,decimal='']=raw.split('.');
+ const raw=String(value??'').trim().replace(/[๐-๙]/g,d=>String('๐๑๒๓๔๕๖๗๘๙'.indexOf(d)));
+ if(!/^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?$/.test(raw))return '';
+ const [whole,decimal='']=raw.replace(/,/g,'').split('.');
  return BigInt(whole).toString()+'.'+decimal.padEnd(2,'0');
 }
 function syncPage10Amounts(){
+ syncBudgetAmountText();
  for(const key of ['pa','pv','pw','pf'])formValues[key]=page10Money(formValues[key]);
  function sum(keys){
   if(!keys.some(key=>formValues[key]))return '';
@@ -185,17 +185,10 @@ function syncPage10Amounts(){
  formValues.pt=sum(['pa','pv']);
  formValues.pn=sum(['pt','pw','pf']);
  formValues.pnt=page10BahtText(formValues.pn);
- formValues.agreed_price_text=page10BahtText(page10Money(formValues.agreed_price));
+ formValues.agreed_price_text=budgetAmountInThaiWords(formValues.agreed_price);
+ for(const key of ['agreed_price_text','pnt']){const field=document.getElementById('field-'+key);if(field)field.value=formValues[key];}
 }
-function page10BahtText(amount){
- if(!amount)return '';
- const [whole,decimal]=amount.split('.');
- function words(n){
-  if(n>=1000000n)return words(n/1000000n)+'ล้าน'+(n%1000000n?words(n%1000000n):'');
-  return budgetAmountInThaiWords(n.toString()).replace(/บาทถ้วน$/,'');
- }
- return words(BigInt(whole))+'บาท'+(decimal==='00'?'ถ้วน':words(BigInt(decimal))+'สตางค์');
-}
+function page10BahtText(amount){return budgetAmountInThaiWords(amount);}
 function renderFormFields(){
  lastFormPage=currentPDFPage;
  const shared=document.getElementById('sharedFields'),specific=document.getElementById('pageFields');
@@ -250,9 +243,9 @@ function renderFormFields(){
   }
   const input=document.createElement('input');input.id='field-'+key;input.type='text';input.autocomplete='off';
   input.placeholder='กรอก'+thaiFieldLabel(key);input.value=formValues[key]??'';
-  if(key==='budget_amount_text'){input.readOnly=true;input.title='คำนวณจากวงเงินงบประมาณอัตโนมัติ';}
+  if(['budget_amount_text','agreed_price_text','pnt'].includes(key)){input.readOnly=true;input.title='คำนวณจากจำนวนเงินอัตโนมัติ';input.placeholder='คำนวณจากจำนวนเงินอัตโนมัติ';}
   input.addEventListener('focus',()=>{activeField=key;highlightField(key)});
-  input.addEventListener('input',()=>{formValues[key]=input.value;if(key==='budget_amount')syncBudgetAmountText();try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}activeField=key;renderPDFPage(currentPDFPage)});
+  input.addEventListener('input',()=>{formValues[key]=input.value;if(key==='budget_amount'||key==='agreed_price'||page10MoneyKeys.has(key))syncPage10Amounts();try{localStorage.setItem('school-procurement-preview-values-v1',JSON.stringify(formValues))}catch{}activeField=key;renderPDFPage(currentPDFPage)});
   wrap.append(label,input);parent.appendChild(wrap);
  }
  // Left input panel only. Keep document preview/export logic unchanged.
@@ -314,7 +307,7 @@ sharedToggle.addEventListener('click',()=>{
  sharedBody.hidden=expanded;
  document.getElementById('sharedChevron').textContent=expanded?'▸':'▾';
 });
-syncBudgetAmountText();
+syncPage10Amounts();
 if(window.documentPageView!=='history')loadPDF();
 document.getElementById('exportWord').addEventListener('click',exportFilledWord);
 async function exportFilledWord(){

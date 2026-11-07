@@ -110,7 +110,7 @@
  }
  async function refreshDraft(){
   const values=JSON.parse(localStorage.getItem(keys[0])||'{}');
-  Object.keys(formValues).forEach(key=>delete formValues[key]);Object.assign(formValues,values);
+  Object.keys(formValues).forEach(key=>delete formValues[key]);Object.assign(formValues,values);syncPage10Amounts();
   active=JSON.parse(localStorage.getItem(activeKey)||'{}');
   for(const page of [3,4,6,11])window['resetPage'+page+'Draft']?.();
   currentPDFPage=1;lastFormPage=0;activeField=null;await loadPDF();
