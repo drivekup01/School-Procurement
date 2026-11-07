@@ -23,10 +23,10 @@
 
  // Capture the clean state before the first real user edit, after automatic rendering.
  let editBaseline=null;
- function editFingerprint(){
+ function editFingerprint(stores=snapshot().stores){
   const derived=new Set(['budget_amount_text','agreed_price_text','pt','pn','pnt']);
   function clean(value){if(value===null||value===undefined||value===''||value===false)return undefined;if(Array.isArray(value)){const rows=value.map(clean).filter(v=>v!==undefined);return rows.length?rows:undefined;}if(typeof value==='object'){const out={};for(const key of Object.keys(value).sort()){const v=clean(value[key]);if(v!==undefined)out[key]=v;}return Object.keys(out).length?out:undefined;}return value;}
-  const stores=snapshot().stores;stores[keys[0]]=Object.fromEntries(Object.entries(stores[keys[0]]).filter(([key])=>!derived.has(key)));return JSON.stringify(clean(stores)||{});
+  const normalized={...stores,[keys[0]]:Object.fromEntries(Object.entries(stores[keys[0]]).filter(([key])=>!derived.has(key)))};return JSON.stringify(clean(normalized)||{});
  }
  function hasUnsavedChanges(){return canEdit&&window.documentPageView!=='history'&&editBaseline!==null&&editFingerprint()!==editBaseline;}
  function beginEdit(event){if(!canEdit||window.documentPageView==='history'||!event.isTrusted)return;if(editBaseline===null)editBaseline=editFingerprint();}
@@ -93,7 +93,7 @@
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download=data.name.replace(/[\\/]/g,' ')+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
- async function saveDraft(){if(!canEdit)return;busy(true);try{const data=snapshot();const value={page:currentPDFPage,data,active};await rpc('saveProcurementDraft',value);localStorage.setItem(draftKey,JSON.stringify(value));localStorage.setItem(keys[0],JSON.stringify(data.stores[keys[0]]));editBaseline=editFingerprint();status.textContent='บันทึกรายละเอียดหน้า '+currentPDFPage+' แล้ว'}catch(error){status.textContent='บันทึกไม่สำเร็จ: '+error.message}finally{busy(false)}}
+ async function saveDraft(){if(!canEdit)return;busy(true);try{const data=snapshot();const value={page:currentPDFPage,data,active};await rpc('saveProcurementDraft',value);localStorage.setItem(draftKey,JSON.stringify(value));localStorage.setItem(keys[0],JSON.stringify(data.stores[keys[0]]));editBaseline=editFingerprint(data.stores);status.textContent='บันทึกรายละเอียดหน้า '+currentPDFPage+' แล้ว'}catch(error){status.textContent='บันทึกไม่สำเร็จ: '+error.message}finally{busy(false)}}
  async function complete(){
   if(!canEdit)return;busy(true);status.textContent='กำลังบันทึกไฟล์งาน...';
   try{
