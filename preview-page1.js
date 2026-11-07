@@ -16,7 +16,7 @@ function renderHTMLFirstPage(preserveScroll=false){
    if(!match){fragment.append(document.createTextNode(part));continue}
    const field=document.createElement('span');field.dataset.field=match[1];
    const value=formValues[match[1]];
-   field.textContent=value===undefined||value===''?part:(calendarFieldKeys.has(match[1])?toThaiDocumentDate(value):String(value));
+   field.textContent=documentFieldText(match[1],formValues,calendarFieldKeys,toThaiDocumentDate);
    field.className=value===undefined||value===''?'word-parameter':'word-parameter word-filled';
    field.addEventListener('click',()=>{const input=document.getElementById('field-'+match[1]);if(input){input.focus();input.scrollIntoView({block:'nearest'})}});
    fragment.append(field);

@@ -17,6 +17,32 @@ function normalizeDeliveryDateBinding(doc){
  }
  return changed;
 }
+/* Replace text across Word runs, preserving surrounding text and run formatting. */
+function replaceWordText(paragraph,pattern,replacementFor){
+ const ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+ const nodes=Array.from(paragraph.getElementsByTagNameNS(ns,'t')),ranges=[];let full='';
+ for(const node of nodes){const text=node.textContent||'';ranges.push({node,start:full.length,end:full.length+text.length});full+=text;}
+ let changed=0;
+ for(const match of Array.from(full.matchAll(pattern)).reverse()){
+  const replacement=String(replacementFor(match,full));if(replacement===match[0])continue;
+  const start=match.index,end=start+match[0].length,first=ranges.find(r=>start>=r.start&&start<r.end),last=ranges.find(r=>end>r.start&&end<=r.end);
+  if(!first||!last)continue;
+  if(first===last)first.node.textContent=first.node.textContent.slice(0,start-first.start)+replacement+first.node.textContent.slice(end-first.start);
+  else{const suffix=last.node.textContent.slice(end-last.start);first.node.textContent=first.node.textContent.slice(0,start-first.start)+replacement;let inside=false;for(const row of ranges){if(row===first){inside=true;continue;}if(row===last){row.node.textContent=suffix;break;}if(inside)row.node.textContent='';}}
+  first.node.setAttributeNS?.('http://www.w3.org/XML/1998/namespace','xml:space','preserve');
+  last.node.setAttributeNS?.('http://www.w3.org/XML/1998/namespace','xml:space','preserve');changed++;
+ }
+ return changed;
+}
+function documentFieldText(key,values,dateKeys,formatDate){
+ const value=values[key];if(value===undefined||value===null||typeof value==='string'&&!value.trim())return '';
+ return dateKeys.has(key)?formatDate(value):String(value);
+}
+function normalizeDeliveryDeadlineBinding(doc){
+ let changes=0;for(const p of Array.from(doc.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','p')))
+  changes+=replaceWordText(p,/\{\{\s*delivery_days\s*\}\}/g,(match,full)=>/กำหนดเวลาการส่งมอบ\s*$/.test(full.slice(0,match.index))?'{{delivery_due_date}}':match[0]);
+ return changes>0;
+}
 /* Word HTML preview controller. Every displayed page comes from the DOCX source. */
 const prevPage=document.getElementById('prevPage'),nextPage=document.getElementById('nextPage'),pageCounter=document.getElementById('pageCounter'),pdfStage=document.getElementById('pdfRender');
 let pdfZoom=1,zoomTimer=null,pdfRenderSerial=0,pdfDocument=null,parameterIndex=new Map(),detectedPages=new Set(),currentPDFPage=1,activeField=null,lastFormPage=0,activePageRender=0;
@@ -43,7 +69,7 @@ function wordFieldFragments(text){
   if(!m){f.append(document.createTextNode(part));continue}
   const span=document.createElement('span'),key=m[1],value=formValues[key];
   span.dataset.field=key;span.className='word-parameter'+(value!==undefined&&value!==''?' word-filled':'');
-  span.textContent=value!==undefined&&value!==''?(calendarFieldKeys.has(key)?toThaiDocumentDate(value):String(value)):part;
+  span.textContent=documentFieldText(key,formValues,calendarFieldKeys,toThaiDocumentDate);
   span.addEventListener('click',()=>{const el=document.getElementById('field-'+key);if(el){el.focus();el.scrollIntoView({block:'nearest'})}});
   f.append(span);
  }
@@ -95,7 +121,7 @@ function paragraphHTML(p){
   if(first.parentElement?.closest('[data-field]')||last.parentElement?.closest('[data-field]'))continue;
   const marker=document.createElement('span');marker.dataset.field=match[1];marker.className='word-parameter word-overlay-field';
   const value=formValues[match[1]];
-  marker.textContent=value!==undefined&&value!==''?String(value):match[0];
+  marker.textContent=documentFieldText(match[1],formValues,calendarFieldKeys,toThaiDocumentDate);
   marker.classList.toggle('word-filled',value!==undefined&&value!=='');
   if(first===last){const original=first.nodeValue||'';first.nodeValue=original.slice(0,firstOffset);first.after(marker,document.createTextNode(original.slice(lastOffset)))}
   else{
@@ -406,6 +432,7 @@ async function loadPDF(){
   const doc=new DOMParser().parseFromString(await file.async('string'),'application/xml');
   if(doc.querySelector('parsererror'))throw Error('อ่าน XML ของ Word ไม่สำเร็จ');
   normalizeDeliveryDateBinding(doc);
+  normalizeDeliveryDeadlineBinding(doc);
   const body=doc.getElementsByTagNameNS(WORD_NS,'body')[0];
   sourcePage4Table=Array.from(body.getElementsByTagNameNS(WORD_NS,'tbl')).find(t=>Array.from(t.getElementsByTagNameNS(WORD_NS,'t')).some(n=>(n.textContent||'').includes('รายละเอียดของวัสดุที่จะซื้อ/จ้าง')))||null;
   const groups=wordBlocks(body);
@@ -433,7 +460,7 @@ async function renderPDFPage(number,preserveScroll=false){
  const page=wordPages[currentPDFPage-1].cloneNode(true);
  for(const field of page.querySelectorAll('[data-field]')){
   const key=field.dataset.field,value=formValues[key];
-  field.textContent=value===undefined||value===''?'{{'+key+'}}':calendarFieldKeys.has(key)?toThaiDocumentDate(value):String(value);
+  field.textContent=documentFieldText(key,formValues,calendarFieldKeys,toThaiDocumentDate);
   field.classList.toggle('word-filled',value!==undefined&&value!=='');
   field.addEventListener('click',()=>{const input=document.getElementById('field-'+key);if(input){input.focus();input.scrollIntoView({block:'nearest'})}});
  }

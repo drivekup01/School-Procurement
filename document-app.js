@@ -326,7 +326,7 @@ async function exportFilledWord(){
   const response=await fetch('procurement-template13.docx',{cache:'default'});
   if(!response.ok)throw new Error('ไม่สามารถอ่าน Word ต้นฉบับ');
   const zip=await JSZip.loadAsync(await response.arrayBuffer());
-  const xmlFiles=Object.keys(zip.files).filter(name=>/^word\/(document|header\d*|footer\d*)\.xml$/.test(name));
+  const xmlFiles=Object.keys(zip.files).filter(name=>/^word\/(document|header\d*|footer\d*|footnotes|endnotes|comments)\.xml$/.test(name));
   let replacements=0;
   for(const filename of xmlFiles){
    const xml=await zip.file(filename).async('string');
@@ -334,35 +334,10 @@ async function exportFilledWord(){
    if(doc.querySelector('parsererror'))throw new Error('ไฟล์เอกสารมี XML ที่อ่านไม่ได้');
    const paragraphs=Array.from(doc.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','p'));
    let changed=normalizeDeliveryDateBinding(doc);
+   changed=normalizeDeliveryDeadlineBinding(doc)||changed;
    for(const paragraph of paragraphs){
-    const nodes=Array.from(paragraph.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','t'));
-    if(!nodes.length)continue;
-    let full='',offset=[];
-    for(const node of nodes){const str=node.textContent||'';for(const ch of Array.from(str)){offset.push({node,char:ch});full+=ch;}}
-    const regex=/\{\{\s*([\w.-]+)\s*\}\}/g;
-    const matches=Array.from(full.matchAll(regex)).reverse();
-    for(const match of matches){
-     const key=match[1],raw=formValues[key];
-     const replacement=String(calendarFieldKeys.has(key)?toThaiDocumentDate(raw??''):(raw??''));
-     if(replacement==='')continue;
-     const start=match.index,end=start+match[0].length;
-     const first=offset[start]?.node,last=offset[end-1]?.node;
-     if(!first||!last)continue;
-     const firstStart=offset.findIndex(x=>x.node===first),lastStart=offset.findIndex(x=>x.node===last);
-     if(first===last){
-      const source=first.textContent||'';
-      first.textContent=Array.from(source).slice(0,start-firstStart).join('')+replacement+Array.from(source).slice(end-firstStart).join('');
-     }else{
-      const firstSource=Array.from(first.textContent||'');
-      const lastSource=Array.from(last.textContent||'');
-      const prefix=firstSource.slice(0,start-firstStart).join('');
-      const suffix=lastSource.slice(end-lastStart).join('');
-      first.textContent=prefix+replacement;
-      let between=false;
-      for(const n of nodes){if(n===first){between=true;continue;}if(n===last){n.textContent=suffix;break;}if(between)n.textContent='';}
-     }
-     replacements++;changed=true;
-    }
+    const writes=replaceWordText(paragraph,/\{\{\s*([\w.-]+)\s*\}\}/g,match=>documentFieldText(match[1],formValues,calendarFieldKeys,toThaiDocumentDate));
+    replacements+=writes;if(writes)changed=true;
    }
    if(filename==='word/document.xml'&&typeof window.exportPage4TableToWord==='function'){
     const tableWrites=window.exportPage4TableToWord(doc);
@@ -384,4 +359,3 @@ async function exportFilledWord(){
  }catch(error){alert('ส่งออก Word ไม่สำเร็จ: '+error.message);}
  finally{button.disabled=false;button.textContent='⬇ Export Word';}
 }
-
